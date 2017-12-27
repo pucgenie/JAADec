@@ -1,6 +1,7 @@
 package net.sourceforge.jaad.mp4.boxes;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public interface Box {
 

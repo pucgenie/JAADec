@@ -6,9 +6,8 @@ import net.sourceforge.jaad.aac.syntax.PCE;
 import net.sourceforge.jaad.aac.syntax.SyntacticElements;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.transport.ADIFHeader;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Main AAC decoder class
@@ -16,20 +15,13 @@ import java.util.logging.Level;
  */
 public class Decoder implements Constants {
 
-	static {
-		for(Handler h : LOGGER.getHandlers()) {
-			LOGGER.removeHandler(h);
-		}
-		LOGGER.setLevel(Level.WARNING);
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.Decoder"); //for debugging
 
-		final ConsoleHandler h = new ConsoleHandler();
-		h.setLevel(Level.ALL);
-		LOGGER.addHandler(h);
-	}
 	private final DecoderConfig config;
 	private final SyntacticElements syntacticElements;
 	private final FilterBank filterBank;
 	private BitStream in;
+	private int frames=0;
 	private ADIFHeader adifHeader;
 
 	/**
@@ -81,7 +73,9 @@ public class Decoder implements Constants {
 	public void decodeFrame(byte[] frame, SampleBuffer buffer) throws AACException {
 		if(frame!=null) in.setData(frame);
 		try {
+			LOGGER.log(Level.INFO, ()->String.format("frame %d", frames));
 			decode(buffer);
+			++frames;
 		}
 		catch(AACException e) {
 			if(!e.isEndOfStream()) throw e;

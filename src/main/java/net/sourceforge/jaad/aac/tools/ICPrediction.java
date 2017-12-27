@@ -7,13 +7,15 @@ import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.ICSInfo;
 import net.sourceforge.jaad.aac.syntax.ICStream;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Intra-channel prediction used in profile Main
  * @author in-somnia
  */
 public class ICPrediction {
-
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.tools.ICPrediction"); //for debugging
+	
 	private static final float SF_SCALE = 1.0f/-1024.0f;
 	private static final float INV_SF_SCALE = 1.0f/SF_SCALE;
 	private static final int MAX_PREDICTORS = 672;
@@ -50,7 +52,7 @@ public class ICPrediction {
 		for(int sfb = 0; sfb<length; sfb++) {
 			predictionUsed[sfb] = in.readBool();
 		}
-		Constants.LOGGER.log(Level.WARNING, "ICPrediction: maxSFB={0}, maxPredSFB={1}", new int[]{maxSFB, maxPredSFB});
+		LOGGER.log(Level.WARNING, "ICPrediction: maxSFB={0}, maxPredSFB={1}", new int[]{maxSFB, maxPredSFB});
 		/*//if maxSFB<maxPredSFB set remaining to false
 		for(int sfb = length; sfb<maxPredSFB; sfb++) {
 		predictionUsed[sfb] = false;
