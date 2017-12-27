@@ -10,10 +10,13 @@ import net.sourceforge.jaad.aac.huffman.HCB;
 import net.sourceforge.jaad.aac.huffman.Huffman;
 import net.sourceforge.jaad.aac.tools.TNS;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import net.sourceforge.jaad.aac.Decoder;
 
 //TODO: apply pulse data
 public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.ICStream"); //for debugging
 
 	private static final int SF_DELTA = 60;
 	private static final int SF_OFFSET = 200;

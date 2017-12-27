@@ -76,7 +76,7 @@ public class Artwork {
 			return image;
 		}
 		catch(IOException e) {
-			Logger.getLogger("MP4 API").log(Level.SEVERE, "Artwork.getImage failed: {0}", e.toString());
+			DecoderInfo.LOGGER.log(Level.SEVERE, "Artwork.getImage failed: {0}", e.toString());
 			throw e;
 		}
 	}

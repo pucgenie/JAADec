@@ -74,7 +74,7 @@ public abstract class Track {
 					location = new URL(url.getLocation());
 				}
 				catch(MalformedURLException e) {
-					Logger.getLogger("MP4 API").log(Level.WARNING, "Parsing URL-Box failed: {0}, url: {1}", new String[]{e.toString(), url.getLocation()});
+					DecoderInfo.LOGGER.log(Level.WARNING, "Parsing URL-Box failed: {0}, url: {1}", new String[]{e.toString(), url.getLocation()});
 					location = null;
 				}
 			}
@@ -335,7 +335,7 @@ public abstract class Track {
 			else if(diff<0) {
 				if(in.hasRandomAccess()) in.seek(frame.getOffset());
 				else {
-					Logger.getLogger("MP4 API").log(Level.WARNING, "readNextFrame failed: frame {0} already skipped, offset:{1}, stream:{2}", new Object[]{currentFrame, frame.getOffset(), in.getOffset()});
+					DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: frame {0} already skipped, offset:{1}, stream:{2}", new Object[]{currentFrame, frame.getOffset(), in.getOffset()});
 					throw new IOException("frame already skipped and no random access");
 				}
 			}
@@ -345,7 +345,7 @@ public abstract class Track {
 				in.readBytes(b);
 			}
 			catch(EOFException e) {
-				Logger.getLogger("MP4 API").log(Level.WARNING, "readNextFrame failed: tried to read {0} bytes at {1}", new Long[]{frame.getSize(), in.getOffset()});
+				DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: tried to read {0} bytes at {1}", new Long[]{frame.getSize(), in.getOffset()});
 				throw e;
 			}
 			frame.setData(b);

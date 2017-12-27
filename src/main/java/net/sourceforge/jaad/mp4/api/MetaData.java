@@ -278,7 +278,7 @@ public class MetaData {
 				put(Field.RELEASE_DATE, new Date(Integer.parseInt(value)));
 			}
 			catch(NumberFormatException e) {
-				Logger.getLogger("MP4 API").log(Level.INFO, "unable to parse 3GPP metadata: recording year value: {0}", value);
+				DecoderInfo.LOGGER.log(Level.INFO, "unable to parse 3GPP metadata: recording year value: {0}", value);
 			}
 		}
 		if(udta.hasChild(BoxTypes.THREE_GPP_TITLE_BOX)) put(Field.TITLE, ((ThreeGPPMetadataBox) udta.getChild(BoxTypes.THREE_GPP_TITLE_BOX)).getData());
@@ -417,7 +417,7 @@ public class MetaData {
 			}
 		}
 		catch(IOException e) {
-			Logger.getLogger("MP4 API").log(Level.SEVERE, "Exception in MetaData.parseID3: {0}", e.toString());
+			DecoderInfo.LOGGER.log(Level.SEVERE, "Exception in MetaData.parseID3: {0}", e.toString());
 		}
 	}
 
@@ -454,7 +454,7 @@ public class MetaData {
 				if(key.equals(NERO_TAGS[19])) put(Field.TEMPO, Integer.parseInt(val));
 			}
 			catch(NumberFormatException e) {
-				Logger.getLogger("MP4 API").log(Level.SEVERE, "Exception in MetaData.parseNeroTags: {0}", e.toString());
+				DecoderInfo.LOGGER.log(Level.SEVERE, "Exception in MetaData.parseNeroTags: {0}", e.toString());
 			}
 		}
 	}

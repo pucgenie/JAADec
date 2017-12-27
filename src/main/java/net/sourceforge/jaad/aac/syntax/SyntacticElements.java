@@ -1,6 +1,8 @@
 package net.sourceforge.jaad.aac.syntax;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import net.sourceforge.jaad.aac.*;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.sbr.SBR;
@@ -9,6 +11,7 @@ import net.sourceforge.jaad.aac.tools.LTPrediction;
 import net.sourceforge.jaad.aac.tools.MS;
 
 public class SyntacticElements implements Constants {
+	static final Logger LOGGER = Logger.getLogger("jaad.SyntacticElements"); //for debugging
 
 	//global properties
 	private DecoderConfig config;

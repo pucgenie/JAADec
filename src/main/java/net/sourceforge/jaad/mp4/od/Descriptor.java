@@ -15,6 +15,7 @@ import net.sourceforge.jaad.mp4.MP4InputStream;
  * @author in-somnia
  */
 public abstract class Descriptor {
+	static final Logger LOGGER = Logger.getLogger("jaad.mp4.od.Descriptor"); //for debugging
 
 	public static final int TYPE_OBJECT_DESCRIPTOR = 1;
 	public static final int TYPE_INITIAL_OBJECT_DESCRIPTOR = 2;
@@ -50,7 +51,7 @@ public abstract class Descriptor {
 		//skip remaining bytes
 		final long remaining = size-(in.getOffset()-desc.start);
 		if(remaining>0) {
-			Logger.getLogger("MP4 Boxes").log(Level.INFO, "Descriptor: bytes left: {0}, offset: {1}", new Long[]{remaining, in.getOffset()});
+			LOGGER.log(Level.INFO, "Descriptor: bytes left: {0}, offset: {1}", new Long[]{remaining, in.getOffset()});
 			in.skipBytes(remaining);
 		}
 		desc.size += read; //include type and size fields
@@ -81,7 +82,7 @@ public abstract class Descriptor {
 			//desc = new SLConfigDescriptor();
 			//break;
 			default:
-				Logger.getLogger("MP4 Boxes").log(Level.INFO, "Unknown descriptor type: {0}", tag);
+				LOGGER.log(Level.INFO, "Unknown descriptor type: {0}", tag);
 				desc = new UnknownDescriptor();
 		}
 		return desc;

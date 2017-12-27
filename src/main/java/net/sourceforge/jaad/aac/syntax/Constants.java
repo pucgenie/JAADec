@@ -4,7 +4,6 @@ import java.util.logging.Logger;
 
 public interface Constants {
 
-	Logger LOGGER = Logger.getLogger("jaad"); //for debugging
 	int MAX_ELEMENTS = 16;
 	int BYTE_MASK = 0xFF;
 	int MIN_INPUT_SIZE = 768; //6144 bits/channel

@@ -20,18 +20,6 @@ import net.sourceforge.jaad.mp4.boxes.impl.drm.FairPlayDataBox;
 
 public class BoxFactory implements BoxTypes {
 
-	private static final Logger LOGGER = Logger.getLogger("MP4 Boxes");
-
-	static {
-		for(Handler h : LOGGER.getHandlers()) {
-			LOGGER.removeHandler(h);
-		}
-		LOGGER.setLevel(Level.WARNING);
-
-		final ConsoleHandler h = new ConsoleHandler();
-		h.setLevel(Level.ALL);
-		LOGGER.addHandler(h);
-	}
 	private static final Map<Long, Class<? extends BoxImpl>> BOX_CLASSES = new HashMap<Long, Class<? extends BoxImpl>>();
 	private static final Map<Long, Class<? extends BoxImpl>[]> BOX_MULTIPLE_CLASSES = new HashMap<Long, Class<? extends BoxImpl>[]>();
 	private static final Map<Long, String[]> PARAMETER = new HashMap<Long, String[]>();
@@ -347,7 +335,7 @@ public class BoxFactory implements BoxTypes {
 			if(size>parentLeft) throw new IOException("error while decoding box '"+typeToString(type)+"' at offset "+offset+": box too large for parent");
 		}
 
-		Logger.getLogger("MP4 Boxes").finest(typeToString(type));
+		LOGGER.finest(typeToString(type));
 		final BoxImpl box = forType(type, in.getOffset());
 		box.setParams(parent, size, type, offset);
 		box.decode(in);

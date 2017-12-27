@@ -4,6 +4,8 @@ import net.sourceforge.jaad.mp4.api.codec.*;
 import net.sourceforge.jaad.mp4.boxes.BoxTypes;
 import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.codec.*;
 
+import java.util.logging.Logger;
+
 /**
  * The <code>DecoderInfo</code> object contains the neccessary data to 
  * initialize a decoder. A track either contains a <code>DecoderInfo</code> or a
@@ -20,6 +22,8 @@ import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.codec.*;
  * @author in-somnia
  */
 public abstract class DecoderInfo {
+
+	static final Logger LOGGER = Logger.getLogger("jaad.mp4.Api"); //for debugging
 
 	static DecoderInfo parse(CodecSpecificBox css) {
 		final long l = css.getType();
