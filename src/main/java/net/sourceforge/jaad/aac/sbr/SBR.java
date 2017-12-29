@@ -1,12 +1,17 @@
 package net.sourceforge.jaad.aac.sbr;
 
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.ps.PS;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
 public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants, HuffmanTables {
+
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.sbr.SBR"); //for debugging
 
 	private final boolean downSampledSBR;
 	final SampleFrequency sample_rate;
@@ -343,6 +348,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		int saved_xover_band;
 		boolean saved_alter_scale;
 
+		LOGGER.log(Level.FINE, () -> String.format("SBR start %d @%d", bits, num_sbr_bits1));
+
 		if(crc) {
 			this.bs_sbr_crc_bits = ld.readBits(10);
 		}
@@ -404,6 +411,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		}
 
 		num_sbr_bits2 = (int) (ld.getPosition()-num_sbr_bits1);
+
+		LOGGER.log(Level.FINE, () -> String.format("SBR left %d @%d", num_sbr_bits2, ld.getPosition()));
 
 		/* check if we read more bits then were available for sbr */
 		if(bits<num_sbr_bits2) {
