@@ -337,7 +337,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 2 */
-	public int decode(BitStream ld, int bits) throws AACException {
+	public int decode(BitStream ld, int bits, boolean crc) throws AACException {
 		int result = 0;
 		int num_align_bits = 0;
 		long num_sbr_bits1 = ld.getPosition();
@@ -350,9 +350,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 		LOGGER.log(Level.FINE, () -> String.format("SBR start %d @%d", bits, num_sbr_bits1));
 
-		int bs_extension_type = ld.readBits(4);
-
-		if(bs_extension_type==EXT_SBR_DATA_CRC) {
+		if(crc) {
 			this.bs_sbr_crc_bits = ld.readBits(10);
 		}
 
