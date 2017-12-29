@@ -18,6 +18,7 @@ public abstract class Element implements Constants {
 	}
 
 	void decodeSBR(BitStream in, SampleFrequency sf, int count, boolean stereo, boolean crc, boolean downSampled,boolean smallFrames) throws AACException {
+
 		if(sbr==null) {
             /* implicit SBR signalling, see 4.6.18.2.6 */
 			int fq = sf.getFrequency();
@@ -25,6 +26,7 @@ public abstract class Element implements Constants {
 			    sf = SampleFrequency.forFrequency(2*fq);
 			sbr = new SBR(smallFrames, stereo, sf, downSampled);
 		}
+
 		sbr.decode(in, count, crc);
 	}
 
