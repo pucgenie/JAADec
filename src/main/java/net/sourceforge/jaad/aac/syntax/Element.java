@@ -17,7 +17,7 @@ public abstract class Element implements Constants {
 		return elementInstanceTag;
 	}
 
-	void decodeSBR(BitStream in, SampleFrequency sf, int count, boolean stereo, boolean crc, boolean downSampled,boolean smallFrames) throws AACException {
+	int decodeSBR(BitStream in, SampleFrequency sf, int count, boolean stereo, boolean crc, boolean downSampled,boolean smallFrames) throws AACException {
 
 		if(sbr==null) {
             /* implicit SBR signalling, see 4.6.18.2.6 */
@@ -27,7 +27,7 @@ public abstract class Element implements Constants {
 			sbr = new SBR(smallFrames, stereo, sf, downSampled);
 		}
 
-		sbr.decode(in, count, crc);
+		return sbr.decode(in, count, crc);
 	}
 
 	boolean isSBRPresent() {
