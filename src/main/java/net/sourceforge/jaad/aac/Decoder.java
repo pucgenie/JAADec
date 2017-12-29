@@ -73,13 +73,15 @@ public class Decoder implements Constants {
 	public void decodeFrame(byte[] frame, SampleBuffer buffer) throws AACException {
 		if(frame!=null) in.setData(frame);
 		try {
-			LOGGER.log(Level.INFO, ()->String.format("frame %d", frames));
+			LOGGER.log(Level.INFO, ()->String.format("frame %d @%d", frames, 8*frame.length));
 			decode(buffer);
-			++frames;
+			LOGGER.log(Level.INFO, ()->String.format("left %d", in.getBitsLeft()));
 		}
 		catch(AACException e) {
 			if(!e.isEndOfStream()) throw e;
 			else LOGGER.log(Level.WARNING,"unexpected end of frame",e);
+		} finally {
+			++frames;
 		}
 	}
 
