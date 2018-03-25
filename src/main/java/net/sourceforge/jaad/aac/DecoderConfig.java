@@ -3,6 +3,7 @@ package net.sourceforge.jaad.aac;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.PCE;
+import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
 
 /**
  * DecoderConfig that must be passed to the
@@ -29,6 +30,12 @@ public class DecoderConfig {
 		profile = Profile.AAC_MAIN;
 		sampleFrequency = SampleFrequency.SAMPLE_FREQUENCY_NONE;
 		channelConfiguration = ChannelConfiguration.CHANNEL_CONFIG_UNSUPPORTED;
+	}
+
+	private DecoderConfig(AudioDecoderInfo info) {
+		this.profile = info.getProfile();
+		this.sampleFrequency = info.getSampleFrequency();
+		this.channelConfiguration = info.getChannelConfiguration();
 	}
 
 	/* ========== gets/sets ========== */
@@ -123,14 +130,19 @@ public class DecoderConfig {
 	}
 
 	/* ======== static builder ========= */
+
+	public static DecoderConfig create(AudioDecoderInfo info) {
+		return new DecoderConfig(info);
+	}
+
 	/**
 	 * Parses the input arrays as a DecoderSpecificInfo, as used in MP4
 	 * containers.
 	 * 
 	 * @return a DecoderConfig
 	 */
-	static DecoderConfig parseMP4DecoderSpecificInfo(byte[] data) throws AACException {
-		final BitStream in = new BitStream(data);
+	public static DecoderConfig decode(DecoderSpecificInfo info) throws AACException {
+		final BitStream in = new BitStream(info.getData());
 		final DecoderConfig config = new DecoderConfig();
 
 		try {

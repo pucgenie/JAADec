@@ -60,7 +60,7 @@ public class Play {
 			line.start();
 
 			//create AAC decoder
-			final Decoder dec = new Decoder(track.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo());
 
 			//decode
 			Frame frame;
@@ -91,7 +91,7 @@ public class Play {
 		byte[] b;
 		try {
 			final ADTSDemultiplexer adts = new ADTSDemultiplexer(new FileInputStream(in));
-			final Decoder dec = new Decoder(adts.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(adts.getDecoderInfo());
 			final SampleBuffer buf = new SampleBuffer();
 			while(true) {
 				b = adts.readNextFrame();

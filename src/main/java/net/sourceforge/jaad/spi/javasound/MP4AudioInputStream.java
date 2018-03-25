@@ -30,7 +30,7 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 		if(tracks.isEmpty()) throw new IOException(ERROR_MESSAGE_AAC_TRACK_NOT_FOUND);
 		track = (AudioTrack) tracks.get(0);
 
-		decoder = new Decoder(track.getDecoderSpecificInfo());
+		decoder = Decoder.create(track.getDecoderSpecificInfo());
 		sampleBuffer = new SampleBuffer();
 	}
 

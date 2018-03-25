@@ -65,7 +65,7 @@ public class Radio {
 
 			final ADTSDemultiplexer adts = new ADTSDemultiplexer(in);
 			AudioFormat aufmt = new AudioFormat(adts.getSampleFrequency(), 16, adts.getChannelCount(), true, true);
-			final Decoder dec = new Decoder(adts.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(adts.getDecoderInfo());
 
 			while(true) {
 				b = adts.readNextFrame();

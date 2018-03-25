@@ -1,11 +1,12 @@
 package net.sourceforge.jaad.aac;
 
 import net.sourceforge.jaad.aac.syntax.BitStream;
-import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.PCE;
 import net.sourceforge.jaad.aac.syntax.SyntacticElements;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.transport.ADIFHeader;
+import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
  * Main AAC decoder class
  * @author in-somnia
  */
-public class Decoder implements Constants {
+public class Decoder {
 
 	static final Logger LOGGER = Logger.getLogger("jaad.aac.Decoder"); //for debugging
 
@@ -34,22 +35,35 @@ public class Decoder implements Constants {
 		return profile.isDecodingSupported();
 	}
 
+	public static Decoder create(DecoderSpecificInfo info) throws AACException {
+		DecoderConfig config = DecoderConfig.decode(info);
+		return create(config);
+	}
+
+	public static Decoder create(AudioDecoderInfo info) throws AACException {
+		DecoderConfig config = DecoderConfig.create(info);
+		return create(config);
+	}
+
+	public static Decoder create(DecoderConfig config) throws AACException {
+		if(config==null)
+			throw new IllegalArgumentException("illegal MP4 decoder specific info");
+		return new Decoder(config);
+	}
+
 	/**
 	 * Initializes the decoder with a MP4 decoder specific info.
 	 *
 	 * After this the MP4 frames can be passed to the
 	 * <code>decodeFrame(byte[], SampleBuffer)</code> method to decode them.
 	 * 
-	 * @param decoderSpecificInfo a byte array containing the decoder specific info from an MP4 container
+	 * @param config decoder specific info from an MP4 container
 	 * @throws AACException if the specified profile is not supported
 	 */
-	public Decoder(byte[] decoderSpecificInfo) throws AACException {
-		config = DecoderConfig.parseMP4DecoderSpecificInfo(decoderSpecificInfo);
-		if(config==null)
-			throw new IllegalArgumentException("illegal MP4 decoder specific info");
+	private Decoder(DecoderConfig config) throws AACException {
+		//config = DecoderConfig.parseMP4DecoderSpecificInfo(decoderSpecificInfo);
 
-		if(!canDecode(config.getProfile()))
-			throw new AACException("unsupported profile: "+config.getProfile().getDescription());
+		this.config = config;
 
 		syntacticElements = new SyntacticElements(config);
 		filterBank = new FilterBank(config.isSmallFrameUsed(), config.getChannelConfiguration().getChannelCount());

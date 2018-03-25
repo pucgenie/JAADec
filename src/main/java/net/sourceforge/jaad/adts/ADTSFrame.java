@@ -2,10 +2,10 @@ package net.sourceforge.jaad.adts;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import net.sourceforge.jaad.aac.ChannelConfiguration;
-import net.sourceforge.jaad.aac.SampleFrequency;
 
-class ADTSFrame {
+import net.sourceforge.jaad.aac.*;
+
+class ADTSFrame implements AudioDecoderInfo {
 
 	//fixed
 	private boolean id, protectionAbsent, privateBit, copy, home;
@@ -98,11 +98,15 @@ class ADTSFrame {
 		return info;
 	}
 
-	int getSampleFrequency() {
-		return SampleFrequency.forInt(sampleFrequency).getFrequency();
+	public Profile getProfile() {
+		return Profile.forInt(profile);
 	}
 
-	int getChannelCount() {
-		return ChannelConfiguration.forInt(channelConfiguration).getChannelCount();
+	public SampleFrequency getSampleFrequency() {
+		return SampleFrequency.forInt(sampleFrequency);
+	}
+
+	public ChannelConfiguration getChannelConfiguration() {
+		return ChannelConfiguration.forInt(channelConfiguration);
 	}
 }

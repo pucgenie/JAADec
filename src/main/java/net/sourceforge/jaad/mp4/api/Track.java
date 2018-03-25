@@ -280,8 +280,8 @@ public abstract class Track {
 	 * @see #getDecoderInfo() 
 	 * @return the decoder specific info
 	 */
-	public byte[] getDecoderSpecificInfo() {
-		return decoderSpecificInfo.getData();
+	public DecoderSpecificInfo getDecoderSpecificInfo() {
+		return decoderSpecificInfo;
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package net.sourceforge.jaad.adts;
 
+import net.sourceforge.jaad.aac.AudioDecoderInfo;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,10 +60,14 @@ public class ADTSDemultiplexer {
 	}
 
 	public int getSampleFrequency() {
-		return frame.getSampleFrequency();
+		return frame.getSampleFrequency().getFrequency();
 	}
 
 	public int getChannelCount() {
-		return frame.getChannelCount();
+		return frame.getChannelConfiguration().getChannelCount();
+	}
+
+	public AudioDecoderInfo getDecoderInfo() {
+		return frame;
 	}
 }

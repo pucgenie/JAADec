@@ -53,7 +53,7 @@ public class Main {
 
 			wav = new WaveFileWriter(new File(out), track.getSampleRate(), track.getChannelCount(), track.getSampleSize());
 
-			final Decoder dec = new Decoder(track.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo());
 
 			Frame frame;
 			final SampleBuffer buf = new SampleBuffer();
@@ -72,7 +72,7 @@ public class Main {
 		WaveFileWriter wav = null;
 		try {
 			final ADTSDemultiplexer adts = new ADTSDemultiplexer(new FileInputStream(in));
-			final Decoder dec = new Decoder(adts.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(adts.getDecoderInfo());
 
 			final SampleBuffer buf = new SampleBuffer();
 			byte[] b;
