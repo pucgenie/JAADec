@@ -44,7 +44,8 @@ public class ICPrediction {
 	public void decode(BitStream in, int maxSFB, SampleFrequency sf) throws AACException {
 		final int predictorCount = sf.getPredictorCount();
 
-		if(predictorReset = in.readBool()) predictorResetGroup = in.readBits(5);
+		if(predictorReset = in.readBool())
+			predictorResetGroup = in.readBits(5);
 
 		final int maxPredSFB = sf.getMaximalPredictionSFB();
 		final int length = Math.min(maxSFB, maxPredSFB);
@@ -66,7 +67,8 @@ public class ICPrediction {
 	public void process(ICStream ics, float[] data, SampleFrequency sf) {
 		final ICSInfo info = ics.getInfo();
 
-		if(info.isEightShortFrame()) resetAllPredictors();
+		if(info.isEightShortFrame())
+			resetAllPredictors();
 		else {
 			final int len = Math.min(sf.getMaximalPredictionSFB(), info.getMaxSFB());
 			final int[] swbOffsets = info.getSWBOffsets();
@@ -76,12 +78,15 @@ public class ICPrediction {
 					predict(data, k, predictionUsed[sfb]);
 				}
 			}
-			if(predictorReset) resetPredictorGroup(predictorResetGroup);
+			if(predictorReset)
+				resetPredictorGroup(predictorResetGroup);
 		}
 	}
 
 	private void resetPredictState(int index) {
-		if(states[index]==null) states[index] = new PredictorState();
+		if(states[index]==null)
+			states[index] = new PredictorState();
+
 		states[index].r0 = 0;
 		states[index].r1 = 0;
 		states[index].cor0 = 0;
@@ -105,7 +110,9 @@ public class ICPrediction {
 	}
 
 	private void predict(float[] data, int off, boolean output) {
-		if(states[off]==null) states[off] = new PredictorState();
+		if(states[off]==null)
+			states[off] = new PredictorState();
+
 		final PredictorState state = states[off];
 		final float r0 = state.r0, r1 = state.r1;
 		final float cor0 = state.cor0, cor1 = state.cor1;
@@ -115,7 +122,8 @@ public class ICPrediction {
 		final float k2 = var1>1 ? cor1*even(A/var1) : 0;
 
 		final float pv = round(k1*r0+k2*r1);
-		if(output) data[off] += pv*SF_SCALE;
+		if(output)
+			data[off] += pv*SF_SCALE;
 
 		final float e0 = (data[off]*INV_SF_SCALE);
 		final float e1 = e0-k1*r0;

@@ -41,7 +41,8 @@ public class TNS implements Constants, TNSTables {
 				for(filt = 0; filt<nFilt[w]; filt++) {
 					length[w][filt] = in.readBits(bits[1]);
 
-					if((order[w][filt] = in.readBits(bits[2]))>20) throw new AACException("TNS filter out of range: "+order[w][filt]);
+					if((order[w][filt] = in.readBits(bits[2]))>20)
+						throw new AACException("TNS filter out of range: "+order[w][filt]);
 					else if(order[w][filt]!=0) {
 						direction[w][filt] = in.readBool();
 						coefCompress = in.readBit();

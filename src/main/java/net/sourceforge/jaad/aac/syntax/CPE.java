@@ -24,7 +24,8 @@ public class CPE extends Element implements Constants {
 	void decode(BitStream in, DecoderConfig conf) throws AACException {
 		final Profile profile = conf.getProfile();
 		final SampleFrequency sf = conf.getSampleFrequency();
-		if(sf.equals(SampleFrequency.SAMPLE_FREQUENCY_NONE)) throw new AACException("invalid sample frequency");
+		if(sf.equals(SampleFrequency.SAMPLE_FREQUENCY_NONE))
+			throw new AACException("invalid sample frequency");
 
 		readElementInstanceTag(in);
 
@@ -43,8 +44,12 @@ public class CPE extends Element implements Constants {
 					msUsed[idx] = in.readBool();
 				}
 			}
-			else if(msMask.equals(MSMask.TYPE_ALL_1)) Arrays.fill(msUsed, true);
-			else if(msMask.equals(MSMask.TYPE_ALL_0)) Arrays.fill(msUsed, false);
+			else if(msMask.equals(MSMask.TYPE_ALL_1))
+				Arrays.fill(msUsed, true);
+
+			else if(msMask.equals(MSMask.TYPE_ALL_0))
+				Arrays.fill(msUsed, false);
+
 			else throw new AACException("reserved MS mask type used");
 		}
 		else {

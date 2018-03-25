@@ -11,32 +11,24 @@ import net.sourceforge.jaad.aac.syntax.PCE;
  *
  * @author in-somnia
  */
-public class DecoderConfig implements Constants {
+public class DecoderConfig {
 
-	private Profile profile, extProfile;
+	private Profile profile, extProfile = Profile.UNKNOWN;
 	private SampleFrequency sampleFrequency;
 	private ChannelConfiguration channelConfiguration;
-	private boolean frameLengthFlag;
-	private boolean dependsOnCoreCoder;
-	private int coreCoderDelay;
-	private boolean extensionFlag;
+	private boolean frameLengthFlag=false;
+	private boolean dependsOnCoreCoder=false;
+	private int coreCoderDelay = 0;
+	private boolean extensionFlag=false;
 	//extension: SBR
-	private boolean sbrPresent, downSampledSBR, sbrEnabled;
+	private boolean sbrPresent=false, downSampledSBR=false, sbrEnabled=true;
 	//extension: error resilience
-	private boolean sectionDataResilience, scalefactorResilience, spectralDataResilience;
+	private boolean sectionDataResilience=false, scalefactorResilience=false, spectralDataResilience=false;
 
 	private DecoderConfig() {
 		profile = Profile.AAC_MAIN;
-		extProfile = Profile.UNKNOWN;
 		sampleFrequency = SampleFrequency.SAMPLE_FREQUENCY_NONE;
 		channelConfiguration = ChannelConfiguration.CHANNEL_CONFIG_UNSUPPORTED;
-		frameLengthFlag = false;
-		sbrPresent = false;
-		downSampledSBR = false;
-		sbrEnabled = true;
-		sectionDataResilience = false;
-		scalefactorResilience = false;
-		spectralDataResilience = false;
 	}
 
 	/* ========== gets/sets ========== */
@@ -73,7 +65,7 @@ public class DecoderConfig implements Constants {
 	}
 
 	public int getFrameLength() {
-		return frameLengthFlag ? WINDOW_SMALL_LEN_LONG : WINDOW_LEN_LONG;
+		return frameLengthFlag ? Constants.WINDOW_SMALL_LEN_LONG : Constants.WINDOW_LEN_LONG;
 	}
 
 	public boolean isSmallFrameUsed() {
@@ -145,8 +137,11 @@ public class DecoderConfig implements Constants {
 			config.profile = readProfile(in);
 
 			int sf = in.readBits(4);
-			if(sf==0xF) config.sampleFrequency = SampleFrequency.forFrequency(in.readBits(24));
-			else config.sampleFrequency = SampleFrequency.forInt(sf);
+			if(sf==0xF)
+				config.sampleFrequency = SampleFrequency.forFrequency(in.readBits(24));
+			else
+				config.sampleFrequency = SampleFrequency.forInt(sf);
+
 			config.channelConfiguration = ChannelConfiguration.forInt(in.readBits(4));
 
 			switch(config.profile) {
@@ -161,6 +156,7 @@ public class DecoderConfig implements Constants {
 					config.sampleFrequency = SampleFrequency.forInt(sf);
 					config.profile = readProfile(in);
 					break;
+
 				case AAC_MAIN:
 				case AAC_LC:
 				case AAC_SSR:
@@ -170,10 +166,16 @@ public class DecoderConfig implements Constants {
 				case ER_AAC_LD:
 					//ga-specific info:
 					config.frameLengthFlag = in.readBool();
-					if(config.frameLengthFlag) throw new AACException("config uses 960-sample frames, not yet supported"); //TODO: are 960-frames working yet?
+					if(config.frameLengthFlag)
+						throw new AACException("config uses 960-sample frames, not yet supported"); //TODO: are 960-frames working yet?
+
 					config.dependsOnCoreCoder = in.readBool();
-					if(config.dependsOnCoreCoder) config.coreCoderDelay = in.readBits(14);
-					else config.coreCoderDelay = 0;
+
+					if(config.dependsOnCoreCoder)
+						config.coreCoderDelay = in.readBits(14);
+					else
+						config.coreCoderDelay = 0;
+
 					config.extensionFlag = in.readBool();
 
 					if(config.extensionFlag) {
@@ -196,8 +198,11 @@ public class DecoderConfig implements Constants {
 						config.channelConfiguration = ChannelConfiguration.forInt(pce.getChannelCount());
 					}
 
-					if(in.getBitsLeft()>10) readSyncExtension(in, config);
+					if(in.getBitsLeft()>10)
+						config.readSyncExtension(in);
+
 					break;
+
 				default:
 					throw new AACException("profile not supported: "+config.profile.getIndex());
 			}
@@ -210,24 +215,27 @@ public class DecoderConfig implements Constants {
 
 	private static Profile readProfile(BitStream in) throws AACException {
 		int i = in.readBits(5);
-		if(i==31) i = 32+in.readBits(6);
+		if(i==31)
+			i = 32+in.readBits(6);
 		return Profile.forInt(i);
 	}
 
-	private static void readSyncExtension(BitStream in, DecoderConfig config) throws AACException {
+	private void readSyncExtension(BitStream in) throws AACException {
 		final int type = in.readBits(11);
 		switch(type) {
 			case 0x2B7:
 				final Profile profile = Profile.forInt(in.readBits(5));
 
 				if(profile.equals(Profile.AAC_SBR)) {
-					config.sbrPresent = in.readBool();
-					if(config.sbrPresent) {
-						config.profile = profile;
+					sbrPresent = in.readBool();
+					if(sbrPresent) {
+						this.profile = profile;
 
 						int tmp = in.readBits(4);
 
-						if(tmp==config.sampleFrequency.getIndex()) config.downSampledSBR = true;
+						if(tmp==sampleFrequency.getIndex())
+							downSampledSBR = true;
+
 						if(tmp==15) {
 							throw new AACException("sample rate specified explicitly, not supported yet!");
 							//tmp = in.readBits(24);

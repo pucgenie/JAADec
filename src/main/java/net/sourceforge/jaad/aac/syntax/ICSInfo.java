@@ -71,7 +71,8 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 	/* ========== decoding ========== */
 	public void decode(BitStream in, DecoderConfig conf, boolean commonWindow) throws AACException {
 		final SampleFrequency sf = conf.getSampleFrequency();
-		if(sf.equals(SampleFrequency.SAMPLE_FREQUENCY_NONE)) throw new AACException("invalid sample frequency");
+		if(sf.equals(SampleFrequency.SAMPLE_FREQUENCY_NONE))
+			throw new AACException("invalid sample frequency");
 
 		in.skipBit(); //reserved
 		windowSequence = WindowSequence.forInt(in.readBits(2));
@@ -213,7 +214,9 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 		windowShape[CURRENT] = info.windowShape[CURRENT];
 		maxSFB = info.maxSFB;
 		predictionDataPresent = info.predictionDataPresent;
-		if(predictionDataPresent) icPredict = info.icPredict;
+		if(predictionDataPresent)
+			icPredict = info.icPredict;
+
 		ltpData1Present = info.ltpData1Present;
 		if(ltpData1Present) {
 			ltPredict1.copy(info.ltPredict1);

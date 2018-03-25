@@ -39,7 +39,9 @@ public class BitStream {
 		//make the buffer size an integer number of words
 		final int size = WORD_BYTES*((data.length+WORD_BYTES-1)/WORD_BYTES);
 		//only reallocate if needed
-		if(buffer==null||buffer.length!=size) buffer = new byte[size];
+		if(buffer==null||buffer.length!=size)
+			buffer = new byte[size];
+
 		System.arraycopy(data, 0, buffer, 0, data.length);
 		log(Level.FINE, "@%d setData: %d", 8*data.length);
 		reset();
@@ -48,7 +50,8 @@ public class BitStream {
 	public void byteAlign() throws AACException {
 		log(Level.FINER, "@%d byteAlign: %d", position);
 		final int toFlush = bitsCached&7;
-		if(toFlush>0) skipBits(toFlush);
+		if(toFlush>0)
+			skipBits(toFlush);
 	}
 
 	public final void reset() {
@@ -72,12 +75,14 @@ public class BitStream {
 	 */
 	protected int readCache(boolean peek) throws AACException {
 		int i;
-		if(pos>buffer.length-WORD_BYTES) throw new AACException("end of stream", true);
+		if(pos>buffer.length-WORD_BYTES)
+			throw new AACException("end of stream", true);
 		else i = ((buffer[pos]&BYTE_MASK)<<24)
 					|((buffer[pos+1]&BYTE_MASK)<<16)
 					|((buffer[pos+2]&BYTE_MASK)<<8)
 					|(buffer[pos+3]&BYTE_MASK);
-		if(!peek) pos += WORD_BYTES;
+		if(!peek)
+			pos += WORD_BYTES;
 		return i;
 	}
 
@@ -188,8 +193,10 @@ public class BitStream {
 
 	public int maskBits(int n) {
 		int i;
-		if(n==32) i = -1;
-		else i = (1<<n)-1;
+		if(n==32)
+			i = -1;
+		else
+			i = (1<<n)-1;
 		return i;
 	}
 }

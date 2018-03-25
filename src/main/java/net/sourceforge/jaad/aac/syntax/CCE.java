@@ -67,7 +67,8 @@ class CCE extends Element implements Constants {
 			idSelect[i] = in.readBits(4);
 			if(channelPair[i]) {
 				chSelect[i] = in.readBits(2);
-				if(chSelect[i]==3) gainCount++;
+				if(chSelect[i]==3)
+					gainCount++;
 			}
 			else chSelect[i] = 2;
 		}

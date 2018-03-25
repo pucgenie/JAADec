@@ -138,29 +138,41 @@ public class SyntacticElements implements Constants {
 	}
 
 	private Element decodeSCE_LFE(BitStream in) throws AACException {
-		if(elements[curElem]==null) elements[curElem] = new SCE_LFE(config.getFrameLength());
+		if(elements[curElem]==null)
+			elements[curElem] = new SCE_LFE(config.getFrameLength());
+
 		((SCE_LFE) elements[curElem]).decode(in, config);
 		curElem++;
 		return elements[curElem-1];
 	}
 
 	private Element decodeCPE(BitStream in) throws AACException {
-		if(elements[curElem]==null) elements[curElem] = new CPE(config.getFrameLength());
+		if(elements[curElem]==null)
+			elements[curElem] = new CPE(config.getFrameLength());
+
 		((CPE) elements[curElem]).decode(in, config);
 		curElem++;
 		return elements[curElem-1];
 	}
 
 	private void decodeCCE(BitStream in) throws AACException {
-		if(curCCE==MAX_ELEMENTS) throw new AACException("too much CCE elements");
-		if(cces[curCCE]==null) cces[curCCE] = new CCE(config.getFrameLength());
+		if(curCCE==MAX_ELEMENTS)
+			throw new AACException("too much CCE elements");
+
+		if(cces[curCCE]==null)
+			cces[curCCE] = new CCE(config.getFrameLength());
+
 		cces[curCCE].decode(in, config);
 		curCCE++;
 	}
 
 	private void decodeDSE(BitStream in) throws AACException {
-		if(curDSE==MAX_ELEMENTS) throw new AACException("too much CCE elements");
-		if(dses[curDSE]==null) dses[curDSE] = new DSE();
+		if(curDSE==MAX_ELEMENTS)
+			throw new AACException("too much CCE elements");
+
+		if(dses[curDSE]==null)
+			dses[curDSE] = new DSE();
+
 		dses[curDSE].decode(in);
 		curDSE++;
 	}
@@ -173,14 +185,19 @@ public class SyntacticElements implements Constants {
 	}
 
 	private void decodeFIL(BitStream in, Element prev) throws AACException {
-		if(curFIL==MAX_ELEMENTS) throw new AACException("too much FIL elements");
-		if(fils[curFIL]==null) fils[curFIL] = new FIL(config.isSBRDownSampled());
+		if(curFIL==MAX_ELEMENTS)
+			throw new AACException("too much FIL elements");
+
+		if(fils[curFIL]==null)
+			fils[curFIL] = new FIL(config.isSBRDownSampled());
+
 		fils[curFIL].decode(in, prev, config.getSampleFrequency(), config.isSBREnabled(), config.isSmallFrameUsed());
 		curFIL++;
 
 		if(prev!=null&&prev.isSBRPresent()) {
 			sbrPresent = true;
-			if(!psPresent&&prev.getSBR().isPSUsed()) psPresent = true;
+			if(!psPresent&&prev.getSBR().isPSUsed())
+				psPresent = true;
 		}
 	}
 
@@ -190,10 +207,13 @@ public class SyntacticElements implements Constants {
 		//final ChannelConfiguration channels = config.getChannelConfiguration();
 
 		int chs = config.getChannelConfiguration().getChannelCount();
-		if(chs==1&&psPresent) chs++;
+		if(chs==1&&psPresent)
+			chs++;
+
 		final int mult = sbrPresent ? 2 : 1;
 		//only reallocate if needed
-		if(data==null||chs!=data.length||(mult*config.getFrameLength())!=data[0].length) data = new float[chs][mult*config.getFrameLength()];
+		if(data==null||chs!=data.length||(mult*config.getFrameLength())!=data[0].length)
+			data = new float[chs][mult*config.getFrameLength()];
 
 		int channel = 0;
 		Element e;
@@ -201,7 +221,9 @@ public class SyntacticElements implements Constants {
 		CPE cpe;
 		for(int i = 0; i<elements.length&&channel<chs; i++) {
 			e = elements[i];
-			if(e==null) continue;
+			if(e==null)
+				continue;
+
 			if(e instanceof SCE_LFE) {
 				scelfe = (SCE_LFE) e;
 				channel += processSingle(scelfe, filterBank, channel, profile, sf);
@@ -229,14 +251,18 @@ public class SyntacticElements implements Constants {
 		final float[] iqData = ics.getInvQuantData();
 
 		//prediction
-		if(profile.equals(Profile.AAC_MAIN)&&info.isICPredictionPresent()) info.getICPrediction().process(ics, iqData, sf);
-		if(LTPrediction.isLTPProfile(profile)&&info.isLTPrediction1Present()) ltp.process(ics, iqData, filterBank, sf);
+		if(profile.equals(Profile.AAC_MAIN)&&info.isICPredictionPresent())
+			info.getICPrediction().process(ics, iqData, sf);
+
+		if(LTPrediction.isLTPProfile(profile)&&info.isLTPrediction1Present())
+			ltp.process(ics, iqData, filterBank, sf);
 
 		//dependent coupling
 		processDependentCoupling(false, elementID, CCE.BEFORE_TNS, iqData, null);
 
 		//TNS
-		if(ics.isTNSDataPresent()) ics.getTNS().process(ics, iqData, sf, false);
+		if(ics.isTNSDataPresent())
+			ics.getTNS().process(ics, iqData, sf, false);
 
 		//dependent coupling
 		processDependentCoupling(false, elementID, CCE.AFTER_TNS, iqData, null);
@@ -244,18 +270,22 @@ public class SyntacticElements implements Constants {
 		//filterbank
 		filterBank.process(info.getWindowSequence(), info.getWindowShape(ICSInfo.CURRENT), info.getWindowShape(ICSInfo.PREVIOUS), iqData, data[channel], channel);
 
-		if(LTPrediction.isLTPProfile(profile)) ltp.updateState(data[channel], filterBank.getOverlap(channel), profile);
+		if(LTPrediction.isLTPProfile(profile))
+			ltp.updateState(data[channel], filterBank.getOverlap(channel), profile);
 
 		//dependent coupling
 		processIndependentCoupling(false, elementID, data[channel], null);
 
 		//gain control
-		if(ics.isGainControlPresent()) ics.getGainControl().process(iqData, info.getWindowShape(ICSInfo.CURRENT), info.getWindowShape(ICSInfo.PREVIOUS), info.getWindowSequence());
+		if(ics.isGainControlPresent())
+			ics.getGainControl().process(iqData, info.getWindowShape(ICSInfo.CURRENT), info.getWindowShape(ICSInfo.PREVIOUS), info.getWindowSequence());
 
 		//SBR
 		int chs = 1;
 		if(sbrPresent&&config.isSBREnabled()) {
-			if(data[channel].length==config.getFrameLength()) LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
+			if(data[channel].length==config.getFrameLength())
+				LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
+
 			final SBR sbr = scelfe.getSBR();
 			if(sbr.isPSUsed()) {
 				chs = 2;
@@ -280,28 +310,40 @@ public class SyntacticElements implements Constants {
 		final float[] iqData2 = ics2.getInvQuantData();
 
 		//MS
-		if(cpe.isCommonWindow()&&cpe.isMSMaskPresent()) MS.process(cpe, iqData1, iqData2);
+		if(cpe.isCommonWindow()&&cpe.isMSMaskPresent())
+			MS.process(cpe, iqData1, iqData2);
+
 		//main prediction
 		if(profile.equals(Profile.AAC_MAIN)) {
-			if(info1.isICPredictionPresent()) info1.getICPrediction().process(ics1, iqData1, sf);
-			if(info2.isICPredictionPresent()) info2.getICPrediction().process(ics2, iqData2, sf);
+			if(info1.isICPredictionPresent())
+				info1.getICPrediction().process(ics1, iqData1, sf);
+
+			if(info2.isICPredictionPresent())
+				info2.getICPrediction().process(ics2, iqData2, sf);
 		}
 		//IS
 		IS.process(cpe, iqData1, iqData2);
 
 		//LTP
 		if(LTPrediction.isLTPProfile(profile)) {
-			if(info1.isLTPrediction1Present()) ltp1.process(ics1, iqData1, filterBank, sf);
-			if(cpe.isCommonWindow()&&info1.isLTPrediction2Present()) ltp2.process(ics2, iqData2, filterBank, sf);
-			else if(info2.isLTPrediction1Present()) ltp2.process(ics2, iqData2, filterBank, sf);
+			if(info1.isLTPrediction1Present())
+				ltp1.process(ics1, iqData1, filterBank, sf);
+
+			if(cpe.isCommonWindow()&&info1.isLTPrediction2Present())
+				ltp2.process(ics2, iqData2, filterBank, sf);
+			else if(info2.isLTPrediction1Present())
+				ltp2.process(ics2, iqData2, filterBank, sf);
 		}
 
 		//dependent coupling
 		processDependentCoupling(true, elementID, CCE.BEFORE_TNS, iqData1, iqData2);
 
 		//TNS
-		if(ics1.isTNSDataPresent()) ics1.getTNS().process(ics1, iqData1, sf, false);
-		if(ics2.isTNSDataPresent()) ics2.getTNS().process(ics2, iqData2, sf, false);
+		if(ics1.isTNSDataPresent())
+			ics1.getTNS().process(ics1, iqData1, sf, false);
+
+		if(ics2.isTNSDataPresent())
+			ics2.getTNS().process(ics2, iqData2, sf, false);
 
 		//dependent coupling
 		processDependentCoupling(true, elementID, CCE.AFTER_TNS, iqData1, iqData2);
@@ -319,12 +361,17 @@ public class SyntacticElements implements Constants {
 		processIndependentCoupling(true, elementID, data[channel], data[channel+1]);
 
 		//gain control
-		if(ics1.isGainControlPresent()) ics1.getGainControl().process(iqData1, info1.getWindowShape(ICSInfo.CURRENT), info1.getWindowShape(ICSInfo.PREVIOUS), info1.getWindowSequence());
-		if(ics2.isGainControlPresent()) ics2.getGainControl().process(iqData2, info2.getWindowShape(ICSInfo.CURRENT), info2.getWindowShape(ICSInfo.PREVIOUS), info2.getWindowSequence());
+		if(ics1.isGainControlPresent())
+			ics1.getGainControl().process(iqData1, info1.getWindowShape(ICSInfo.CURRENT), info1.getWindowShape(ICSInfo.PREVIOUS), info1.getWindowSequence());
+
+		if(ics2.isGainControlPresent())
+			ics2.getGainControl().process(iqData2, info2.getWindowShape(ICSInfo.CURRENT), info2.getWindowShape(ICSInfo.PREVIOUS), info2.getWindowSequence());
 
 		//SBR
 		if(sbrPresent&&config.isSBREnabled()) {
-			if(data[channel].length==config.getFrameLength()) LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
+			if(data[channel].length==config.getFrameLength())
+				LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
+
 			cpe.getSBR().process(data[channel], data[channel+1], false);
 		}
 	}
@@ -341,7 +388,8 @@ public class SyntacticElements implements Constants {
 					if(cce.isChannelPair(c)==channelPair&&cce.getIDSelect(c)==elementID) {
 						if(chSelect!=1) {
 							cce.applyIndependentCoupling(index, data1);
-							if(chSelect!=0) index++;
+							if(chSelect!=0)
+								index++;
 						}
 						if(chSelect!=2) {
 							cce.applyIndependentCoupling(index, data2);
@@ -366,7 +414,8 @@ public class SyntacticElements implements Constants {
 					if(cce.isChannelPair(c)==channelPair&&cce.getIDSelect(c)==elementID) {
 						if(chSelect!=1) {
 							cce.applyDependentCoupling(index, data1);
-							if(chSelect!=0) index++;
+							if(chSelect!=0)
+								index++;
 						}
 						if(chSelect!=2) {
 							cce.applyDependentCoupling(index, data2);
@@ -391,7 +440,8 @@ public class SyntacticElements implements Constants {
 		final int freq = mult*config.getSampleFrequency().getFrequency();
 
 		byte[] b = buffer.getData();
-		if(b.length!=chs*length*2) b = new byte[chs*length*2];
+		if(b.length!=chs*length*2)
+			b = new byte[chs*length*2];
 
 		float[] cur;
 		int i, j, off;

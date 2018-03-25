@@ -17,7 +17,8 @@ public class ADTSDemultiplexer {
 		this.in = new PushbackInputStream(in);
 		din = new DataInputStream(this.in);
 		first = true;
-		if(!findNextFrame()) throw new IOException("no ADTS header found");
+		if(!findNextFrame())
+			throw new IOException("no ADTS header found");
 	}
 
 	public byte[] getDecoderSpecificInfo() {
@@ -25,8 +26,10 @@ public class ADTSDemultiplexer {
 	}
 
 	public byte[] readNextFrame() throws IOException {
-		if(first) first = false;
-		else findNextFrame();
+		if(first)
+			first = false;
+		else
+			findNextFrame();
 
 		byte[] b = new byte[frame.getFrameLength()];
 		din.readFully(b);
@@ -43,12 +46,14 @@ public class ADTSDemultiplexer {
 			left--;
 			if(i==0xFF) {
 				i = in.read();
-				if((i&0xF6)==0xF0) found = true;
+				if((i&0xF6)==0xF0)
+					found = true;
 				in.unread(i);
 			}
 		}
 
-		if(found) frame = new ADTSFrame(din);
+		if(found)
+			frame = new ADTSFrame(din);
 		return found;
 	}
 

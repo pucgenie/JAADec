@@ -45,9 +45,11 @@ public class Decoder implements Constants {
 	 */
 	public Decoder(byte[] decoderSpecificInfo) throws AACException {
 		config = DecoderConfig.parseMP4DecoderSpecificInfo(decoderSpecificInfo);
-		if(config==null) throw new IllegalArgumentException("illegal MP4 decoder specific info");
+		if(config==null)
+			throw new IllegalArgumentException("illegal MP4 decoder specific info");
 
-		if(!canDecode(config.getProfile())) throw new AACException("unsupported profile: "+config.getProfile().getDescription());
+		if(!canDecode(config.getProfile()))
+			throw new AACException("unsupported profile: "+config.getProfile().getDescription());
 
 		syntacticElements = new SyntacticElements(config);
 		filterBank = new FilterBank(config.isSmallFrameUsed(), config.getChannelConfiguration().getChannelCount());
@@ -71,15 +73,19 @@ public class Decoder implements Constants {
 	 * @throws AACException if decoding fails
 	 */
 	public void decodeFrame(byte[] frame, SampleBuffer buffer) throws AACException {
-		if(frame!=null) in.setData(frame);
+		if(frame!=null)
+			in.setData(frame);
+
 		try {
 			LOGGER.log(Level.INFO, ()->String.format("frame %d @%d", frames, 8*frame.length));
 			decode(buffer);
 			LOGGER.log(Level.INFO, ()->String.format("left %d", in.getBitsLeft()));
 		}
 		catch(AACException e) {
-			if(!e.isEndOfStream()) throw e;
-			else LOGGER.log(Level.WARNING,"unexpected end of frame",e);
+			if(!e.isEndOfStream())
+				throw e;
+			else
+				LOGGER.log(Level.WARNING,"unexpected end of frame",e);
 		} finally {
 			++frames;
 		}
@@ -94,7 +100,8 @@ public class Decoder implements Constants {
 			config.setChannelConfiguration(ChannelConfiguration.forInt(pce.getChannelCount()));
 		}
 
-		if(!canDecode(config.getProfile())) throw new AACException("unsupported profile: "+config.getProfile().getDescription());
+		if(!canDecode(config.getProfile()))
+			throw new AACException("unsupported profile: "+config.getProfile().getDescription());
 
 		syntacticElements.startNewFrame();
 

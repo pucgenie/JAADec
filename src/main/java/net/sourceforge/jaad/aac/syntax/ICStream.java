@@ -52,12 +52,15 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 
 	/* ========= decoding ========== */
 	public void decode(BitStream in, boolean commonWindow, DecoderConfig conf) throws AACException {
-		if(conf.isScalefactorResilienceUsed()&&rvlc==null) rvlc = new RVLC();
+		if(conf.isScalefactorResilienceUsed()&&rvlc==null)
+			rvlc = new RVLC();
+
 		final boolean er = conf.getProfile().isErrorResilientProfile();
 
 		globalGain = in.readBits(8);
 
-		if(!commonWindow) info.decode(in, conf, commonWindow);
+		if(!commonWindow)
+			info.decode(in, conf, commonWindow);
 
 		decodeSectionData(in, conf.isSectionDataResilienceUsed());
 
@@ -66,14 +69,17 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 
 		pulseDataPresent = in.readBool();
 		if(pulseDataPresent) {
-			if(info.isEightShortFrame()) throw new AACException("pulse data not allowed for short frames");
+			if(info.isEightShortFrame())
+				throw new AACException("pulse data not allowed for short frames");
+
 			LOGGER.log(Level.FINE, "PULSE");
 			decodePulseData(in);
 		}
 
 		tnsDataPresent = in.readBool();
 		if(tnsDataPresent&&!er) {
-			if(tns==null) tns = new TNS();
+			if(tns==null)
+				tns = new TNS();
 			tns.decode(in, info);
 		}
 
@@ -113,12 +119,16 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 			while(k<maxSFB) {
 				end = k;
 				cb = in.readBits(4);
-				if(cb==12) throw new AACException("invalid huffman codebook: 12");
+				if(cb==12)
+					throw new AACException("invalid huffman codebook: 12");
+
 				while((incr = in.readBits(bits))==escVal) {
 					end += incr;
 				}
 				end += incr;
-				if(end>maxSFB) throw new AACException("too many bands: "+end+", allowed: "+maxSFB);
+				if(end>maxSFB)
+					throw new AACException("too many bands: "+end+", allowed: "+maxSFB);
+
 				for(; k<end; k++) {
 					sfbCB[idx] = cb;
 					sectEnd[idx++] = end;
@@ -130,7 +140,8 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 	private void decodePulseData(BitStream in) throws AACException {
 		pulseCount = in.readBits(2)+1;
 		pulseStartSWB = in.readBits(6);
-		if(pulseStartSWB>=info.getSWBCount()) throw new AACException("pulse SWB out of range: "+pulseStartSWB+" > "+info.getSWBCount());
+		if(pulseStartSWB>=info.getSWBCount())
+			throw new AACException("pulse SWB out of range: "+pulseStartSWB+" > "+info.getSWBCount());
 
 		if(pulseOffset==null||pulseCount!=pulseOffset.length) {
 			//only reallocate if needed
@@ -143,7 +154,9 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		pulseAmp[0] = in.readBits(4);
 		for(int i = 1; i<pulseCount; i++) {
 			pulseOffset[i] = in.readBits(5)+pulseOffset[i-1];
-			if(pulseOffset[i]>1023) throw new AACException("pulse offset out of range: "+pulseOffset[0]);
+			if(pulseOffset[i]>1023)
+				throw new AACException("pulse offset out of range: "+pulseOffset[0]);
+
 			pulseAmp[i] = in.readBits(4);
 		}
 	}

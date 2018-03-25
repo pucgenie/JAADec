@@ -22,7 +22,9 @@ class ADTSFrame {
 	ADTSFrame(DataInputStream in) throws IOException {
 		readHeader(in);
 
-		if(!protectionAbsent) crcCheck = in.readUnsignedShort();
+		if(!protectionAbsent)
+			crcCheck = in.readUnsignedShort();
+
 		if(rawDataBlockCount==0) {
 			//raw_data_block();
 		}

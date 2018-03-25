@@ -42,10 +42,14 @@ public class LTPrediction implements Constants {
 		lag = 0;
 		if(profile.equals(Profile.AAC_LD)) {
 			lagUpdate = in.readBool();
-			if(lagUpdate) lag = in.readBits(10);
+			if(lagUpdate)
+				lag = in.readBits(10);
 		}
-		else lag = in.readBits(11);
-		if(lag>(frameLength<<1)) throw new AACException("LTP lag too large: "+lag);
+		else
+			lag = in.readBits(11);
+		if(lag>(frameLength<<1))
+			throw new AACException("LTP lag too large: "+lag);
+
 		coef = in.readBits(3);
 
 		final int windowCount = info.getWindowCount();
@@ -57,7 +61,8 @@ public class LTPrediction implements Constants {
 			for(int w = 0; w<windowCount; w++) {
 				if((shortUsed[w] = in.readBool())) {
 					shortLagPresent[w] = in.readBool();
-					if(shortLagPresent[w]) shortLag[w] = in.readBits(4);
+					if(shortLagPresent[w])
+						shortLag[w] = in.readBits(4);
 				}
 			}
 		}
@@ -71,7 +76,8 @@ public class LTPrediction implements Constants {
 	}
 
 	public void setPredictionUnused(int sfb) {
-		if(longUsed!=null) longUsed[sfb] = false;
+		if(longUsed!=null)
+			longUsed[sfb] = false;
 	}
 
 	public void process(ICStream ics, float[] data, FilterBank filterBank, SampleFrequency sf) {
@@ -89,7 +95,8 @@ public class LTPrediction implements Constants {
 			filterBank.processLTP(info.getWindowSequence(), info.getWindowShape(ICSInfo.CURRENT),
 					info.getWindowShape(ICSInfo.PREVIOUS), in, out);
 
-			if(ics.isTNSDataPresent()) ics.getTNS().process(ics, out, sf, true);
+			if(ics.isTNSDataPresent())
+				ics.getTNS().process(ics, out, sf, true);
 
 			final int[] swbOffsets = info.getSWBOffsets();
 			final int swbOffsetMax = info.getSWBOffsetMax();

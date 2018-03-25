@@ -47,7 +47,8 @@ public final class ADIFHeader {
 		pces = new PCE[pceCount];
 		adifBufferFullness = new int[pceCount];
 		for(i = 0; i<pceCount; i++) {
-			if(bitstreamType) adifBufferFullness[i] = -1;
+			if(bitstreamType)
+				adifBufferFullness[i] = -1;
 			else adifBufferFullness[i] = in.readBits(20);
 			pces[i] = new PCE();
 			pces[i].decode(in);
