@@ -326,13 +326,17 @@ public class BoxFactory implements BoxTypes {
 
 		long size = in.readBytes(4);
 		long type = in.readBytes(4);
-		if(size==1) size = in.readBytes(8);
-		if(type==EXTENDED_TYPE) in.skipBytes(16);
+		if(size==1)
+			size = in.readBytes(8);
+
+		if(type==EXTENDED_TYPE)
+			in.skipBytes(16);
 
 		//error protection
 		if(parent!=null) {
 			final long parentLeft = (parent.getOffset()+parent.getSize())-offset;
-			if(size>parentLeft) throw new IOException("error while decoding box '"+typeToString(type)+"' at offset "+offset+": box too large for parent");
+			if(size>parentLeft)
+				throw new IOException("error while decoding box '"+typeToString(type)+"' at offset "+offset+": box too large for parent");
 		}
 
 		LOGGER.finest(typeToString(type));
@@ -342,7 +346,8 @@ public class BoxFactory implements BoxTypes {
 
 		//if box doesn't contain data it only contains children
 		final Class<?> cl = box.getClass();
-		if(cl==BoxImpl.class||cl==FullBox.class) box.readChildren(in);
+		if(cl==BoxImpl.class||cl==FullBox.class)
+			box.readChildren(in);
 
 		//check bytes left
 		final long left = (box.getOffset()+box.getSize())-in.getOffset();
@@ -350,10 +355,13 @@ public class BoxFactory implements BoxTypes {
 				&&!(box instanceof MediaDataBox)
 				&&!(box instanceof UnknownBox)
 				&&!(box instanceof FreeSpaceBox)) LOGGER.log(Level.INFO, "bytes left after reading box {0}: left: {1}, offset: {2}", new Object[]{typeToString(type), left, in.getOffset()});
-		else if(left<0) LOGGER.log(Level.SEVERE, "box {0} overread: {1} bytes, offset: {2}", new Object[]{typeToString(type), -left, in.getOffset()});
+		else if(left<0)
+			LOGGER.log(Level.SEVERE, "box {0} overread: {1} bytes, offset: {2}", new Object[]{typeToString(type), -left, in.getOffset()});
 
 		//if mdat found and no random access, don't skip
-		if(box.getType()!=MEDIA_DATA_BOX||in.hasRandomAccess()) in.skipBytes(left);
+		if(box.getType()!=MEDIA_DATA_BOX||in.hasRandomAccess())
+			in.skipBytes(left);
+
 		return box;
 	}
 
@@ -363,8 +371,11 @@ public class BoxFactory implements BoxTypes {
 
 		long size = in.readBytes(4);
 		long type = in.readBytes(4);
-		if(size==1) size = in.readBytes(8);
-		if(type==EXTENDED_TYPE) in.skipBytes(16);
+		if(size==1)
+			size = in.readBytes(8);
+
+		if(type==EXTENDED_TYPE)
+			in.skipBytes(16);
 
 		BoxImpl box = null;
 		try {
