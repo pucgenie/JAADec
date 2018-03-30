@@ -3,6 +3,15 @@ package net.sourceforge.jaad.aac.syntax;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.SampleFrequency;
 
+/**
+ * fill_element: Abbreviation FIL.
+ *
+ * Syntactic element that contains fill data.
+ *
+ * There may be any number of fill elements, that can come
+ * in any order in the raw data block.
+ */
+
 class FIL extends Element implements Constants {
 
 	public static class DynamicRangeInfo {

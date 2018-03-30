@@ -2,6 +2,17 @@ package net.sourceforge.jaad.aac.syntax;
 
 import net.sourceforge.jaad.aac.AACException;
 
+/**
+ * data_stream_element Abbreviation DSE.
+ *
+ * Syntactic element that contains data.
+ * Again, there are 16 element_instance_tags.
+ * There is, however, no restriction on the number
+ * of data_stream_element’s with any one instance tag,
+ * as a single data stream may continue across multiple
+ * data_stream_element’s with the same instance tag.
+ */
+
 class DSE extends Element {
 
 	private byte[] dataStreamBytes;

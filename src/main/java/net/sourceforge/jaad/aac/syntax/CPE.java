@@ -7,6 +7,17 @@ import net.sourceforge.jaad.aac.Profile;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.tools.MSMask;
 
+/**
+ * channel_pair_element: abbreviation CPE.
+ *
+ * Syntactic element of the bitstream payload containing data for a pair of channels.
+ * A channel_pair_element consists of two individual_channel_streams and additional
+ * joint channel coding information. The two channels may share common side information.
+ *
+ * The channel_pair_element has the same restrictions as the single channel element
+ * as far as element_instance_tag, and number of occurrences.
+ */
+
 public class CPE extends Element implements Constants {
 
 	private MSMask msMask;

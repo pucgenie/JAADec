@@ -6,6 +6,15 @@ import net.sourceforge.jaad.aac.SampleFrequency;
 
 import java.util.logging.Logger;
 
+/**
+ * program_config_element: Abbreviation PCE.
+ *
+ * Syntactic element that contains program configuration data.
+ * The rules for the number of program_config_element’s and
+ * element instance tags are the same as for single_channel_element’s.
+ * PCEs must come before all other syntactic elements in a raw_data_block.
+ */
+
 public class PCE extends Element {
 	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.PCE"); //for debugging
 

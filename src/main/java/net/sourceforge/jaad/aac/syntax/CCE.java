@@ -5,6 +5,17 @@ import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.huffman.HCB;
 import net.sourceforge.jaad.aac.huffman.Huffman;
 
+/**
+ * coupling_channel_element: Abbreviation CCE.
+ *
+ * Syntactic element that contains audio data for a coupling channel.
+ * A coupling channel represents the information for multi-channel intensity
+ * for one block, or alternately for dialogue for multilingual programming.
+ *
+ * The rules for number of coupling_channel_element’s and instance tags
+ * are as for single_channel_element().
+ */
+
 class CCE extends Element implements Constants {
 
 	public static final int BEFORE_TNS = 0;
