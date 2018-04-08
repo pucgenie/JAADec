@@ -44,11 +44,18 @@ public class Play {
 	}
 
 	private static void decodeMP4(String in) throws Exception {
+  		if(in.startsWith("http:"))
+	  		decodeMP4(new URL(in).openStream());
+     		else
+	  		decodeMP4(new FileInputStream(in));
+ 	}
+
+ 	private static void decodeMP4(InputStream in) throws Exception {
 		SourceDataLine line = null;
 		byte[] b;
 		try {
 			//create container
-			final MP4Container cont = new MP4Container(new RandomAccessFile(in, "r"));
+			final MP4Container cont = new MP4Container(in);
 			final Movie movie = cont.getMovie();
 			//find AAC track
 			final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
