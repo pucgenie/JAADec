@@ -1,8 +1,6 @@
 package net.sourceforge.jaad.mp4;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,15 +51,8 @@ public class MP4Container {
 	private Box moov;
 	private Movie movie;
 
-	public MP4Container(InputStream in) throws IOException {
-		this.in = new MP4InputStream(in);
-		boxes = new ArrayList<Box>();
-
-		readContent();
-	}
-
-	public MP4Container(RandomAccessFile in) throws IOException {
-		this.in = new MP4InputStream(in);
+	public MP4Container(MP4InputStream in) throws IOException {
+		this.in = in;
 		boxes = new ArrayList<Box>();
 
 		readContent();

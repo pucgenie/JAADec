@@ -5,6 +5,7 @@ import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 import net.sourceforge.jaad.mp4.MP4Container;
+import net.sourceforge.jaad.mp4.MP4InputStream;
 import net.sourceforge.jaad.mp4.api.*;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -54,7 +55,7 @@ public class Play {
 		byte[] b;
 		try {
 			//create container
-			final MP4Container cont = new MP4Container(in);
+			final MP4Container cont = new MP4Container(MP4InputStream.open(in));
 			final Movie movie = cont.getMovie();
 			//find AAC track
 			final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);

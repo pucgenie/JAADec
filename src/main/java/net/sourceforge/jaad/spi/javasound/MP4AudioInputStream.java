@@ -3,6 +3,7 @@ package net.sourceforge.jaad.spi.javasound;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
 import net.sourceforge.jaad.mp4.MP4Container;
+import net.sourceforge.jaad.mp4.MP4InputStream;
 import net.sourceforge.jaad.mp4.api.AudioTrack;
 import net.sourceforge.jaad.mp4.api.Frame;
 import net.sourceforge.jaad.mp4.api.Movie;
@@ -24,7 +25,7 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 
 	MP4AudioInputStream(InputStream in, AudioFormat format, long length) throws IOException {
 		super(in, format, length);
-		final MP4Container cont = new MP4Container(in);
+		final MP4Container cont = new MP4Container(MP4InputStream.open(in));
 		final Movie movie = cont.getMovie();
 		final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
 		if(tracks.isEmpty()) throw new IOException(ERROR_MESSAGE_AAC_TRACK_NOT_FOUND);
