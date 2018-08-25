@@ -5,7 +5,6 @@ import net.sourceforge.jaad.aac.syntax.PCE;
 import net.sourceforge.jaad.aac.syntax.SyntacticElements;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.transport.ADIFHeader;
-import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,8 +34,12 @@ public class Decoder {
 		return profile.isDecodingSupported();
 	}
 
-	public static Decoder create(DecoderSpecificInfo info) throws AACException {
-		DecoderConfig config = DecoderConfig.decode(info);
+	public static Decoder create(byte[] data) throws AACException {
+		return create(new BitStream(data));
+	}
+
+	public static Decoder create(BitStream in) throws AACException {
+		DecoderConfig config = DecoderConfig.decode(in);
 		return create(config);
 	}
 

@@ -3,7 +3,6 @@ package net.sourceforge.jaad.aac;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.PCE;
-import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
 
 /**
  * DecoderConfig that must be passed to the
@@ -141,8 +140,7 @@ public class DecoderConfig {
 	 * 
 	 * @return a DecoderConfig
 	 */
-	public static DecoderConfig decode(DecoderSpecificInfo info) throws AACException {
-		final BitStream in = new BitStream(info.getData());
+	public static DecoderConfig decode(BitStream in) throws AACException {
 		final DecoderConfig config = new DecoderConfig();
 
 		try {

@@ -68,7 +68,7 @@ public class Play {
 			line.start();
 
 			//create AAC decoder
-			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo().getData());
 
 			//decode
 			Frame frame;

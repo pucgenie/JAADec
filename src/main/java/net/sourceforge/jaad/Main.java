@@ -1,7 +1,9 @@
 package net.sourceforge.jaad;
 
 import net.sourceforge.jaad.aac.Decoder;
+import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.SampleBuffer;
+import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 import net.sourceforge.jaad.mp4.MP4Container;
 import net.sourceforge.jaad.mp4.api.AudioTrack;
@@ -53,7 +55,7 @@ public class Main {
 
 			wav = new WaveFileWriter(new File(out), track.getSampleRate(), track.getChannelCount(), track.getSampleSize());
 
-			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo());
+			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo().getData());
 
 			Frame frame;
 			final SampleBuffer buf = new SampleBuffer();
