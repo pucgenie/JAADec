@@ -1,7 +1,6 @@
 package net.sourceforge.jaad.mp4.api;
 
 import java.io.EOFException;
-import java.util.logging.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,7 +23,6 @@ import net.sourceforge.jaad.mp4.boxes.impl.DecodingTimeToSampleBox;
 import net.sourceforge.jaad.mp4.boxes.impl.TrackHeaderBox;
 import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
 import net.sourceforge.jaad.mp4.boxes.impl.ESDBox;
-import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.SampleEntry;
 import net.sourceforge.jaad.mp4.od.Descriptor;
 
 /**

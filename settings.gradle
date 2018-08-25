@@ -1,2 +1,5 @@
 rootProject.name = 'jaad'
 
+include "mp4"
+include "aac"
+

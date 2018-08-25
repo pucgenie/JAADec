@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.mp4.api;
 
-import java.util.List;
 import net.sourceforge.jaad.mp4.MP4InputStream;
 import net.sourceforge.jaad.mp4.boxes.Box;
 import net.sourceforge.jaad.mp4.boxes.BoxTypes;

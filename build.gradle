@@ -1,32 +1,36 @@
 apply plugin: 'java'
 
-group 'net.sourceforge.jaadec'
-version '0.8.6'
+allprojects {
 
-sourceCompatibility = 8
+    apply plugin: 'idea'
 
-jar {
-    baseName = project.name
-    manifest {
-        attributes 'Manifest-Version' : '1.0'
-        attributes 'Implementation-Version': version
-        attributes 'Main-Class': "net.sourceforge.jaad.Radio"
+    group 'net.sourceforge.jaadec'
+    version '0.8.6'
+
+    plugins.withType(JavaPlugin) {
+        
+        sourceCompatibility = 8
+
+        idea {
+            module {
+                outputDir file('build/idea/main')
+                testOutputDir file('build/idea/test')
+            }
+        }
+
+        jar {
+            baseName = project.name
+            manifest {
+                attributes 'Manifest-Version': '1.0'
+                attributes 'Implementation-Version': version
+            }
+        }
+
     }
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
+dependencies {
+    compile (project(':aac'))
+    compile (project(':mp4'))
 
-artifacts {
-    archives sourcesJar
-}
-
-tasks.withType(Zip) {
-    task ->
-
-    task.doLast {
-        ant.checksum file: it.archivePath
-    }
 }

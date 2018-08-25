@@ -8,7 +8,6 @@ import net.sourceforge.jaad.mp4.MP4Container;
 import net.sourceforge.jaad.mp4.api.*;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.List;
 import javax.sound.sampled.AudioFormat;
