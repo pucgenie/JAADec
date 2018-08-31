@@ -1,20 +1,19 @@
 package net.sourceforge.jaad.mp4.boxes;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-
 import net.sourceforge.jaad.mp4.MP4InputStream;
 import net.sourceforge.jaad.mp4.boxes.impl.*;
+import net.sourceforge.jaad.mp4.boxes.impl.drm.FairPlayDataBox;
 import net.sourceforge.jaad.mp4.boxes.impl.fd.*;
 import net.sourceforge.jaad.mp4.boxes.impl.meta.*;
 import net.sourceforge.jaad.mp4.boxes.impl.oma.*;
 import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.*;
 import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.codec.*;
-import net.sourceforge.jaad.mp4.boxes.impl.ESDBox;
-import net.sourceforge.jaad.mp4.boxes.impl.drm.FairPlayDataBox;
+
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 
 public class BoxFactory implements BoxTypes {
 
@@ -320,10 +319,16 @@ public class BoxFactory implements BoxTypes {
 	}
 
 	public static Box parseBox(Box parent, MP4InputStream in) throws IOException {
-		final long offset = in.getOffset();
 
+		long offset = in.getOffset();
 		long size = in.readBytes(4);
 		long type = in.readBytes(4);
+
+		return parseBox(parent, offset, size, type, in);
+	}
+
+	public static Box parseBox(Box parent, long offset, long size, long type, MP4InputStream in) throws IOException {
+
 		if(size==1)
 			size = in.readBytes(8);
 
@@ -337,7 +342,7 @@ public class BoxFactory implements BoxTypes {
 				throw new IOException("error while decoding box '"+typeToString(type)+"' at offset "+offset+": box too large for parent");
 		}
 
-		LOGGER.finest(typeToString(type));
+		LOGGER.finest(() -> typeToString(type));
 		final BoxImpl box = forType(type, in.getOffset());
 		box.setParams(parent, size, type, offset);
 		box.decode(in);

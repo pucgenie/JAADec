@@ -1,10 +1,11 @@
 package net.sourceforge.jaad.mp4.boxes;
 
+import net.sourceforge.jaad.mp4.MP4InputStream;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import net.sourceforge.jaad.mp4.MP4InputStream;
 
 public class BoxImpl implements Box {
 
@@ -104,10 +105,14 @@ public class BoxImpl implements Box {
 		return l;
 	}
 
+	protected Box parseBox(MP4InputStream in) throws IOException {
+		return BoxFactory.parseBox(this, in);
+	}
+
 	protected void readChildren(MP4InputStream in) throws IOException {
 		Box box;
 		while(in.getOffset()<(offset+size)) {
-			box = BoxFactory.parseBox(this, in);
+			box = parseBox(in);
 			children.add(box);
 		}
 	}
@@ -115,7 +120,7 @@ public class BoxImpl implements Box {
 	protected void readChildren(MP4InputStream in, int len) throws IOException {
 		Box box;
 		for(int i = 0; i<len; i++) {
-			box = BoxFactory.parseBox(this, in);
+			box = parseBox(in);
 			children.add(box);
 		}
 	}
