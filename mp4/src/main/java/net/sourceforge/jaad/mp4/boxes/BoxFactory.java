@@ -433,11 +433,13 @@ public class BoxFactory implements BoxTypes {
 	}
 
 	public static String typeToString(long l) {
-		byte[] b = new byte[4];
-		b[0] = (byte) ((l>>24)&0xFF);
-		b[1] = (byte) ((l>>16)&0xFF);
-		b[2] = (byte) ((l>>8)&0xFF);
-		b[3] = (byte) (l&0xFF);
+	    // convert bytes to char directly
+        // first utf16 page is ISO 8859
+        byte[] b = new byte[4];
+        b[0] = (byte) ((l>>24)&0xFF);
+        b[1] = (byte) ((l>>16)&0xFF);
+        b[2] = (byte) ((l>>8)&0xFF);
+        b[3] = (byte) (l&0xFF);
 		return new String(b);
 	}
 }
