@@ -1,10 +1,5 @@
 package net.sourceforge.jaad.mp4;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import net.sourceforge.jaad.mp4.api.Brand;
 import net.sourceforge.jaad.mp4.api.Movie;
 import net.sourceforge.jaad.mp4.boxes.Box;
@@ -12,6 +7,11 @@ import net.sourceforge.jaad.mp4.boxes.BoxFactory;
 import net.sourceforge.jaad.mp4.boxes.BoxTypes;
 import net.sourceforge.jaad.mp4.boxes.impl.FileTypeBox;
 import net.sourceforge.jaad.mp4.boxes.impl.ProgressiveDownloadInformationBox;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The MP4Container is the central class for the MP4 demultiplexer. It reads the
@@ -42,7 +42,7 @@ import net.sourceforge.jaad.mp4.boxes.impl.ProgressiveDownloadInformationBox;
  */
 public class MP4Container {
 
-	private final MP4InputStream in;
+	private final MP4Input in;
 	private final List<Box> boxes;
 	private Brand major, minor;
 	private Brand[] compatible;
@@ -51,7 +51,7 @@ public class MP4Container {
 	private Box moov;
 	private Movie movie;
 
-	public MP4Container(MP4InputStream in) throws IOException {
+	public MP4Container(MP4Input in) throws IOException {
 		this.in = in;
 		boxes = new ArrayList<Box>();
 

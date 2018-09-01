@@ -5,15 +5,20 @@ import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 import net.sourceforge.jaad.mp4.MP4Container;
-import net.sourceforge.jaad.mp4.MP4InputStream;
-import net.sourceforge.jaad.mp4.api.*;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.List;
+import net.sourceforge.jaad.mp4.MP4Input;
+import net.sourceforge.jaad.mp4.api.AudioTrack;
+import net.sourceforge.jaad.mp4.api.Frame;
+import net.sourceforge.jaad.mp4.api.Movie;
+import net.sourceforge.jaad.mp4.api.Track;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.URL;
+import java.util.List;
 
 /**
  * Command line example, that can decode an AAC file and play it.
@@ -47,15 +52,24 @@ public class Play {
   		if(in.startsWith("http:"))
 	  		decodeMP4(new URL(in).openStream());
      		else
-	  		decodeMP4(new FileInputStream(in));
+	  		//decodeMP4(new FileInputStream(in));
+			decodeMP4(new RandomAccessFile(in, "r"));
  	}
 
- 	private static void decodeMP4(InputStream in) throws Exception {
+	private static void decodeMP4(InputStream in) throws Exception {
+			decodeMP4(MP4Input.open(in));
+	}
+
+	private static void decodeMP4(RandomAccessFile in) throws Exception {
+			decodeMP4(MP4Input.open(in));
+	}
+
+ 	private static void decodeMP4(MP4Input in) throws Exception {
 		SourceDataLine line = null;
 		byte[] b;
 		try {
 			//create container
-			final MP4Container cont = new MP4Container(MP4InputStream.open(in));
+			final MP4Container cont = new MP4Container(in);
 			final Movie movie = cont.getMovie();
 			//find AAC track
 			final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);

@@ -1,13 +1,14 @@
 package net.sourceforge.jaad.mp4.boxes.impl.meta;
 
+import net.sourceforge.jaad.mp4.MP4Input;
+import net.sourceforge.jaad.mp4.boxes.FullBox;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import net.sourceforge.jaad.mp4.MP4InputStream;
-import net.sourceforge.jaad.mp4.boxes.FullBox;
 
 /**
  * This box contains the data for a metadata tag. It is right below an
@@ -69,7 +70,7 @@ public class ITunesMetadataBox extends FullBox {
 	}
 
 	@Override
-	public void decode(MP4InputStream in) throws IOException {
+	public void decode(MP4Input in) throws IOException {
 		super.decode(in);
 
 		dataType = DataType.forInt(flags);

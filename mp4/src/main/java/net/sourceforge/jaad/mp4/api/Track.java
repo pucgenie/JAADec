@@ -1,29 +1,18 @@
 package net.sourceforge.jaad.mp4.api;
 
+import net.sourceforge.jaad.mp4.MP4Input;
+import net.sourceforge.jaad.mp4.boxes.Box;
+import net.sourceforge.jaad.mp4.boxes.BoxTypes;
+import net.sourceforge.jaad.mp4.boxes.impl.*;
+import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
+import net.sourceforge.jaad.mp4.od.Descriptor;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.logging.Level;
-import net.sourceforge.jaad.mp4.MP4InputStream;
-import net.sourceforge.jaad.mp4.boxes.Box;
-import net.sourceforge.jaad.mp4.boxes.BoxTypes;
-import net.sourceforge.jaad.mp4.boxes.impl.ChunkOffsetBox;
-import net.sourceforge.jaad.mp4.boxes.impl.DataEntryUrlBox;
-import net.sourceforge.jaad.mp4.boxes.impl.DataReferenceBox;
-import net.sourceforge.jaad.mp4.boxes.impl.MediaHeaderBox;
-import net.sourceforge.jaad.mp4.boxes.impl.SampleSizeBox;
-import net.sourceforge.jaad.mp4.boxes.impl.SampleToChunkBox;
-import net.sourceforge.jaad.mp4.boxes.impl.DecodingTimeToSampleBox;
-import net.sourceforge.jaad.mp4.boxes.impl.TrackHeaderBox;
-import net.sourceforge.jaad.mp4.od.DecoderSpecificInfo;
-import net.sourceforge.jaad.mp4.boxes.impl.ESDBox;
-import net.sourceforge.jaad.mp4.od.Descriptor;
 
 /**
  * This class represents a track in a movie.
@@ -40,7 +29,7 @@ public abstract class Track {
 	public interface Codec {
 		//TODO: currently only marker interface
 	}
-	private final MP4InputStream in;
+	private final MP4Input in;
 	protected final TrackHeaderBox tkhd;
 	private final MediaHeaderBox mdhd;
 	private final boolean inFile;
@@ -52,7 +41,7 @@ public abstract class Track {
 	protected DecoderInfo decoderInfo;
 	protected Protection protection;
 
-	Track(Box trak, MP4InputStream in) {
+	Track(Box trak, MP4Input in) {
 		this.in = in;
 
 		tkhd = (TrackHeaderBox) trak.getChild(BoxTypes.TRACK_HEADER_BOX);

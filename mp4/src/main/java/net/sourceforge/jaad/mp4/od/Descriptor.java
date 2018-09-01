@@ -1,12 +1,13 @@
 package net.sourceforge.jaad.mp4.od;
 
+import net.sourceforge.jaad.mp4.MP4Input;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.sourceforge.jaad.mp4.MP4InputStream;
 
 /**
  * The abstract base class and factory for all descriptors (defined in ISO
@@ -26,14 +27,14 @@ public abstract class Descriptor {
 	public static final int TYPE_ES_ID_INC = 14;
 	public static final int TYPE_MP4_INITIAL_OBJECT_DESCRIPTOR = 16;
 
-	public static Descriptor createDescriptor(MP4InputStream in) throws IOException {
+	public static Descriptor createDescriptor(MP4Input in) throws IOException {
 		//read tag and size
-		final int type = in.read();
+		final int type = in.readByte();
 		int read = 1;
 		int size = 0;
 		int b = 0;
 		do {
-			b = in.read();
+			b = in.readByte();
 			size <<= 7;
 			size |= b&0x7f;
 			read++;
@@ -95,10 +96,10 @@ public abstract class Descriptor {
 		children = new ArrayList<Descriptor>();
 	}
 
-	abstract void decode(MP4InputStream in) throws IOException;
+	abstract void decode(MP4Input in) throws IOException;
 
 	//children
-	protected void readChildren(MP4InputStream in) throws IOException {
+	protected void readChildren(MP4Input in) throws IOException {
 		Descriptor desc;
 		while((size-(in.getOffset()-start))>0) {
 			desc = createDescriptor(in);

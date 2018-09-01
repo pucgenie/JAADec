@@ -1,13 +1,13 @@
 package net.sourceforge.jaad.mp4.api;
 
-import net.sourceforge.jaad.mp4.MP4InputStream;
+import net.sourceforge.jaad.mp4.MP4Input;
 import net.sourceforge.jaad.mp4.boxes.Box;
 import net.sourceforge.jaad.mp4.boxes.BoxTypes;
+import net.sourceforge.jaad.mp4.boxes.impl.ESDBox;
 import net.sourceforge.jaad.mp4.boxes.impl.SampleDescriptionBox;
 import net.sourceforge.jaad.mp4.boxes.impl.SoundMediaHeaderBox;
 import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.AudioSampleEntry;
 import net.sourceforge.jaad.mp4.boxes.impl.sampleentries.codec.CodecSpecificBox;
-import net.sourceforge.jaad.mp4.boxes.impl.ESDBox;
 
 public class AudioTrack extends Track {
 
@@ -41,7 +41,7 @@ public class AudioTrack extends Track {
 	private final AudioSampleEntry sampleEntry;
 	private Codec codec;
 
-	public AudioTrack(Box trak, MP4InputStream in) {
+	public AudioTrack(Box trak, MP4Input in) {
 		super(trak, in);
 
 		final Box mdia = trak.getChild(BoxTypes.MEDIA_BOX);

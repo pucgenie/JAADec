@@ -2,56 +2,74 @@ package net.sourceforge.jaad.mp4;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 
-/**
- * Created by IntelliJ IDEA.
- * User: stueken
- * Date: 25.08.18
- * Time: 17:25
- */
-public interface MP4InputStream {
+public class MP4InputStream extends MP4InputReader {
 
-    static MP4InputStream open(InputStream in) {
-        return new MP4FileInputStream(in);
-    }
+	private final InputStream in;
+	private long offset;
 
-    static MP4InputStream open(RandomAccessFile in) {
-        return new MP4FileInputStream(in);
-    }
+	/**
+	 * Constructs an <code>MP4InputStream</code> that reads from an 
+	 * <code>InputStream</code>. It will have no random access, thus seeking 
+	 * will not be possible.
+	 * 
+	 * @param in an <code>InputStream</code> to read from
+	 */
+	MP4InputStream(InputStream in) {
+		this.in = in;
+		offset = 0;
+	}
 
-    String UTF8 = "UTF-8";
-    String UTF16 = "UTF-16";
+	@Override
+	protected int read() throws IOException {
+		int i = in.read();
+		if(i>=0)
+			++offset;
 
-    int read() throws IOException;
+		return i;
+	}
 
-    void peek(byte[] b, int off, int len) throws IOException;
+	@Override
+	protected int read(byte[] b, int off, int len) throws IOException {
+		int i = in.read(b, off, len);
 
-    void read(byte[] b, int off, int len) throws IOException;
+		if(i>0)
+			offset += i;
 
-    long peekBytes(int n) throws IOException;
+		return i;
+	}
 
-    long readBytes(int n) throws IOException;
-    
-    void readBytes(byte[] b) throws IOException;
+	@Override
+	protected long skip(int n) throws IOException {
+		long i = in.skip(n);
 
-    String readString(int n) throws IOException;
+		if(i>0)
+			offset += i;
 
-    String readUTFString(int max, String encoding) throws IOException;
+		return i;
+	}
 
-    String readUTFString(int max) throws IOException;
+	@Override
+	public long getOffset() {
+		return offset;
+	}
 
-    byte[] readTerminated(int max, int terminator) throws IOException;
+	@Override
+	public void seek(long pos) throws IOException {
+		throw new IOException("could not seek: no random access");
+	}
 
-    double readFixedPoint(int m, int n) throws IOException;
+	@Override
+	public boolean hasRandomAccess() {
+		return false;
+	}
 
-    void skipBytes(long n) throws IOException;
+	@Override
+	public boolean hasLeft() throws IOException {
+		return in.available()>0;
+	}
 
-    long getOffset() throws IOException;
-
-    void seek(long pos) throws IOException;
-
-    boolean hasRandomAccess();
-
-    boolean hasLeft() throws IOException;
+	public void close() throws IOException {
+		in.close();
+	}
 }
