@@ -67,9 +67,9 @@ public class PCE extends Element {
 	private int frontChannelElementsCount, sideChannelElementsCount, backChannelElementsCount;
 	private int lfeChannelElementsCount, assocDataElementsCount;
 	private int validCCElementsCount;
-	private boolean monoMixdown, stereoMixdown, matrixMixdownIDXPresent;
-	private int monoMixdownElementNumber, stereoMixdownElementNumber, matrixMixdownIDX;
-	private boolean pseudoSurround;
+	boolean monoMixdown, stereoMixdown, matrixMixdownIDXPresent;
+	int monoMixdownElementNumber, stereoMixdownElementNumber, matrixMixdownIDX;
+	boolean pseudoSurround;
 	private final TaggedElement[] frontElements, sideElements, backElements;
 	private final int[] lfeElementTags;
 	private final int[] assocDataElementTags;

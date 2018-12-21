@@ -26,6 +26,8 @@ public class SyntacticElements implements Constants {
 	private int curElem, curCCE, curDSE, curFIL;
 	private float[][] data;
 
+	private int firstChannel = 0;
+
 	public SyntacticElements(DecoderConfig config) {
 		this.config = config;
 
@@ -216,11 +218,9 @@ public class SyntacticElements implements Constants {
 			data = new float[chs][mult*config.getFrameLength()];
 
 		int channel = 0;
-		Element e;
-		SCE_LFE scelfe;
-		CPE cpe;
+		firstChannel = 0;
 		for(int i = 0; i<elements.length&&channel<chs; i++) {
-			e = elements[i];
+			Element e = elements[i];
 			if(e==null)
 				continue;
 
@@ -295,6 +295,10 @@ public class SyntacticElements implements Constants {
 	}
 
 	private void processPair(CPE cpe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) throws AACException {
+
+		if(cpe.getElementInstanceTag() == pce.stereoMixdownElementNumber)
+			firstChannel = channel;
+
 		final ICStream ics1 = cpe.getLeftChannel();
 		final ICStream ics2 = cpe.getRightChannel();
 		final ICSInfo info1 = ics1.getInfo();
@@ -441,7 +445,8 @@ public class SyntacticElements implements Constants {
 
 		for(int ch = 0; ch<chs; ch++) {
 			// duplicate possible mono channel
-			float[] cur = data[ch<data.length?ch:0];
+			int chi = Math.min(ch+firstChannel, data.length-1);
+			float[] cur = data[chi];
 			for(int l = 0; l<length; l++) {
 				short s = (short) Math.max(Math.min(Math.round(cur[l]), Short.MAX_VALUE), Short.MIN_VALUE);
 				int off = (l*chs+ch)*2;
