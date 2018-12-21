@@ -50,7 +50,7 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 	}
 
 	/* ========= decoding ========== */
-	public void decode(BitStream in, boolean commonWindow, DecoderConfig conf) throws AACException {
+	public void decode(BitStream in, boolean commonWindow, DecoderConfig conf) {
 		if(conf.isScalefactorResilienceUsed()&&rvlc==null)
 			rvlc = new RVLC();
 
@@ -101,7 +101,7 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		else decodeSpectralData(in);
 	}
 
-	public void decodeSectionData(BitStream in, boolean sectionDataResilienceUsed) throws AACException {
+	public void decodeSectionData(BitStream in, boolean sectionDataResilienceUsed) {
 		Arrays.fill(sfbCB, 0);
 		Arrays.fill(sectEnd, 0);
 		final int bits = info.isEightShortFrame() ? 3 : 5;
@@ -136,7 +136,7 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		}
 	}
 
-	private void decodePulseData(BitStream in) throws AACException {
+	private void decodePulseData(BitStream in) {
 		pulseCount = in.readBits(2)+1;
 		pulseStartSWB = in.readBits(6);
 		if(pulseStartSWB>=info.getSWBCount())
@@ -160,7 +160,7 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		}
 	}
 
-	public void decodeScaleFactors(BitStream in) throws AACException {
+	public void decodeScaleFactors(BitStream in) {
 		final int windowGroups = info.getWindowGroupCount();
 		final int maxSFB = info.getMaxSFB();
 		//0: spectrum, 1: noise, 2: intensity
@@ -210,7 +210,7 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		}
 	}
 
-	private void decodeSpectralData(BitStream in) throws AACException {
+	private void decodeSpectralData(BitStream in) {
 		Arrays.fill(data, 0);
 		final int maxSFB = info.getMaxSFB();
 		final int windowGroups = info.getWindowGroupCount();

@@ -1,10 +1,10 @@
 package net.sourceforge.jaad.aac.tools;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.ICSInfo;
 import net.sourceforge.jaad.aac.syntax.ICStream;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,7 +40,7 @@ public class ICPrediction {
 		resetAllPredictors();
 	}
 
-	public void decode(BitStream in, int maxSFB, SampleFrequency sf) throws AACException {
+	public void decode(BitStream in, int maxSFB, SampleFrequency sf) {
 		final int predictorCount = sf.getPredictorCount();
 
 		if(predictorReset = in.readBool())

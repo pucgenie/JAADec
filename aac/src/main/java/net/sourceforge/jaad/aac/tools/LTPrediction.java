@@ -8,6 +8,7 @@ import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.ICSInfo;
 import net.sourceforge.jaad.aac.syntax.ICStream;
+
 import java.util.Arrays;
 
 /**
@@ -38,7 +39,7 @@ public class LTPrediction implements Constants {
 		states = new int[4*frameLength];
 	}
 
-	public void decode(BitStream in, ICSInfo info, Profile profile) throws AACException {
+	public void decode(BitStream in, ICSInfo info, Profile profile) {
 		lag = 0;
 		if(profile.equals(Profile.AAC_LD)) {
 			lagUpdate = in.readBool();

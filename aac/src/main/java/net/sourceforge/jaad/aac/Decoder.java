@@ -1,9 +1,9 @@
 package net.sourceforge.jaad.aac;
 
+import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.PCE;
 import net.sourceforge.jaad.aac.syntax.SyntacticElements;
-import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.transport.ADIFHeader;
 
 import java.util.logging.Level;
@@ -34,21 +34,21 @@ public class Decoder {
 		return profile.isDecodingSupported();
 	}
 
-	public static Decoder create(byte[] data) throws AACException {
+	public static Decoder create(byte[] data) {
 		return create(new BitStream(data));
 	}
 
-	public static Decoder create(BitStream in) throws AACException {
+	public static Decoder create(BitStream in) {
 		DecoderConfig config = DecoderConfig.decode(in);
 		return create(config);
 	}
 
-	public static Decoder create(AudioDecoderInfo info) throws AACException {
+	public static Decoder create(AudioDecoderInfo info) {
 		DecoderConfig config = DecoderConfig.create(info);
 		return create(config);
 	}
 
-	public static Decoder create(DecoderConfig config) throws AACException {
+	public static Decoder create(DecoderConfig config) {
 		if(config==null)
 			throw new IllegalArgumentException("illegal MP4 decoder specific info");
 		return new Decoder(config);
@@ -63,7 +63,7 @@ public class Decoder {
 	 * @param config decoder specific info from an MP4 container
 	 * @throws AACException if the specified profile is not supported
 	 */
-	private Decoder(DecoderConfig config) throws AACException {
+	private Decoder(DecoderConfig config) {
 		//config = DecoderConfig.parseMP4DecoderSpecificInfo(decoderSpecificInfo);
 
 		this.config = config;
@@ -89,7 +89,7 @@ public class Decoder {
 	 * @param buffer a buffer to hold the decoded PCM data
 	 * @throws AACException if decoding fails
 	 */
-	public void decodeFrame(byte[] frame, SampleBuffer buffer) throws AACException {
+	public void decodeFrame(byte[] frame, SampleBuffer buffer) {
 		if(frame!=null)
 			in.setData(frame);
 
@@ -98,17 +98,14 @@ public class Decoder {
 			decode(buffer);
 			LOGGER.log(Level.INFO, ()->String.format("left %d", in.getBitsLeft()));
 		}
-		catch(AACException e) {
-			if(!e.isEndOfStream())
-				throw e;
-			else
-				LOGGER.log(Level.WARNING,"unexpected end of frame",e);
+		catch(EOSException e) {
+			LOGGER.log(Level.WARNING,"unexpected end of frame",e);
 		} finally {
 			++frames;
 		}
 	}
 
-	private void decode(SampleBuffer buffer) throws AACException {
+	private void decode(SampleBuffer buffer) {
 		if(ADIFHeader.isPresent(in)) {
 			adifHeader = ADIFHeader.readHeader(in);
 			final PCE pce = adifHeader.getFirstPCE();
@@ -130,13 +127,12 @@ public class Decoder {
 			//3: send to output buffer
 			syntacticElements.sendToOutput(buffer);
 		}
-		catch(AACException e) {
-			buffer.setData(new byte[0], 0, 0, 0, 0);
-			throw e;
-		}
 		catch(Exception e) {
 			buffer.setData(new byte[0], 0, 0, 0, 0);
-			throw new AACException(e);
+			if(e instanceof AACException)
+				throw (AACException) e;
+			else
+				throw new AACException(e);
 		}
 	}
 }

@@ -140,7 +140,7 @@ public class DecoderConfig {
 	 * 
 	 * @return a DecoderConfig
 	 */
-	public static DecoderConfig decode(BitStream in) throws AACException {
+	public static DecoderConfig decode(BitStream in) {
 		final DecoderConfig config = new DecoderConfig();
 
 		try {
@@ -223,14 +223,14 @@ public class DecoderConfig {
 		}
 	}
 
-	private static Profile readProfile(BitStream in) throws AACException {
+	private static Profile readProfile(BitStream in) {
 		int i = in.readBits(5);
 		if(i==31)
 			i = 32+in.readBits(6);
 		return Profile.forInt(i);
 	}
 
-	private void readSyncExtension(BitStream in) throws AACException {
+	private void readSyncExtension(BitStream in) {
 		final int type = in.readBits(11);
 		switch(type) {
 			case 0x2B7:

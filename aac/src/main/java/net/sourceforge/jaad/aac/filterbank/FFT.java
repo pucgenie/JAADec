@@ -9,7 +9,7 @@ class FFT implements FFTTables {
 	private final float[][] rev;
 	private float[] a, b, c, d, e1, e2;
 
-	FFT(int length) throws AACException {
+	FFT(int length) {
 		this.length = length;
 
 		switch(length) {

@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Profile;
 import net.sourceforge.jaad.aac.SampleFrequency;
 
@@ -87,7 +86,7 @@ public class PCE extends Element {
 		sampleFrequency = SampleFrequency.SAMPLE_FREQUENCY_NONE;
 	}
 
-	public void decode(BitStream in) throws AACException {
+	public void decode(BitStream in) {
 		readElementInstanceTag(in);
 
 		profile = Profile.forInt(in.readBits(2));
@@ -143,7 +142,7 @@ public class PCE extends Element {
 		}
 	}
 
-	private void readTaggedElementArray(TaggedElement[] te, BitStream in, int len) throws AACException {
+	private void readTaggedElementArray(TaggedElement[] te, BitStream in, int len) {
 		for(int i = 0; i<len; ++i) {
 			te[i] = new TaggedElement(in.readBool(), in.readBits(4));
 		}

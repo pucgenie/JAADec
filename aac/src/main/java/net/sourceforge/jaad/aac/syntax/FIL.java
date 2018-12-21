@@ -50,7 +50,7 @@ class FIL extends Element implements Constants {
 		this.downSampledSBR = downSampledSBR;
 	}
 
-	void decode(BitStream in, Element prev, SampleFrequency sf, boolean sbrEnabled, boolean smallFrames) throws AACException {
+	void decode(BitStream in, Element prev, SampleFrequency sf, boolean sbrEnabled, boolean smallFrames) {
 		int count = in.readBits(4);
 		if(count==15)
 			count += in.readBits(8)-1;
@@ -73,7 +73,7 @@ class FIL extends Element implements Constants {
 			throw new AACException("FIL element overread: "+bitsLeft);
 	}
 
-	private int decodeExtensionPayload(BitStream in, int count, Element prev, SampleFrequency sf, boolean sbrEnabled, boolean smallFrames) throws AACException {
+	private int decodeExtensionPayload(BitStream in, int count, Element prev, SampleFrequency sf, boolean sbrEnabled, boolean smallFrames) {
 		final int type = in.readBits(4);
 		int ret = count-4;
 		switch(type) {
@@ -105,7 +105,7 @@ class FIL extends Element implements Constants {
 		return ret;
 	}
 
-	private int decodeDynamicRangeInfo(BitStream in, int count) throws AACException {
+	private int decodeDynamicRangeInfo(BitStream in, int count) {
 		if(dri==null)
 			dri = new DynamicRangeInfo();
 
@@ -154,7 +154,7 @@ class FIL extends Element implements Constants {
 		return ret;
 	}
 
-	private int decodeExcludedChannels(BitStream in) throws AACException {
+	private int decodeExcludedChannels(BitStream in) {
 		int i;
 		int exclChs = 0;
 

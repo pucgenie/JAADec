@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.aac.filterbank;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.ICSInfo.WindowSequence;
 
@@ -13,7 +12,7 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 	private final float[] buf;
 	private final float[][] overlaps;
 
-	public FilterBank(boolean smallFrames, int channels) throws AACException {
+	public FilterBank(boolean smallFrames, int channels) {
 		if(smallFrames) {
 			length = WINDOW_SMALL_LEN_LONG;
 			shortLen = WINDOW_SMALL_LEN_SHORT;

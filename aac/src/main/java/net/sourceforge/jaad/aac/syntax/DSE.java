@@ -1,7 +1,5 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import net.sourceforge.jaad.aac.AACException;
-
 /**
  * data_stream_element Abbreviation DSE.
  *
@@ -21,7 +19,7 @@ class DSE extends Element {
 		super();
 	}
 
-	void decode(BitStream in) throws AACException {
+	void decode(BitStream in) {
 		readElementInstanceTag(in);
 
 		final boolean byteAlign = in.readBool();

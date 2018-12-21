@@ -29,7 +29,7 @@ public class TNS implements Constants, TNSTables {
 		coef = new float[8][4][TNS_MAX_ORDER];
 	}
 
-	public void decode(BitStream in, ICSInfo info) throws AACException {
+	public void decode(BitStream in, ICSInfo info) {
 		final int windowCount = info.getWindowCount();
 		final int[] bits = info.isEightShortFrame() ? SHORT_BITS : LONG_BITS;
 

@@ -10,7 +10,7 @@ class MDCT implements MDCTTables {
 	private final float[][] buf;
 	private final float[] tmp;
 
-	MDCT(int length) throws AACException {
+	MDCT(int length) {
 		N = length;
 		N2 = length>>1;
 		N4 = length>>2;

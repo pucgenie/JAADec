@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.aac.transport;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.PCE;
 
@@ -16,7 +15,7 @@ public final class ADIFHeader {
 	private int[] adifBufferFullness;
 	private PCE[] pces;
 
-	public static boolean isPresent(BitStream in) throws AACException {
+	public static boolean isPresent(BitStream in) {
 		return in.peekBits(32)==ADIF_ID;
 	}
 
@@ -24,13 +23,13 @@ public final class ADIFHeader {
 		copyrightID = new byte[9];
 	}
 
-	public static ADIFHeader readHeader(BitStream in) throws AACException {
+	public static ADIFHeader readHeader(BitStream in) {
 		final ADIFHeader h = new ADIFHeader();
 		h.decode(in);
 		return h;
 	}
 
-	private void decode(BitStream in) throws AACException {
+	private void decode(BitStream in) {
 		int i;
 		id = in.readBits(32); //'ADIF'
 		copyrightIDPresent = in.readBool();

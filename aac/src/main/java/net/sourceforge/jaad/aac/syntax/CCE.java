@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.huffman.HCB;
 import net.sourceforge.jaad.aac.huffman.Huffman;
@@ -66,7 +65,7 @@ class CCE extends Element implements Constants {
 		return chSelect[index];
 	}
 
-	void decode(BitStream in, DecoderConfig conf) throws AACException {
+	void decode(BitStream in, DecoderConfig conf) {
 		readElementInstanceTag(in);
 		couplingPoint = 2*in.readBit();
 		coupledCount = in.readBits(3);

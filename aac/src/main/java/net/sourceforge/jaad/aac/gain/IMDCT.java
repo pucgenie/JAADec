@@ -18,7 +18,7 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 		lbMid = (lbLong-lbShort)/2;
 	}
 
-	void process(float[] in, float[] out, int winShape, int winShapePrev, WindowSequence winSeq) throws AACException {
+	void process(float[] in, float[] out, int winShape, int winShapePrev, WindowSequence winSeq) {
 		final float[] buf = new float[frameLen];
 
 		int b, j, i;
@@ -46,7 +46,7 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 		}
 	}
 
-	private void process2(float[] in, float[] out, WindowSequence winSeq, int winShape, int winShapePrev, int band) throws AACException {
+	private void process2(float[] in, float[] out, WindowSequence winSeq, int winShape, int winShapePrev, int band) {
 		final float[] bufIn = new float[lbLong];
 		final float[] bufOut = new float[lbLong*2];
 		final float[] window = new float[lbLong*2];
@@ -127,7 +127,7 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 		}
 	}
 
-	private void imdct(float[] in, float[] out, float[] window, int n) throws AACException {
+	private void imdct(float[] in, float[] out, float[] window, int n) {
 		final int n2 = n/2;
 		float[][] table, table2;
 		if(n==256) {

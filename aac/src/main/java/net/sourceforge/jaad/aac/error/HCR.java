@@ -90,7 +90,7 @@ public class HCR implements Constants {
 	}
 
 	//sectionDataResilience = hDecoder->aacSectionDataResilienceFlag
-	public static void decodeReorderedSpectralData(ICStream ics, BitStream in, short[] spectralData, boolean sectionDataResilience) throws AACException {
+	public static void decodeReorderedSpectralData(ICStream ics, BitStream in, short[] spectralData, boolean sectionDataResilience) {
 		final ICSInfo info = ics.getInfo();
 		final int windowGroupCount = info.getWindowGroupCount();
 		final int maxSFB = info.getMaxSFB();

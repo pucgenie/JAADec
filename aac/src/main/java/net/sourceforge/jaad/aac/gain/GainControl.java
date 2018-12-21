@@ -1,8 +1,8 @@
 package net.sourceforge.jaad.aac.gain;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.ICSInfo.WindowSequence;
+
 import java.util.Arrays;
 
 public class GainControl implements GCConstants {
@@ -30,7 +30,7 @@ public class GainControl implements GCConstants {
 		overlap = new float[BANDS][lbLong*2];
 	}
 
-	public void decode(BitStream in, WindowSequence winSeq) throws AACException {
+	public void decode(BitStream in, WindowSequence winSeq) {
 		maxBand = in.readBits(2)+1;
 
 		int wdLen, locBits, locBits2 = 0;
@@ -76,7 +76,7 @@ public class GainControl implements GCConstants {
 		}
 	}
 
-	public void process(float[] data, int winShape, int winShapePrev, WindowSequence winSeq) throws AACException {
+	public void process(float[] data, int winShape, int winShapePrev, WindowSequence winSeq) {
 		imdct.process(data, buffer1, winShape, winShapePrev, winSeq);
 
 		for(int i = 0; i<BANDS; i++) {

@@ -50,7 +50,7 @@ public class SyntacticElements implements Constants {
 		bitsRead = 0;
 	}
 
-	public void decode(BitStream in) throws AACException {
+	public void decode(BitStream in) {
 		final int start = in.getPosition(); //should be 0
 
 		int type;
@@ -139,7 +139,7 @@ public class SyntacticElements implements Constants {
 		bitsRead = in.getPosition()-start;
 	}
 
-	private Element decodeSCE_LFE(BitStream in) throws AACException {
+	private Element decodeSCE_LFE(BitStream in) {
 		if(elements[curElem]==null)
 			elements[curElem] = new SCE_LFE(config.getFrameLength());
 
@@ -148,7 +148,7 @@ public class SyntacticElements implements Constants {
 		return elements[curElem-1];
 	}
 
-	private Element decodeCPE(BitStream in) throws AACException {
+	private Element decodeCPE(BitStream in) {
 		if(elements[curElem]==null)
 			elements[curElem] = new CPE(config.getFrameLength());
 
@@ -157,7 +157,7 @@ public class SyntacticElements implements Constants {
 		return elements[curElem-1];
 	}
 
-	private void decodeCCE(BitStream in) throws AACException {
+	private void decodeCCE(BitStream in) {
 		if(curCCE==MAX_ELEMENTS)
 			throw new AACException("too much CCE elements");
 
@@ -168,7 +168,7 @@ public class SyntacticElements implements Constants {
 		curCCE++;
 	}
 
-	private void decodeDSE(BitStream in) throws AACException {
+	private void decodeDSE(BitStream in) {
 		if(curDSE==MAX_ELEMENTS)
 			throw new AACException("too much CCE elements");
 
@@ -179,14 +179,14 @@ public class SyntacticElements implements Constants {
 		curDSE++;
 	}
 
-	private void decodePCE(BitStream in) throws AACException {
+	private void decodePCE(BitStream in) {
 		pce.decode(in);
 		config.setProfile(pce.getProfile());
 		config.setSampleFrequency(pce.getSampleFrequency());
 		config.setChannelConfiguration(ChannelConfiguration.forInt(pce.getChannelCount()));
 	}
 
-	private void decodeFIL(BitStream in, Element prev) throws AACException {
+	private void decodeFIL(BitStream in, Element prev) {
 		if(curFIL==MAX_ELEMENTS)
 			throw new AACException("too much FIL elements");
 
@@ -203,7 +203,7 @@ public class SyntacticElements implements Constants {
 		}
 	}
 
-	public void process(FilterBank filterBank) throws AACException {
+	public void process(FilterBank filterBank) {
 		final Profile profile = config.getProfile();
 		final SampleFrequency sf = config.getSampleFrequency();
 		//final ChannelConfiguration channels = config.getChannelConfiguration();
@@ -239,7 +239,7 @@ public class SyntacticElements implements Constants {
 		}
 	}
 
-	private int processSingle(SCE_LFE scelfe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) throws AACException {
+	private int processSingle(SCE_LFE scelfe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) {
 		final ICStream ics = scelfe.getICStream();
 		final ICSInfo info = ics.getInfo();
 		final LTPrediction ltp = info.getLTPrediction1();
@@ -294,7 +294,7 @@ public class SyntacticElements implements Constants {
 		return chs;
 	}
 
-	private void processPair(CPE cpe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) throws AACException {
+	private void processPair(CPE cpe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) {
 
 		if(cpe.getElementInstanceTag() == pce.stereoMixdownElementNumber)
 			firstChannel = channel;

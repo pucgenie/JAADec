@@ -1,6 +1,6 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import net.sourceforge.jaad.aac.AACException;
+import net.sourceforge.jaad.aac.EOSException;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,7 +47,7 @@ public class BitStream {
 		reset();
 	}
 
-	public void byteAlign() throws AACException {
+	public void byteAlign() {
 		log(Level.FINER, "@%d byteAlign: %d", position);
 		final int toFlush = bitsCached&7;
 		if(toFlush>0)
@@ -73,10 +73,10 @@ public class BitStream {
 	 * Reads the next four bytes.
 	 * @param peek if true, the stream pointer will not be increased
 	 */
-	protected int readCache(boolean peek) throws AACException {
+	protected int readCache(boolean peek) {
 		int i;
 		if(pos>buffer.length-WORD_BYTES)
-			throw new AACException("end of stream", true);
+			throw new EOSException("end of stream");
 		else i = ((buffer[pos]&BYTE_MASK)<<24)
 					|((buffer[pos+1]&BYTE_MASK)<<16)
 					|((buffer[pos+2]&BYTE_MASK)<<8)
@@ -86,7 +86,7 @@ public class BitStream {
 		return i;
 	}
 
-	public int readBits(int n) throws AACException {
+	public int readBits(int n) {
 		log(n==0 ? Level.FINEST:Level.FINER, "@%d readBits: %d", n);
 
 		int result;
@@ -106,7 +106,7 @@ public class BitStream {
 		return result;
 	}
 
-	public int readBit() throws AACException {
+	public int readBit() {
 		log(Level.FINER, "@%d readBit: %d", 1);
 		int i;
 		if(bitsCached>0) {
@@ -123,11 +123,11 @@ public class BitStream {
 		return i;
 	}
 
-	public boolean readBool() throws AACException {
+	public boolean readBool() {
 		return (readBit()&0x1)!=0;
 	}
 
-	public int peekBits(int n) throws AACException {
+	public int peekBits(int n) {
 		log(Level.FINER, "@%d peekBits: %d", n);
 		int ret;
 		if(bitsCached>=n) {
@@ -143,7 +143,7 @@ public class BitStream {
 		return ret;
 	}
 
-	public int peekBit() throws AACException {
+	public int peekBit() {
 		log(Level.FINER, "@%d peekBit: %d", 1);
 		int ret;
 		if(bitsCached>0) {
@@ -156,7 +156,7 @@ public class BitStream {
 		return ret;
 	}
 
-	public void skipBits(int n) throws AACException {
+	public void skipBits(int n) {
 		log(Level.FINER, "@%d skipBits: %d", n);
 		position += n;
 		if(n<=bitsCached) {
@@ -179,7 +179,7 @@ public class BitStream {
 		}
 	}
 
-	public void skipBit() throws AACException {
+	public void skipBit() {
 		log(Level.FINER, "@%d skipBit: %d", 1);
 		position++;
 		if(bitsCached>0) {

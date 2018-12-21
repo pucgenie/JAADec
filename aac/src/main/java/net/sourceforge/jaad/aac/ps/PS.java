@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.aac.ps;
 
-import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
@@ -139,7 +138,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 	}
 
-	public int decode(BitStream ld) throws AACException {
+	public int decode(BitStream ld) {
 		int tmp, n;
 		long bits = ld.getPosition();
 
@@ -251,7 +250,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	private int ps_extension(BitStream ld,
 		int ps_extension_id,
-		int num_bits_left) throws AACException {
+		int num_bits_left) {
 		int n;
 		long bits = ld.getPosition();
 
@@ -284,7 +283,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	/* read huffman data coded in either the frequency or the time direction */
 	private void huff_data(BitStream ld, boolean dt, int nr_par,
-		int[][] t_huff, int[][] f_huff, int[] par) throws AACException {
+		int[][] t_huff, int[][] f_huff, int[] par) {
 		int n;
 
 		if(dt) {
@@ -304,7 +303,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	/* binary search huffman decoding */
-	private int ps_huff_dec(BitStream ld, int[][] t_huff) throws AACException {
+	private int ps_huff_dec(BitStream ld, int[][] t_huff) {
 		int bit;
 		int index = 0;
 

@@ -6,6 +6,7 @@ import net.sourceforge.jaad.aac.Profile;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.tools.ICPrediction;
 import net.sourceforge.jaad.aac.tools.LTPrediction;
+
 import java.util.Arrays;
 
 public class ICSInfo implements Constants, ScaleFactorBands {
@@ -22,7 +23,7 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 		EIGHT_SHORT_SEQUENCE,
 		LONG_STOP_SEQUENCE;
 
-		public static WindowSequence forInt(int i) throws AACException {
+		public static WindowSequence forInt(int i) {
 			WindowSequence w;
 			switch(i) {
 				case 0:
@@ -69,7 +70,7 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 	}
 
 	/* ========== decoding ========== */
-	public void decode(BitStream in, DecoderConfig conf, boolean commonWindow) throws AACException {
+	public void decode(BitStream in, DecoderConfig conf, boolean commonWindow) {
 		final SampleFrequency sf = conf.getSampleFrequency();
 		if(sf.equals(SampleFrequency.SAMPLE_FREQUENCY_NONE))
 			throw new AACException("invalid sample frequency");
@@ -106,7 +107,7 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 		}
 	}
 
-	private void readPredictionData(BitStream in, Profile profile, SampleFrequency sf, boolean commonWindow) throws AACException {
+	private void readPredictionData(BitStream in, Profile profile, SampleFrequency sf, boolean commonWindow) {
 		switch(profile) {
 			case AAC_MAIN:
 				if(icPredict==null) icPredict = new ICPrediction();

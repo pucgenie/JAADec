@@ -12,7 +12,7 @@ public class Huffman implements Codebooks {
 	private Huffman() {
 	}
 
-	private static int findOffset(BitStream in, int[][] table) throws AACException {
+	private static int findOffset(BitStream in, int[][] table) {
 		int off = 0;
 		int len = table[off][0];
 		int cw = in.readBits(len);
@@ -27,7 +27,7 @@ public class Huffman implements Codebooks {
 		return off;
 	}
 
-	private static void signValues(BitStream in, int[] data, int off, int len) throws AACException {
+	private static void signValues(BitStream in, int[] data, int off, int len) {
 		for(int i = off; i<off+len; i++) {
 			if(data[i]!=0) {
 				if(in.readBool()) data[i] = -data[i];
@@ -35,7 +35,7 @@ public class Huffman implements Codebooks {
 		}
 	}
 
-	private static int getEscape(BitStream in, int s) throws AACException {
+	private static int getEscape(BitStream in, int s) {
 		final boolean neg = s<0;
 
 		int i = 4;
@@ -47,12 +47,12 @@ public class Huffman implements Codebooks {
 		return (neg ? -j : j);
 	}
 
-	public static int decodeScaleFactor(BitStream in) throws AACException {
+	public static int decodeScaleFactor(BitStream in) {
 		final int offset = findOffset(in, HCB_SF);
 		return HCB_SF[offset][2];
 	}
 
-	public static void decodeSpectralData(BitStream in, int cb, int[] data, int off) throws AACException {
+	public static void decodeSpectralData(BitStream in, int cb, int[] data, int off) {
 		final int[][] HCB = CODEBOOKS[cb-1];
 
 		//find index

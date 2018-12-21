@@ -1,13 +1,13 @@
 package net.sourceforge.jaad.aac.sbr;
 
-import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.ps.PS;
 import net.sourceforge.jaad.aac.syntax.BitStream;
+
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants, HuffmanTables {
 
@@ -337,7 +337,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 2 */
-	public int decode(BitStream ld, int bits, boolean crc) throws AACException {
+	public int decode(BitStream ld, int bits, boolean crc) {
 		int result = 0;
 		int num_align_bits = 0;
 		long num_sbr_bits1 = ld.getPosition();
@@ -438,7 +438,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 3 */
-	private void sbr_header(BitStream ld) throws AACException {
+	private void sbr_header(BitStream ld) {
 		boolean bs_header_extra_1, bs_header_extra_2;
 
 		this.header_count++;
@@ -483,7 +483,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 4 */
-	private int sbr_data(BitStream ld) throws AACException {
+	private int sbr_data(BitStream ld) {
 		int result;
 
 		this.rate = (this.bs_samplerate_mode!=0) ? 2 : 1;
@@ -501,7 +501,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 5 */
-	private int sbr_single_channel_element(BitStream ld) throws AACException {
+	private int sbr_single_channel_element(BitStream ld) {
 		int result;
 
 		if(ld.readBool()) {
@@ -573,7 +573,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 6 */
-	private int sbr_channel_pair_element(BitStream ld) throws AACException {
+	private int sbr_channel_pair_element(BitStream ld) {
 		int n, result;
 
 		if(ld.readBool()) {
@@ -725,7 +725,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 
 	/* table 7 */
-	private int sbr_grid(BitStream ld, int ch) throws AACException {
+	private int sbr_grid(BitStream ld, int ch) {
 		int i, env, rel, result;
 		int bs_abs_bord, bs_abs_bord_1;
 		int bs_num_env = 0;
@@ -846,7 +846,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 8 */
-	private void sbr_dtdf(BitStream ld, int ch) throws AACException {
+	private void sbr_dtdf(BitStream ld, int ch) {
 		int i;
 
 		for(i = 0; i<this.L_E[ch]; i++) {
@@ -859,7 +859,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 9 */
-	private void invf_mode(BitStream ld, int ch) throws AACException {
+	private void invf_mode(BitStream ld, int ch) {
 		int n;
 
 		for(n = 0; n<this.N_Q; n++) {
@@ -867,7 +867,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		}
 	}
 
-	private int sbr_extension(BitStream ld, int bs_extension_id, int num_bits_left) throws AACException {
+	private int sbr_extension(BitStream ld, int bs_extension_id, int num_bits_left) {
 		int ret;
 
 		switch(bs_extension_id) {
@@ -897,7 +897,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 12 */
-	private void sinusoidal_coding(BitStream ld, int ch) throws AACException {
+	private void sinusoidal_coding(BitStream ld, int ch) {
 		int n;
 
 		for(n = 0; n<this.N_high; n++) {
@@ -906,7 +906,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 	/* table 10 */
 
-	private void sbr_envelope(BitStream ld, int ch) throws AACException {
+	private void sbr_envelope(BitStream ld, int ch) {
 		int env, band;
 		int delta = 0;
 		int[][] t_huff, f_huff;
@@ -974,7 +974,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 	}
 
 	/* table 11 */
-	private void sbr_noise(BitStream ld, int ch) throws AACException {
+	private void sbr_noise(BitStream ld, int ch) {
 		int noise, band;
 		int delta = 0;
 		int[][] t_huff, f_huff;
@@ -1012,7 +1012,7 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		NoiseEnvelope.extract_noise_floor_data(this, ch);
 	}
 
-	private int decodeHuffman(BitStream ld, int[][] t_huff) throws AACException {
+	private int decodeHuffman(BitStream ld, int[][] t_huff) {
 		int bit;
 		int index = 0;
 

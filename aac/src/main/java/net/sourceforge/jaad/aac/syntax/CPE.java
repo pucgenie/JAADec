@@ -1,11 +1,12 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import java.util.Arrays;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.Profile;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.tools.MSMask;
+
+import java.util.Arrays;
 
 /**
  * channel_pair_element: abbreviation CPE.
@@ -32,7 +33,7 @@ public class CPE extends Element implements Constants {
 		icsR = new ICStream(frameLength);
 	}
 
-	void decode(BitStream in, DecoderConfig conf) throws AACException {
+	void decode(BitStream in, DecoderConfig conf) {
 		final Profile profile = conf.getProfile();
 		final SampleFrequency sf = conf.getSampleFrequency();
 		if(sf.equals(SampleFrequency.SAMPLE_FREQUENCY_NONE))
