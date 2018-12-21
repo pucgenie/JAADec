@@ -1,14 +1,14 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import net.sourceforge.jaad.aac.*;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.tools.IS;
 import net.sourceforge.jaad.aac.tools.LTPrediction;
 import net.sourceforge.jaad.aac.tools.MS;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SyntacticElements implements Constants {
 	static final Logger LOGGER = Logger.getLogger("jaad.SyntacticElements"); //for debugging
@@ -225,12 +225,10 @@ public class SyntacticElements implements Constants {
 				continue;
 
 			if(e instanceof SCE_LFE) {
-				scelfe = (SCE_LFE) e;
-				channel += processSingle(scelfe, filterBank, channel, profile, sf);
+				channel += processSingle((SCE_LFE) e, filterBank, channel, profile, sf);
 			}
 			else if(e instanceof CPE) {
-				cpe = (CPE) e;
-				processPair(cpe, filterBank, channel, profile, sf);
+				processPair((CPE) e, filterBank, channel, profile, sf);
 				channel += 2;
 			}
 			else if(e instanceof CCE) {
@@ -403,14 +401,12 @@ public class SyntacticElements implements Constants {
 	}
 
 	private void processDependentCoupling(boolean channelPair, int elementID, int couplingPoint, float[] data1, float[] data2) {
-		int index, c, chSelect;
-		CCE cce;
 		for(int i = 0; i<cces.length; i++) {
-			cce = cces[i];
-			index = 0;
+			CCE cce = cces[i];
+			int index = 0;
 			if(cce!=null&&cce.getCouplingPoint()==couplingPoint) {
-				for(c = 0; c<=cce.getCoupledCount(); c++) {
-					chSelect = cce.getCHSelect(c);
+				for(int c = 0; c<=cce.getCoupledCount(); c++) {
+					int chSelect = cce.getCHSelect(c);
 					if(cce.isChannelPair(c)==channelPair&&cce.getIDSelect(c)==elementID) {
 						if(chSelect!=1) {
 							cce.applyDependentCoupling(index, data1);
@@ -433,7 +429,7 @@ public class SyntacticElements implements Constants {
 
 		// always allocate at least two channels
 		// mono can't be upgraded after implicit PS occures
-		final int chs = Math.max(data.length, 2);
+		final int chs = 2; //Math.max(data.length, 2);
 
 		final int mult = (sbrPresent&&config.isSBREnabled()) ? 2 : 1;
 		final int length = mult*config.getFrameLength();
@@ -443,15 +439,12 @@ public class SyntacticElements implements Constants {
 		if(b.length!=chs*length*2)
 			b = new byte[chs*length*2];
 
-		float[] cur;
-		int i, j, off;
-		short s;
-		for(i = 0; i<chs; i++) {
+		for(int ch = 0; ch<chs; ch++) {
 			// duplicate possible mono channel
-			cur = data[i<data.length?i:0];
-			for(j = 0; j<length; j++) {
-				s = (short) Math.max(Math.min(Math.round(cur[j]), Short.MAX_VALUE), Short.MIN_VALUE);
-				off = (j*chs+i)*2;
+			float[] cur = data[ch<data.length?ch:0];
+			for(int l = 0; l<length; l++) {
+				short s = (short) Math.max(Math.min(Math.round(cur[l]), Short.MAX_VALUE), Short.MIN_VALUE);
+				int off = (l*chs+ch)*2;
 				if(be) {
 					b[off] = (byte) ((s>>8)&BYTE_MASK);
 					b[off+1] = (byte) (s&BYTE_MASK);

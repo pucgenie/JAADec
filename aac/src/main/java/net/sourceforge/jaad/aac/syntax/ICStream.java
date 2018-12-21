@@ -1,6 +1,5 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import java.util.Arrays;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.ChannelConfiguration;
 import net.sourceforge.jaad.aac.DecoderConfig;
@@ -9,6 +8,8 @@ import net.sourceforge.jaad.aac.gain.GainControl;
 import net.sourceforge.jaad.aac.huffman.HCB;
 import net.sourceforge.jaad.aac.huffman.Huffman;
 import net.sourceforge.jaad.aac.tools.TNS;
+
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -109,27 +110,27 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		final int windowGroupCount = info.getWindowGroupCount();
 		final int maxSFB = info.getMaxSFB();
 
-		int end, cb, incr;
 		int idx = 0;
 
 		for(int g = 0; g<windowGroupCount; g++) {
-			int k = 0;
-			while(k<maxSFB) {
-				end = k;
-				cb = in.readBits(4);
+			for(int k=0; k<maxSFB; ) {
+				int end = k;
+				int cb = in.readBits(4);
 				if(cb==12)
 					throw new AACException("invalid huffman codebook: 12");
 
-				while((incr = in.readBits(bits))==escVal) {
+				int incr;
+				do {
+					incr = in.readBits(bits);
 					end += incr;
-				}
-				end += incr;
+				} while(incr==escVal);
+
 				if(end>maxSFB)
 					throw new AACException("too many bands: "+end+", allowed: "+maxSFB);
 
-				for(; k<end; k++) {
+				for(; k<end; k++, idx++) {
 					sfbCB[idx] = cb;
-					sectEnd[idx++] = end;
+					sectEnd[idx] = end;
 				}
 			}
 		}

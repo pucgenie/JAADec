@@ -27,7 +27,6 @@ class CCE extends Element implements Constants {
 		1.4142135623730950488016887f,
 		2f};
 	private final ICStream ics;
-	//private float[] iqData;
 	private int couplingPoint;
 	private int coupledCount;
 	private final boolean[] channelPair;
@@ -72,8 +71,8 @@ class CCE extends Element implements Constants {
 		couplingPoint = 2*in.readBit();
 		coupledCount = in.readBits(3);
 		int gainCount = 0;
-		int i;
-		for(i = 0; i<=coupledCount; i++) {
+
+		for(int i = 0; i<=coupledCount; i++) {
 			gainCount++;
 			channelPair[i] = in.readBool();
 			idSelect[i] = in.readBits(4);
@@ -81,8 +80,8 @@ class CCE extends Element implements Constants {
 				chSelect[i] = in.readBits(2);
 				if(chSelect[i]==3)
 					gainCount++;
-			}
-			else chSelect[i] = 2;
+			} else
+				chSelect[i] = 2;
 		}
 		couplingPoint += in.readBit();
 		couplingPoint |= (couplingPoint>>1);
@@ -94,8 +93,10 @@ class CCE extends Element implements Constants {
 		final ICSInfo info = ics.getInfo();
 		final int windowGroupCount = info.getWindowGroupCount();
 		final int maxSFB = info.getMaxSFB();
-        final int[] sfbCB = ics.getSfbCB();
-		for(i = 0; i<gainCount; i++) {
+
+		final int[] sfbCB = ics.getSfbCB();
+
+		for(int i = 0; i<gainCount; i++) {
 			int idx = 0;
 			int cge = 1;
 			int xg = 0;
@@ -105,11 +106,11 @@ class CCE extends Element implements Constants {
 				xg = cge==0 ? 0 : Huffman.decodeScaleFactor(in)-60;
 				gainCache = (float) Math.pow(scale, -xg);
 			}
-			if(couplingPoint==2) gain[i][0] = gainCache;
+			if(couplingPoint==2)
+				gain[i][0] = gainCache;
 			else {
-				int sfb;
 				for(int g = 0; g<windowGroupCount; g++) {
-					for(sfb = 0; sfb<maxSFB; sfb++, idx++) {
+					for(int sfb = 0; sfb<maxSFB; sfb++, idx++) {
 						if(sfbCB[idx]!=HCB.ZERO_HCB) {
 							if(cge==0) {
 								int t = Huffman.decodeScaleFactor(in)-60;
@@ -132,12 +133,11 @@ class CCE extends Element implements Constants {
 	}
 
 	void process() {
-		//iqData = ics.getInvQuantData();
 	}
 
 	void applyIndependentCoupling(int index, float[] data) {
 		final double g = gain[index][0];
-		final float[] iqData = ics.getInvQuantData();
+		float[] iqData = ics.getInvQuantData();
 		for(int i = 0; i<data.length; i++) {
 			data[i] += g*iqData[i];
 		}
@@ -149,20 +149,19 @@ class CCE extends Element implements Constants {
 		final int windowGroupCount = info.getWindowGroupCount();
 		final int maxSFB = info.getMaxSFB();
 		final int[] sfbCB = ics.getSfbCB();
-		final float[] iqData = ics.getInvQuantData();
+		float[] iqData = ics.getInvQuantData();
 
 		int srcOff = 0;
 		int dstOff = 0;
 
-		int len, sfb, group, k, idx = 0;
-		float x;
+		int idx = 0;
 		for(int g = 0; g<windowGroupCount; g++) {
-			len = info.getWindowGroupLength(g);
-			for(sfb = 0; sfb<maxSFB; sfb++, idx++) {
+			int len = info.getWindowGroupLength(g);
+			for(int sfb = 0; sfb<maxSFB; sfb++, idx++) {
 				if(sfbCB[idx]!=HCB.ZERO_HCB) {
-					x = gain[index][idx];
-					for(group = 0; group<len; group++) {
-						for(k = swbOffsets[sfb]; k<swbOffsets[sfb+1]; k++) {
+					float x = gain[index][idx];
+					for(int group = 0; group<len; group++) {
+						for(int k = swbOffsets[sfb]; k<swbOffsets[sfb+1]; k++) {
 							data[dstOff+group*128+k] += x*iqData[srcOff+group*128+k];
 						}
 					}

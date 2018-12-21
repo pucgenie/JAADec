@@ -51,7 +51,7 @@ public class Play {
 	private static void decodeMP4(String in) throws Exception {
   		if(in.startsWith("http:"))
 	  		decodeMP4(new URL(in).openStream());
-     		else
+  		else
 	  		//decodeMP4(new FileInputStream(in));
 			decodeMP4(new RandomAccessFile(in, "r"));
  	}
