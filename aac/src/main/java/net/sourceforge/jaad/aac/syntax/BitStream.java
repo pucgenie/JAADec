@@ -29,7 +29,4 @@ public interface BitStream {
     static BitStream open(byte[] data) {
         return new ByteArrayBitStream(data);
     }
-
-    @Deprecated
-    void destroy();
 }
