@@ -5,7 +5,7 @@ import net.sourceforge.jaad.aac.EOSException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class BitStream {
+public class ByteArrayBitStream {
 
 	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.BitStream"); //for debugging
 
@@ -23,10 +23,10 @@ public class BitStream {
 	protected int bitsCached; //remaining bits in current cache
 	protected int position; //number of total bits read
 
-	public BitStream() {
+	public ByteArrayBitStream() {
 	}
 
-	public BitStream(byte[] data) {
+	public ByteArrayBitStream(byte[] data) {
 		setData(data);
 	}
 
