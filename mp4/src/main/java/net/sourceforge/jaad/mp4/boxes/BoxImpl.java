@@ -87,7 +87,8 @@ public class BoxImpl implements Box {
 		int i = 0;
 		while(box==null&&i<children.size()) {
 			b = children.get(i);
-			if(b.getType()==type) box = b;
+			if(b.getType()==type)
+				box = b;
 			i++;
 		}
 		return box;
@@ -100,7 +101,8 @@ public class BoxImpl implements Box {
 	public List<Box> getChildren(long type) {
 		List<Box> l = new ArrayList<Box>();
 		for(Box box : children) {
-			if(box.getType()==type) l.add(box);
+			if(box.getType()==type)
+				l.add(box);
 		}
 		return l;
 	}

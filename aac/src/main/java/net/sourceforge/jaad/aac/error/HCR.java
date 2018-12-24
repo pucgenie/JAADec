@@ -83,8 +83,10 @@ public class HCR implements Constants {
 	private static boolean isGoodCB(int cb, int sectCB) {
 		boolean b = false;
 		if((sectCB>HCB.ZERO_HCB&&sectCB<=HCB.ESCAPE_HCB)||(sectCB>=VCB11_FIRST&&sectCB<=VCB11_LAST)) {
-			if(cb<HCB.ESCAPE_HCB) b = ((sectCB==cb)||(sectCB==cb+1));
-			else b = (sectCB==cb);
+			if(cb<HCB.ESCAPE_HCB)
+				b = ((sectCB==cb)||(sectCB==cb+1));
+			else
+				b = (sectCB==cb);
 		}
 		return b;
 	}
@@ -106,10 +108,12 @@ public class HCR implements Constants {
 
 		//check parameter
 		final int spDataLen = ics.getReorderedSpectralDataLength();
-		if(spDataLen==0) return;
+		if(spDataLen==0)
+			return;
 
 		final int longestLen = ics.getLongestCodewordLength();
-		if(longestLen==0||longestLen>=spDataLen) throw new AACException("length of longest HCR codeword out of range");
+		if(longestLen==0||longestLen>=spDataLen)
+		    throw new AACException("length of longest HCR codeword out of range");
 
 		//create spOffsets
 		final int[] spOffsets = new int[8];
@@ -219,7 +223,8 @@ public class HCR implements Constants {
 			}
 		}
 
-		if(segmentsCount==0) throw new AACException("no segments in HCR");
+		if(segmentsCount==0)
+		    throw new AACException("no segments in HCR");
 
 		final int numberOfSets = numberOfCodewords/segmentsCount;
 
@@ -232,16 +237,19 @@ public class HCR implements Constants {
 					codewordID = codewordBase+set*segmentsCount-segmentsCount;
 
 					//data up
-					if(codewordID>=numberOfCodewords-segmentsCount) break;
+					if(codewordID>=numberOfCodewords-segmentsCount)
+						break;
 
 					if((codeword[codewordID].decoded==0)&&(segment[segmentID].len>0)) {
-						if(codeword[codewordID].bits.len!=0) segment[segmentID].concatBits(codeword[codewordID].bits);
+						if(codeword[codewordID].bits.len!=0)
+							segment[segmentID].concatBits(codeword[codewordID].bits);
 
 						int tmplen = segment[segmentID].len;
 						/*int ret = Huffman.decodeSpectralDataER(segment[segmentID], codeword[codewordID].cb,
 								spectralData, codeword[codewordID].sp_offset);
 
-						if(ret>=0) codeword[codewordID].decoded = 1;
+						if(ret>=0)
+						    codeword[codewordID].decoded = 1;
 						else {
 							codeword[codewordID].bits = segment[segmentID];
 							codeword[codewordID].bits.len = tmplen;

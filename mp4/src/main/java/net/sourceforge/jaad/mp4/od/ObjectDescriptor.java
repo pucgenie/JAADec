@@ -34,7 +34,8 @@ public class ObjectDescriptor extends Descriptor {
 		objectDescriptorID = (x>>6)&0x3FF;
 		urlPresent = ((x>>5)&1)==1;
 
-		if(urlPresent) url = in.readString(size-2);
+		if(urlPresent)
+			url = in.readString(size-2);
 
 		readChildren(in);
 	}

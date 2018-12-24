@@ -30,7 +30,8 @@ public class Huffman implements Codebooks {
 	private static void signValues(BitStream in, int[] data, int off, int len) {
 		for(int i = off; i<off+len; i++) {
 			if(data[i]!=0) {
-				if(in.readBool()) data[i] = -data[i];
+				if(in.readBool())
+					data[i] = -data[i];
 			}
 		}
 	}
@@ -68,13 +69,17 @@ public class Huffman implements Codebooks {
 
 		//sign & escape
 		if(cb<11) {
-			if(UNSIGNED[cb-1]) signValues(in, data, off, cb<5 ? QUAD_LEN : PAIR_LEN);
+			if(UNSIGNED[cb-1])
+				signValues(in, data, off, cb<5 ? QUAD_LEN : PAIR_LEN);
 		}
 		else if(cb==11||cb>15) {
 			signValues(in, data, off, cb<5 ? QUAD_LEN : PAIR_LEN); //virtual codebooks are always unsigned
-			if(Math.abs(data[off])==16) data[off] = getEscape(in, data[off]);
-			if(Math.abs(data[off+1])==16) data[off+1] = getEscape(in, data[off+1]);
+			if(Math.abs(data[off])==16)
+				data[off] = getEscape(in, data[off]);
+			if(Math.abs(data[off+1])==16)
+				data[off+1] = getEscape(in, data[off+1]);
 		}
-		else throw new AACException("Huffman: unknown spectral codebook: "+cb);
+		else
+		    throw new AACException("Huffman: unknown spectral codebook: "+cb);
 	}
 }

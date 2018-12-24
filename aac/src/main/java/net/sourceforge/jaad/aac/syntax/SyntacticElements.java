@@ -289,7 +289,8 @@ public class SyntacticElements implements Constants {
 				chs = 2;
 				scelfe.getSBR().processPS(data[channel], data[channel+1], false);
 			}
-			else scelfe.getSBR().process(data[channel], false);
+			else
+				scelfe.getSBR().process(data[channel], false);
 		}
 		return chs;
 	}
@@ -398,7 +399,8 @@ public class SyntacticElements implements Constants {
 							index++;
 						}
 					}
-					else index += 1+((chSelect==3) ? 1 : 0);
+					else
+						index += 1+((chSelect==3) ? 1 : 0);
 				}
 			}
 		}
@@ -422,7 +424,8 @@ public class SyntacticElements implements Constants {
 							index++;
 						}
 					}
-					else index += 1+((chSelect==3) ? 1 : 0);
+					else
+						index += 1+((chSelect==3) ? 1 : 0);
 				}
 			}
 		}

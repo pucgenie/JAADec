@@ -216,16 +216,24 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 	void sbrReset() {
 		int j;
-		if(this.qmfa[0]!=null) qmfa[0].reset();
-		if(this.qmfa[1]!=null) qmfa[1].reset();
-		if(this.qmfs[0]!=null) qmfs[0].reset();
-		if(this.qmfs[1]!=null) qmfs[1].reset();
+		if(this.qmfa[0]!=null)
+			qmfa[0].reset();
+		if(this.qmfa[1]!=null)
+			qmfa[1].reset();
+		if(this.qmfs[0]!=null)
+			qmfs[0].reset();
+		if(this.qmfs[1]!=null)
+			qmfs[1].reset();
 
 		for(j = 0; j<5; j++) {
-			if(this.G_temp_prev[0][j]!=null) Arrays.fill(G_temp_prev[0][j], 0);
-			if(this.G_temp_prev[1][j]!=null) Arrays.fill(G_temp_prev[1][j], 0);
-			if(this.Q_temp_prev[0][j]!=null) Arrays.fill(Q_temp_prev[0][j], 0);
-			if(this.Q_temp_prev[1][j]!=null) Arrays.fill(Q_temp_prev[1][j], 0);
+			if(this.G_temp_prev[0][j]!=null)
+				Arrays.fill(G_temp_prev[0][j], 0);
+			if(this.G_temp_prev[1][j]!=null)
+				Arrays.fill(G_temp_prev[1][j], 0);
+			if(this.Q_temp_prev[0][j]!=null)
+				Arrays.fill(Q_temp_prev[0][j], 0);
+			if(this.Q_temp_prev[1][j]!=null)
+				Arrays.fill(Q_temp_prev[1][j], 0);
 		}
 
 		for(int i = 0; i<40; i++) {
@@ -1152,7 +1160,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		float[][][] X = new float[MAX_NTSR][64][2];
 
 		/* case can occur due to bit errors */
-		if(!stereo) return 21;
+		if(!stereo)
+			return 21;
 
 		if(this.ret!=0||(this.header_count==0)) {
 			/* don't process just upsample */
@@ -1193,9 +1202,11 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 		if(this.header_count!=0&&this.ret==0) {
 			ret = sbr_save_prev_data(0);
-			if(ret!=0) return ret;
+			if(ret!=0)
+				return ret;
 			ret = sbr_save_prev_data(1);
-			if(ret!=0) return ret;
+			if(ret!=0)
+				return ret;
 		}
 
 		sbr_save_matrix(0);
@@ -1213,7 +1224,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		float[][][] X = new float[MAX_NTSR][64][2];
 
 		/* case can occur due to bit errors */
-		if(stereo) return 21;
+		if(stereo)
+			return 21;
 
 		if(this.ret!=0||(this.header_count==0)) {
 			/* don't process just upsample */
@@ -1245,7 +1257,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 		if(this.header_count!=0&&this.ret==0) {
 			ret = sbr_save_prev_data(0);
-			if(ret!=0) return ret;
+			if(ret!=0)
+				return ret;
 		}
 
 		sbr_save_matrix(0);
@@ -1264,7 +1277,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 		float[][][] X_right = new float[38][64][2];
 
 		/* case can occur due to bit errors */
-		if(stereo) return 21;
+		if(stereo)
+			return 21;
 
 		if(this.ret!=0||(this.header_count==0)) {
 			/* don't process just upsample */
@@ -1314,7 +1328,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 		if(this.header_count!=0&&this.ret==0) {
 			ret = sbr_save_prev_data(0);
-			if(ret!=0) return ret;
+			if(ret!=0)
+				return ret;
 		}
 
 		sbr_save_matrix(0);

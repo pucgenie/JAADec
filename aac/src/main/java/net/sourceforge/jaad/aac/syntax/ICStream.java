@@ -84,7 +84,8 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 
 		gainControlPresent = in.readBool();
 		if(gainControlPresent) {
-			if(gainControl==null) gainControl = new GainControl(frameLength);
+			if(gainControl==null)
+				gainControl = new GainControl(frameLength);
 			LOGGER.log(Level.FINE, "GAIN");
 			gainControl.decode(in, info.getWindowSequence());
 		}
@@ -98,7 +99,8 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 			longestCodewordLen = Math.max(in.readBits(6), 49);
 			//HCR.decodeReorderedSpectralData(this, in, data, conf.isSectionDataResilienceUsed());
 		}
-		else decodeSpectralData(in);
+		else
+			decodeSpectralData(in);
 	}
 
 	public void decodeSectionData(BitStream in, boolean sectionDataResilienceUsed) {
@@ -193,7 +195,8 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 								offset[1] += in.readBits(9)-256;
 								noiseFlag = false;
 							}
-							else offset[1] += Huffman.decodeScaleFactor(in)-SF_DELTA;
+							else
+								offset[1] += Huffman.decodeScaleFactor(in)-SF_DELTA;
 							tmp = Math.min(Math.max(offset[1], -100), 155);
 							scaleFactors[idx] = -SCALEFACTOR_TABLE[tmp+SF_OFFSET];
 						}
@@ -201,7 +204,8 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 					default:
 						for(; sfb<end; sfb++, idx++) {
 							offset[0] += Huffman.decodeScaleFactor(in)-SF_DELTA;
-							if(offset[0]>255) throw new AACException("scalefactor out of range: "+offset[0]);
+							if(offset[0]>255)
+								throw new AACException("scalefactor out of range: "+offset[0]);
 							scaleFactors[idx] = SCALEFACTOR_TABLE[offset[0]-100+SF_OFFSET];
 						}
 						break;

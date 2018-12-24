@@ -27,7 +27,8 @@ public class SampleSizeBox extends FullBox {
 			in.skipBytes(3);
 			sampleSize = in.readByte();
 		}
-		else sampleSize = (int) in.readBytes(4);
+		else
+			sampleSize = (int) in.readBytes(4);
 
 		sampleCount = in.readBytes(4);
 		sampleSizes = new long[(int) sampleCount];
@@ -42,10 +43,13 @@ public class SampleSizeBox extends FullBox {
 					sampleSizes[i+1] = x&0xF;
 				}
 			}
-			else readSizes(in, sampleSize/8);
+			else
+				readSizes(in, sampleSize/8);
 		}
-		else if(sampleSize==0) readSizes(in, 4);
-		else Arrays.fill(sampleSizes, sampleSize);
+		else if(sampleSize==0)
+			readSizes(in, 4);
+		else
+			Arrays.fill(sampleSizes, sampleSize);
 	}
 
 	private void readSizes(MP4Input in, int len) throws IOException {

@@ -62,7 +62,8 @@ public class CPE extends Element implements Constants {
 			else if(msMask.equals(MSMask.TYPE_ALL_0))
 				Arrays.fill(msUsed, false);
 
-			else throw new AACException("reserved MS mask type used");
+			else
+				throw new AACException("reserved MS mask type used");
 		}
 		else {
 			msMask = MSMask.TYPE_ALL_0;
@@ -70,7 +71,8 @@ public class CPE extends Element implements Constants {
 		}
 
 		if(profile.isErrorResilientProfile()&&(info.isLTPrediction1Present())) {
-			if(info.ltpData2Present = in.readBool()) info.getLTPrediction2().decode(in, info, profile);
+			if(info.ltpData2Present = in.readBool())
+				info.getLTPrediction2().decode(in, info, profile);
 		}
 
 		icsL.decode(in, commonWindow, conf);

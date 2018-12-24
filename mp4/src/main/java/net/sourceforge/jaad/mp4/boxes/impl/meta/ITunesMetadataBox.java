@@ -56,9 +56,11 @@ public class ITunesMetadataBox extends FullBox {
 
 		private static DataType forInt(int i) {
 			DataType type = null;
-			if(i>=0&&i<TYPES.length) type = TYPES[i];
+			if(i>=0&&i<TYPES.length)
+				type = TYPES[i];
 
-			if(type==null) type = UNDEFINED;
+			if(type==null)
+				type = UNDEFINED;
 			return type;
 		}
 	}
@@ -138,7 +140,8 @@ public class ITunesMetadataBox extends FullBox {
 			final SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMPS[i]);
 			date = sdf.parse(new String(data), new ParsePosition(0));
 		}
-		else date = null;
+		else
+			date = null;
 		return date;
 	}
 }

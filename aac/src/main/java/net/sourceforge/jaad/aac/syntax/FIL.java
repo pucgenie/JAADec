@@ -88,7 +88,8 @@ class FIL extends Element implements Constants {
 						ret = 0;
 						break;
 					}
-					else throw new AACException("SBR applied on unexpected element: "+prev);
+					else
+						throw new AACException("SBR applied on unexpected element: "+prev);
 				}
 				else {
 					in.skipBits(ret);

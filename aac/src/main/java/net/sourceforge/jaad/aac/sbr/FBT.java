@@ -123,7 +123,8 @@ class FBT implements Constants {
 	 */
 	public static int find_bands(int warp, int bands, int a0, int a1) {
 		float div = (float) Math.log(2.0);
-		if(warp!=0) div *= 1.3f;
+		if(warp!=0)
+			div *= 1.3f;
 
 		return (int) (bands*Math.log((float) a1/(float) a0)/div+0.5);
 	}

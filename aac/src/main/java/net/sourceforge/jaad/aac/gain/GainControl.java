@@ -194,7 +194,8 @@ public class GainControl implements GCConstants {
 				modFunc[i] = 1.0f;
 			}
 		}
-		if(winSeq.equals(WindowSequence.ONLY_LONG_SEQUENCE)||winSeq.equals(WindowSequence.EIGHT_SHORT_SEQUENCE)) levA[0] = 1.0f;
+		if(winSeq.equals(WindowSequence.ONLY_LONG_SEQUENCE)||winSeq.equals(WindowSequence.EIGHT_SHORT_SEQUENCE))
+			levA[0] = 1.0f;
 
 		for(i = 0; i<maxLocGain0; i++) {
 			modFunc[i+flatLen] = levA[0]*secLevel*buf1[i];
@@ -240,14 +241,18 @@ public class GainControl implements GCConstants {
 		for(i = 0; i<length; i++) {
 			loc[i+1] = 8*lct[i]; //gainc
 			lngain = getGainChangePointID(lvl[i]); //gainc
-			if(lngain<0) lev[i+1] = 1.0f/(float) Math.pow(2, -lngain);
-			else lev[i+1] = (float) Math.pow(2, lngain);
+			if(lngain<0)
+				lev[i+1] = 1.0f/(float) Math.pow(2, -lngain);
+			else
+				lev[i+1] = (float) Math.pow(2, lngain);
 		}
 
 		//set start point values
 		loc[0] = 0;
-		if(length==0) lev[0] = 1.0f;
-		else lev[0] = lev[1];
+		if(length==0)
+			lev[0] = 1.0f;
+		else
+			lev[0] = lev[1];
 		float secLevel = lev[0];
 
 		//set end point values
@@ -258,13 +263,16 @@ public class GainControl implements GCConstants {
 		for(i = 0; i<maxLocGain; i++) {
 			m[i] = 0;
 			for(j = 0; j<=length+1; j++) {
-				if(loc[j]<=i) m[i] = j;
+				if(loc[j]<=i)
+					m[i] = j;
 			}
 		}
 
 		for(i = 0; i<maxLocGain; i++) {
-			if((i>=loc[m[i]])&&(i<=loc[m[i]]+7)) fmd[i] = interpolateGain(lev[m[i]], lev[m[i]+1], i-loc[m[i]]);
-			else fmd[i] = lev[m[i]+1];
+			if((i>=loc[m[i]])&&(i<=loc[m[i]]+7))
+				fmd[i] = interpolateGain(lev[m[i]], lev[m[i]+1], i-loc[m[i]]);
+			else
+				fmd[i] = lev[m[i]+1];
 		}
 
 		return secLevel;
@@ -276,7 +284,8 @@ public class GainControl implements GCConstants {
 	 */
 	private int getGainChangePointID(int lngain) {
 		for(int i = 0; i<ID_GAIN; i++) {
-			if(lngain==LN_GAIN[i]) return i;
+			if(lngain==LN_GAIN[i])
+				return i;
 		}
 		return 0; //shouldn't happen
 	}

@@ -23,8 +23,10 @@ public class Radio {
 
 	public static void main(String[] args) {
 		try {
-			if(args.length<1) printUsage();
-			else decode(args[0]);
+			if(args.length<1)
+				printUsage();
+			else
+				decode(args[0]);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -49,8 +51,10 @@ public class Radio {
 			//send HTTP request
 			final PrintStream out = new PrintStream(sock.getOutputStream());
 			String path = uri.getPath();
-			if(path==null||path.equals("")) path = "/";
-			if(uri.getQuery()!=null) path += "?"+uri.getQuery();
+			if(path==null||path.equals(""))
+				path = "/";
+			if(uri.getQuery()!=null)
+				path += "?"+uri.getQuery();
 			out.println("GET "+path+" HTTP/1.1");
 			out.println("Host: "+uri.getHost());
 			out.println();

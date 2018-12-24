@@ -21,7 +21,8 @@ public class DataEntryUrnBox extends FullBox {
 		inFile = (flags&1)==1;
 		if(!inFile) {
 			referenceName = in.readUTFString((int) getLeft(in), MP4Input.UTF8);
-			if(getLeft(in)>0) location = in.readUTFString((int) getLeft(in), MP4Input.UTF8);
+			if(getLeft(in)>0)
+				location = in.readUTFString((int) getLeft(in), MP4Input.UTF8);
 		}
 	}
 

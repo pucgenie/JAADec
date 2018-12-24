@@ -18,16 +18,20 @@ public class MP4Info {
 
 	public static void main(String[] args) {
 		try {
-			if(args.length<1) printUsage();
+			if(args.length<1)
+				printUsage();
 			else {
 				boolean boxes = false;
 				final String file;
 				if(args.length>1) {
-					if(args[0].equals("-b")) boxes = true;
-					else printUsage();
+					if(args[0].equals("-b"))
+						boxes = true;
+					else
+						printUsage();
 					file = args[1];
 				}
-				else file = args[0];
+				else
+					file = args[0];
 
 				final MP4Input is = MP4Input.open(new RandomAccessFile(file, "r"));
 				final MP4Container cont = new MP4Container(is);
@@ -41,7 +45,8 @@ public class MP4Info {
 					System.out.println("\tTrack "+i+": "+t.getCodec()+" (language: "+t.getLanguage()+", created: "+t.getCreationTime()+")");
 
 					final Protection p = t.getProtection();
-					if(p!=null) System.out.println("\t\tprotection: "+p.getScheme());
+					if(p!=null)
+					    System.out.println("\t\tprotection: "+p.getScheme());
 				}
 
 				if(movie.containsMetaData()) {
@@ -52,7 +57,8 @@ public class MP4Info {
 							final List<?> l = (List<?>) data.get(MetaData.Field.COVER_ARTWORKS);
 							System.out.println("\t\t"+l.size()+" Cover Artworks present");
 						}
-						else System.out.println("\t\t"+key.getName()+" = "+data.get(key));
+						else
+							System.out.println("\t\t"+key.getName()+" = "+data.get(key));
 					}
 				}
 

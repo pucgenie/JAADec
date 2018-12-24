@@ -317,9 +317,13 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	/* limits the value i to the range [min,max] */
 	private int delta_clip(int i, int min, int max) {
-		if(i<min) return min;
-		else if(i>max) return max;
-		else return i;
+		if(i<min)
+			return min;
+		else
+			if(i>max)
+				return max;
+		else
+			return i;
 	}
 
 

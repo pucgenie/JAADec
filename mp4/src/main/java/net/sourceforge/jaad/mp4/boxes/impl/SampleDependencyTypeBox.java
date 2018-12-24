@@ -53,9 +53,11 @@ public class SampleDependencyTypeBox extends FullBox {
 
 		//get number of samples from SampleSizeBox
 		long sampleCount = -1;
-		if(parent.hasChild(BoxTypes.SAMPLE_SIZE_BOX)) sampleCount = ((SampleSizeBox) parent.getChild(BoxTypes.SAMPLE_SIZE_BOX)).getSampleCount();
+		if(parent.hasChild(BoxTypes.SAMPLE_SIZE_BOX))
+			sampleCount = ((SampleSizeBox) parent.getChild(BoxTypes.SAMPLE_SIZE_BOX)).getSampleCount();
 		//TODO: uncomment when CompactSampleSizeBox is implemented
-		//else if(parent.containsChild(BoxTypes.COMPACT_SAMPLE_SIZE_BOX)) sampleCount = ((CompactSampleSizeBox)parent.getChild(BoxTypes.SAMPLE_SIZE_BOX)).getSampleSize();
+		//else
+		//     if(parent.containsChild(BoxTypes.COMPACT_SAMPLE_SIZE_BOX)) sampleCount = ((CompactSampleSizeBox)parent.getChild(BoxTypes.SAMPLE_SIZE_BOX)).getSampleSize();
 		sampleHasRedundancy = new int[(int) sampleCount];
 		sampleIsDependedOn = new int[(int) sampleCount];
 		sampleDependsOn = new int[(int) sampleCount];

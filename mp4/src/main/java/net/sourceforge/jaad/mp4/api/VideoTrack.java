@@ -20,10 +20,14 @@ public class VideoTrack extends Track {
 
 		static Codec forType(long type) {
 			final Codec ac;
-			if(type==BoxTypes.AVC_SAMPLE_ENTRY) ac = AVC;
-			else if(type==BoxTypes.H263_SAMPLE_ENTRY) ac = H263;
-			else if(type==BoxTypes.MP4V_SAMPLE_ENTRY) ac = MP4_ASP;
-			else ac = UNKNOWN_VIDEO_CODEC;
+			if(type==BoxTypes.AVC_SAMPLE_ENTRY)
+				ac = AVC;
+			else if(type==BoxTypes.H263_SAMPLE_ENTRY)
+				ac = H263;
+			else if(type==BoxTypes.MP4V_SAMPLE_ENTRY)
+				ac = MP4_ASP;
+			else
+				ac = UNKNOWN_VIDEO_CODEC;
 			return ac;
 		}
 	}
@@ -44,12 +48,14 @@ public class VideoTrack extends Track {
 		if(stsd.getChildren().get(0) instanceof VideoSampleEntry) {
 			sampleEntry = (VideoSampleEntry) stsd.getChildren().get(0);
 			final long type = sampleEntry.getType();
-			if(type==BoxTypes.MP4V_SAMPLE_ENTRY) findDecoderSpecificInfo((ESDBox) sampleEntry.getChild(BoxTypes.ESD_BOX));
+			if(type==BoxTypes.MP4V_SAMPLE_ENTRY)
+				findDecoderSpecificInfo((ESDBox) sampleEntry.getChild(BoxTypes.ESD_BOX));
 			else if(type==BoxTypes.ENCRYPTED_VIDEO_SAMPLE_ENTRY||type==BoxTypes.DRMS_SAMPLE_ENTRY) {
 				findDecoderSpecificInfo((ESDBox) sampleEntry.getChild(BoxTypes.ESD_BOX));
 				protection = Protection.parse(sampleEntry.getChild(BoxTypes.PROTECTION_SCHEME_INFORMATION_BOX));
 			}
-			else decoderInfo = DecoderInfo.parse((CodecSpecificBox) sampleEntry.getChildren().get(0));
+			else
+				decoderInfo = DecoderInfo.parse((CodecSpecificBox) sampleEntry.getChildren().get(0));
 
 			codec = VideoCodec.forType(sampleEntry.getType());
 		}

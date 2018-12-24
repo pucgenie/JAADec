@@ -32,7 +32,8 @@ public class ItemInformationEntry extends FullBox {
 			extensionType = in.readBytes(4);
 			if(getLeft(in)>0) {
 				extension = Extension.forType((int) extensionType);
-				if(extension!=null) extension.decode(in);
+				if(extension!=null)
+					extension.decode(in);
 			}
 		}
 	}

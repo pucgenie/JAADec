@@ -30,12 +30,16 @@ public class Play {
 
 	public static void main(String[] args) {
 		try {
-			if(args.length<1) printUsage();
+			if(args.length<1)
+				printUsage();
 			if(args[0].equals("-mp4")) {
-				if(args.length<2) printUsage();
-				else decodeMP4(args[1]);
+				if(args.length<2)
+					printUsage();
+				else
+					decodeMP4(args[1]);
 			}
-			else decodeAAC(args[0]);
+			else
+				decodeAAC(args[0]);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -49,12 +53,12 @@ public class Play {
 	}
 
 	private static void decodeMP4(String in) throws Exception {
-  		if(in.startsWith("http:"))
-	  		decodeMP4(new URL(in).openStream());
-  		else
-	  		//decodeMP4(new FileInputStream(in));
+		if(in.startsWith("http:"))
+			decodeMP4(new URL(in).openStream());
+		else
+			//decodeMP4(new FileInputStream(in));
 			decodeMP4(new RandomAccessFile(in, "r"));
- 	}
+	}
 
 	private static void decodeMP4(InputStream in) throws Exception {
 			decodeMP4(MP4Input.open(in));
@@ -64,7 +68,7 @@ public class Play {
 			decodeMP4(MP4Input.open(in));
 	}
 
- 	private static void decodeMP4(MP4Input in) throws Exception {
+	private static void decodeMP4(MP4Input in) throws Exception {
 		SourceDataLine line = null;
 		byte[] b;
 		try {
@@ -73,7 +77,8 @@ public class Play {
 			final Movie movie = cont.getMovie();
 			//find AAC track
 			final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
-			if(tracks.isEmpty()) throw new Exception("movie does not contain any AAC track");
+			if(tracks.isEmpty())
+				throw new Exception("movie does not contain any AAC track");
 			final AudioTrack track = (AudioTrack) tracks.get(0);
 
 			//create audio format
@@ -110,11 +115,11 @@ public class Play {
 	}
 
     private static void decodeAAC(String in) throws Exception {
-	    if(in.startsWith("http:"))
-	        decodeAAC(new URL(in).openStream());
-        else
-	        decodeAAC(new FileInputStream(in));
-    }
+		if(in.startsWith("http:"))
+			decodeAAC(new URL(in).openStream());
+		else
+			decodeAAC(new FileInputStream(in));
+	}
 
 	private static void decodeAAC(InputStream in) throws Exception {
 		SourceDataLine line = null;

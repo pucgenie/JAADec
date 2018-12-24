@@ -38,7 +38,8 @@ public class RVLC implements RVLCTables {
 						break;
 					case HCB.INTENSITY_HCB:
 					case HCB.INTENSITY_HCB2:
-						if(!intensityUsed) intensityUsed = true;
+						if(!intensityUsed)
+							intensityUsed = true;
 						intensityPosition += decodeHuffman(in);
 						scaleFactors[g][sfb] = intensityPosition;
 						break;
@@ -61,9 +62,11 @@ public class RVLC implements RVLCTables {
 		}
 
 		int lastIntensityPosition = 0;
-		if(intensityUsed) lastIntensityPosition = decodeHuffman(in);
+		if(intensityUsed)
+			lastIntensityPosition = decodeHuffman(in);
 		noiseUsed = false;
-		if(in.readBool()) decodeEscapes(in, ics, scaleFactors);
+		if(in.readBool())
+			decodeEscapes(in, ics, scaleFactors);
 	}
 
 	private void decodeEscapes(BitStream in, ICStream ics, int[][] scaleFactors) {
@@ -79,11 +82,14 @@ public class RVLC implements RVLCTables {
 		int sfb, val;
 		for(int g = 0; g<windowGroupCount; g++) {
 			for(sfb = 0; sfb<maxSFB; sfb++) {
-				if(sfbCB[g][sfb]==HCB.NOISE_HCB&&!noiseUsed) noiseUsed = true;
+				if(sfbCB[g][sfb]==HCB.NOISE_HCB&&!noiseUsed)
+					noiseUsed = true;
 				else if(Math.abs(sfbCB[g][sfb])==ESCAPE_FLAG) {
 					val = decodeHuffmanEscape(in);
-					if(sfbCB[g][sfb]==-ESCAPE_FLAG) scaleFactors[g][sfb] -= val;
-					else scaleFactors[g][sfb] += val;
+					if(sfbCB[g][sfb]==-ESCAPE_FLAG)
+						scaleFactors[g][sfb] -= val;
+					else
+						scaleFactors[g][sfb] += val;
 				}
 			}
 		}

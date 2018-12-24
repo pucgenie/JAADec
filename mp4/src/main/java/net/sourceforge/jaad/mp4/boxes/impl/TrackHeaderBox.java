@@ -59,8 +59,10 @@ public class TrackHeaderBox extends FullBox {
 		in.skipBytes(2); //reserved
 
 		for(int i = 0; i<9; i++) {
-			if(i<6) matrix[i] = in.readFixedPoint(16, 16);
-			else matrix[i] = in.readFixedPoint(2, 30);
+			if(i<6)
+				matrix[i] = in.readFixedPoint(16, 16);
+			else
+				matrix[i] = in.readFixedPoint(2, 30);
 		}
 
 		width = in.readFixedPoint(16, 16);

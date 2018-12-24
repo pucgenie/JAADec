@@ -36,7 +36,8 @@ class HFAdjustment implements Constants, NoiseTable {
 		}
 
 		ret = estimate_current_envelope(sbr, adj, Xsbr, ch);
-		if(ret>0) return 1;
+		if(ret>0)
+			return 1;
 
 		calculate_gain(sbr, adj, ch);
 

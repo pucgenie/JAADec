@@ -24,7 +24,8 @@ public class GenreBox extends FullBox {
 			final byte[] b = in.readTerminated((int) getLeft(in), 0);
 			genre = new String(b, MP4Input.UTF8);
 		}
-		else readChildren(in);
+		else
+			readChildren(in);
 	}
 
 	public String getLanguageCode() {

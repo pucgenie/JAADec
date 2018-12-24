@@ -86,7 +86,8 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 			maxSFB = in.readBits(4);
 			int i;
 			for(i = 0; i<7; i++) {
-				if(in.readBool()) windowGroupLength[windowGroupCount-1]++;
+				if(in.readBool())
+					windowGroupLength[windowGroupCount-1]++;
 				else {
 					windowGroupCount++;
 					windowGroupLength[windowGroupCount-1] = 1;
@@ -103,24 +104,28 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 			swbOffsets = SWB_OFFSET_LONG_WINDOW[sf.getIndex()];
 			swbCount = SWB_LONG_WINDOW_COUNT[sf.getIndex()];
 			predictionDataPresent = in.readBool();
-			if(predictionDataPresent) readPredictionData(in, conf.getProfile(), sf, commonWindow);
+			if(predictionDataPresent)
+				readPredictionData(in, conf.getProfile(), sf, commonWindow);
 		}
 	}
 
 	private void readPredictionData(BitStream in, Profile profile, SampleFrequency sf, boolean commonWindow) {
 		switch(profile) {
 			case AAC_MAIN:
-				if(icPredict==null) icPredict = new ICPrediction();
+				if(icPredict==null)
+					icPredict = new ICPrediction();
 				icPredict.decode(in, maxSFB, sf);
 				break;
 			case AAC_LTP:
 				if(ltpData1Present = in.readBool()) {
-					if(ltPredict1==null) ltPredict1 = new LTPrediction(frameLength);
+					if(ltPredict1==null)
+						ltPredict1 = new LTPrediction(frameLength);
 					ltPredict1.decode(in, this, profile);
 				}
 				if(commonWindow) {
 					if(ltpData2Present = in.readBool()) {
-						if(ltPredict2==null) ltPredict2 = new LTPrediction(frameLength);
+						if(ltPredict2==null)
+							ltPredict2 = new LTPrediction(frameLength);
 						ltPredict2.decode(in, this, profile);
 					}
 				}
@@ -128,7 +133,8 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 			case ER_AAC_LTP:
 				if(!commonWindow) {
 					if(ltpData1Present = in.readBool()) {
-						if(ltPredict1==null) ltPredict1 = new LTPrediction(frameLength);
+						if(ltPredict1==null)
+							ltPredict1 = new LTPrediction(frameLength);
 						ltPredict1.decode(in, this, profile);
 					}
 				}
@@ -204,9 +210,12 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 	}
 
 	public void unsetPredictionSFB(int sfb) {
-		if(predictionDataPresent) icPredict.setPredictionUnused(sfb);
-		if(ltpData1Present) ltPredict1.setPredictionUnused(sfb);
-		if(ltpData2Present) ltPredict2.setPredictionUnused(sfb);
+		if(predictionDataPresent)
+			icPredict.setPredictionUnused(sfb);
+		if(ltpData1Present)
+			ltPredict1.setPredictionUnused(sfb);
+		if(ltpData2Present)
+			ltPredict2.setPredictionUnused(sfb);
 	}
 
 	public void setData(ICSInfo info) {

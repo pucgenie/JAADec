@@ -71,7 +71,8 @@ public class Artwork {
 	 */
 	public Image getImage() throws IOException {
 		try {
-			if(image==null) image = ImageIO.read(new ByteArrayInputStream(data));
+			if(image==null)
+				image = ImageIO.read(new ByteArrayInputStream(data));
 			return image;
 		}
 		catch(IOException e) {

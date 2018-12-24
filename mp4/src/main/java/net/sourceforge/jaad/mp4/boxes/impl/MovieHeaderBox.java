@@ -38,8 +38,10 @@ public class MovieHeaderBox extends FullBox {
 		in.skipBytes(10); //reserved
 
 		for(int i = 0; i<9; i++) {
-			if(i<6) matrix[i] = in.readFixedPoint(16, 16);
-			else matrix[i] = in.readFixedPoint(2, 30);
+			if(i<6)
+				matrix[i] = in.readFixedPoint(16, 16);
+			else
+				matrix[i] = in.readFixedPoint(2, 30);
 		}
 
 		in.skipBytes(24); //reserved

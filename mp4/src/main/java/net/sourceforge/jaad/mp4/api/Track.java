@@ -82,7 +82,8 @@ public abstract class Track {
 			frames = new ArrayList<Frame>();
 			parseSampleTable(stbl);
 		}
-		else frames = Collections.emptyList();
+		else
+			frames = Collections.emptyList();
 		currentFrame = 0;
 	}
 
@@ -95,8 +96,10 @@ public abstract class Track {
 
 		//chunk offsets
 		final ChunkOffsetBox stco;
-		if(stbl.hasChild(BoxTypes.CHUNK_OFFSET_BOX)) stco = (ChunkOffsetBox) stbl.getChild(BoxTypes.CHUNK_OFFSET_BOX);
-		else stco = (ChunkOffsetBox) stbl.getChild(BoxTypes.CHUNK_LARGE_OFFSET_BOX);
+		if(stbl.hasChild(BoxTypes.CHUNK_OFFSET_BOX))
+			stco = (ChunkOffsetBox) stbl.getChild(BoxTypes.CHUNK_OFFSET_BOX);
+		else
+			stco = (ChunkOffsetBox) stbl.getChild(BoxTypes.CHUNK_LARGE_OFFSET_BOX);
 		final long[] chunkOffsets = stco.getChunks();
 
 		//samples to chunks
@@ -126,8 +129,10 @@ public abstract class Track {
 		long offset = 0;
 		//iterate over all chunk groups
 		for(int i = 0; i<firstChunks.length; i++) {
-			if(i<firstChunks.length-1) lastChunk = (int) firstChunks[i+1]-1;
-			else lastChunk = chunkOffsets.length;
+			if(i<firstChunks.length-1)
+				lastChunk = (int) firstChunks[i+1]-1;
+			else
+				lastChunk = chunkOffsets.length;
 
 			//iterate over all chunks in current group
 			for(int j = (int) firstChunks[i]-1; j<lastChunk; j++) {
@@ -318,9 +323,11 @@ public abstract class Track {
 			frame = frames.get(currentFrame);
 
 			final long diff = frame.getOffset()-in.getOffset();
-			if(diff>0) in.skipBytes(diff);
+			if(diff>0)
+				in.skipBytes(diff);
 			else if(diff<0) {
-				if(in.hasRandomAccess()) in.seek(frame.getOffset());
+				if(in.hasRandomAccess())
+					in.seek(frame.getOffset());
 				else {
 					DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: frame {0} already skipped, offset:{1}, stream:{2}", new Object[]{currentFrame, frame.getOffset(), in.getOffset()});
 					throw new IOException("frame already skipped and no random access");

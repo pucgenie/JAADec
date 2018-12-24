@@ -83,12 +83,14 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 					out[mid+1*shortLen+i] = overlap[mid+shortLen*1+i]+(buf[shortLen*1+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*2+i]*SHORT_WINDOWS[windowShape][i]);
 					out[mid+2*shortLen+i] = overlap[mid+shortLen*2+i]+(buf[shortLen*3+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*4+i]*SHORT_WINDOWS[windowShape][i]);
 					out[mid+3*shortLen+i] = overlap[mid+shortLen*3+i]+(buf[shortLen*5+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*6+i]*SHORT_WINDOWS[windowShape][i]);
-					if(i<trans) out[mid+4*shortLen+i] = overlap[mid+shortLen*4+i]+(buf[shortLen*7+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*8+i]*SHORT_WINDOWS[windowShape][i]);
+					if(i<trans)
+						out[mid+4*shortLen+i] = overlap[mid+shortLen*4+i]+(buf[shortLen*7+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*8+i]*SHORT_WINDOWS[windowShape][i]);
 				}
 
 				//window the second half and save as overlap for next frame
 				for(i = 0; i<shortLen; i++) {
-					if(i>=trans) overlap[mid+4*shortLen+i-length] = (buf[shortLen*7+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*8+i]*SHORT_WINDOWS[windowShape][i]);
+					if(i>=trans)
+						overlap[mid+4*shortLen+i-length] = (buf[shortLen*7+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*8+i]*SHORT_WINDOWS[windowShape][i]);
 					overlap[mid+5*shortLen+i-length] = (buf[shortLen*9+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*10+i]*SHORT_WINDOWS[windowShape][i]);
 					overlap[mid+6*shortLen+i-length] = (buf[shortLen*11+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*12+i]*SHORT_WINDOWS[windowShape][i]);
 					overlap[mid+7*shortLen+i-length] = (buf[shortLen*13+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*14+i]*SHORT_WINDOWS[windowShape][i]);

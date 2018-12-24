@@ -27,7 +27,8 @@ public class InitialObjectDescriptor extends Descriptor {
 		urlPresent = ((x>>5)&1)==1;
 		includeInlineProfiles = ((x>>4)&1)==1;
 
-		if(urlPresent) url = in.readString(size-2);
+		if(urlPresent)
+			url = in.readString(size-2);
 		else {
 			odProfile = in.readByte();
 			sceneProfile = in.readByte();

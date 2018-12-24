@@ -16,7 +16,8 @@ public class EncoderBox extends FullBox {
 
 	@Override
 	public void decode(MP4Input in) throws IOException {
-		if(parent.getType()==BoxTypes.ITUNES_META_LIST_BOX) readChildren(in);
+		if(parent.getType()==BoxTypes.ITUNES_META_LIST_BOX)
+			readChildren(in);
 		else {
 			super.decode(in);
 			data = in.readString((int) getLeft(in));

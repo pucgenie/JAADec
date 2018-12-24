@@ -70,7 +70,8 @@ public class SampleGroupDescriptionBox extends FullBox {
 		}
 		if(boxClass!=null) {
 		entries[i] = (SampleGroupDescriptionEntry) BoxFactory.parseBox(in, boxClass);
-		if(entries[i]!=null) left -= entries[i].getSize();
+		if(entries[i]!=null)
+			left -= entries[i].getSize();
 		}
 		}*/
 	}

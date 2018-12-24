@@ -52,7 +52,8 @@ public class SLConfigDescriptor extends Descriptor {
 			}
 
 			if(!useTimeStamp) {
-				if(useWallClockTimeStamp) wallClockTimeStamp = in.readBytes(4);
+				if(useWallClockTimeStamp)
+					wallClockTimeStamp = in.readBytes(4);
 				tmp = (int) Math.ceil((double) (2*timeStampLength)/8);
 				final long tmp2 = in.readBytes(tmp);
 				final long mask = ((1<<timeStampLength)-1);
@@ -63,6 +64,7 @@ public class SLConfigDescriptor extends Descriptor {
 
 		tmp = in.readByte();
 		ocrStream = ((tmp>>7)&1)==1;
-		if(ocrStream) ocrES_ID = (int) in.readBytes(2);
+		if(ocrStream)
+			ocrES_ID = (int) in.readBytes(2);
 	}
 }

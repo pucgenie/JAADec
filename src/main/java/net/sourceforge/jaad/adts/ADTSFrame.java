@@ -41,7 +41,8 @@ class ADTSFrame implements AudioDecoderInfo {
 			//raw data blocks
 			for(i = 0; i<rawDataBlockCount; i++) {
 				//raw_data_block();
-				if(!protectionAbsent) crcCheck = in.readUnsignedShort();
+				if(!protectionAbsent)
+					crcCheck = in.readUnsignedShort();
 			}
 		}
 	}

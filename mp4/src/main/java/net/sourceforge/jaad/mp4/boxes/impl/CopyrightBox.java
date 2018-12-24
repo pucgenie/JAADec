@@ -30,7 +30,8 @@ public class CopyrightBox extends FullBox {
 
 			notice = in.readUTFString((int) getLeft(in));
 		}
-		else if(parent.getType()==BoxTypes.ITUNES_META_LIST_BOX) readChildren(in);
+		else if(parent.getType()==BoxTypes.ITUNES_META_LIST_BOX)
+			readChildren(in);
 	}
 
 	/**

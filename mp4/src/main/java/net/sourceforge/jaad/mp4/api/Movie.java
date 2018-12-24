@@ -30,15 +30,18 @@ public class Movie {
 		Track track;
 		for(int i = 0; i<trackBoxes.size(); i++) {
 			track = createTrack(trackBoxes.get(i));
-			if(track!=null) tracks.add(track);
+			if(track!=null)
+				tracks.add(track);
 		}
 
 		//read metadata: moov.meta/moov.udta.meta
 		metaData = new MetaData();
-		if(moov.hasChild(BoxTypes.META_BOX)) metaData.parse(null, moov.getChild(BoxTypes.META_BOX));
+		if(moov.hasChild(BoxTypes.META_BOX))
+			metaData.parse(null, moov.getChild(BoxTypes.META_BOX));
 		else if(moov.hasChild(BoxTypes.USER_DATA_BOX)) {
 			final Box udta = moov.getChild(BoxTypes.USER_DATA_BOX);
-			if(udta.hasChild(BoxTypes.META_BOX)) metaData.parse(udta, udta.getChild(BoxTypes.META_BOX));
+			if(udta.hasChild(BoxTypes.META_BOX))
+				metaData.parse(udta, udta.getChild(BoxTypes.META_BOX));
 		}
 
 		//detect DRM
@@ -88,7 +91,8 @@ public class Movie {
 	public List<Track> getTracks(Type type) {
 		final List<Track> l = new ArrayList<Track>();
 		for(Track t : tracks) {
-			if(t.getType().equals(type)) l.add(t);
+			if(t.getType().equals(type))
+				l.add(t);
 		}
 		return Collections.unmodifiableList(l);
 	}
@@ -103,7 +107,8 @@ public class Movie {
 	public List<Track> getTracks(Track.Codec codec) {
 		final List<Track> l = new ArrayList<Track>();
 		for(Track t : tracks) {
-			if(t.getCodec().equals(codec)) l.add(t);
+			if(t.getCodec().equals(codec))
+				l.add(t);
 		}
 		return Collections.unmodifiableList(l);
 	}
@@ -170,7 +175,8 @@ public class Movie {
 	 */
 	public boolean hasMoreFrames() {
 		for(Track track : tracks) {
-			if(track.hasMoreFrames()) return true;
+			if(track.hasMoreFrames())
+				return true;
 		}
 		return false;
 	}
@@ -186,7 +192,8 @@ public class Movie {
 	public Frame readNextFrame() throws IOException {
 		Track track = null;
 		for(Track t : tracks) {
-			if(t.hasMoreFrames()&&(track==null||t.getNextTimeStamp()<track.getNextTimeStamp())) track = t;
+			if(t.hasMoreFrames()&&(track==null||t.getNextTimeStamp()<track.getNextTimeStamp()))
+				track = t;
 		}
 
 		return (track==null) ? null : track.readNextFrame();

@@ -26,8 +26,10 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 			for(b = 0; b<BANDS; b++) {
 				for(j = 0; j<8; j++) {
 					for(i = 0; i<lbShort; i++) {
-						if(b%2==0) buf[lbLong*b+lbShort*j+i] = in[shortFrameLen*j+lbShort*b+i];
-						else buf[lbLong*b+lbShort*j+i] = in[shortFrameLen*j+lbShort*b+lbShort-1-i];
+						if(b%2==0)
+							buf[lbLong*b+lbShort*j+i] = in[shortFrameLen*j+lbShort*b+i];
+						else
+							buf[lbLong*b+lbShort*j+i] = in[shortFrameLen*j+lbShort*b+lbShort-1-i];
 					}
 				}
 			}
@@ -35,8 +37,10 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 		else {
 			for(b = 0; b<BANDS; b++) {
 				for(i = 0; i<lbLong; i++) {
-					if(b%2==0) buf[lbLong*b+i] = in[lbLong*b+i];
-					else buf[lbLong*b+i] = in[lbLong*b+lbLong-1-i];
+					if(b%2==0)
+						buf[lbLong*b+i] = in[lbLong*b+i];
+					else
+						buf[lbLong*b+i] = in[lbLong*b+lbLong-1-i];
 				}
 			}
 		}
@@ -108,8 +112,10 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 				for(k = 0; k<lbShort; k++) {
 					bufIn[k] = in[band*lbLong+j*lbShort+k];
 				}
-				if(j==0) System.arraycopy(window1, 0, window, 0, lbShort*2);
-				else System.arraycopy(window2, 0, window, 0, lbShort*2);
+				if(j==0)
+					System.arraycopy(window1, 0, window, 0, lbShort*2);
+				else
+					System.arraycopy(window2, 0, window, 0, lbShort*2);
 				imdct(bufIn, bufOut, window, lbShort);
 				for(k = 0; k<lbShort*2; k++) {
 					out[band*lbLong*2+j*lbShort*2+k] = bufOut[k]/32.0f;
@@ -138,7 +144,8 @@ class IMDCT implements GCConstants, IMDCTTables, Windows {
 			table = IMDCT_TABLE_32;
 			table2 = IMDCT_POST_TABLE_32;
 		}
-		else throw new AACException("gain control: unexpected IMDCT length");
+		else
+			throw new AACException("gain control: unexpected IMDCT length");
 
 		final float[] tmp = new float[n];
 		int i;
