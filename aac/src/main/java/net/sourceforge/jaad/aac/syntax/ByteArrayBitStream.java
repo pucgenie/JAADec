@@ -5,7 +5,7 @@ import net.sourceforge.jaad.aac.EOSException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ByteArrayBitStream {
+public class ByteArrayBitStream implements BitStream {
 
 	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.BitStream"); //for debugging
 

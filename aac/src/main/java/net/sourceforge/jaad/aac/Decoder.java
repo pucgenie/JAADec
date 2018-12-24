@@ -20,7 +20,6 @@ public class Decoder {
 	private final DecoderConfig config;
 	private final SyntacticElements syntacticElements;
 	private final FilterBank filterBank;
-	private BitStream in;
 	private int frames=0;
 	private ADIFHeader adifHeader;
 
@@ -35,7 +34,7 @@ public class Decoder {
 	}
 
 	public static Decoder create(byte[] data) {
-		return create(new BitStream(data));
+		return create(BitStream.open(data));
 	}
 
 	public static Decoder create(BitStream in) {
@@ -71,7 +70,6 @@ public class Decoder {
 		syntacticElements = new SyntacticElements(config);
 		filterBank = new FilterBank(config.isSmallFrameUsed(), config.getChannelConfiguration().getChannelCount());
 
-		in = new BitStream();
 
 		LOGGER.log(Level.FINE, "profile: {0}", config.getProfile());
 		LOGGER.log(Level.FINE, "sf: {0}", config.getSampleFrequency().getFrequency());
@@ -90,12 +88,12 @@ public class Decoder {
 	 * @throws AACException if decoding fails
 	 */
 	public void decodeFrame(byte[] frame, SampleBuffer buffer) {
-		if(frame!=null)
-			in.setData(frame);
+
+		BitStream in = BitStream.open(frame);
 
 		try {
 			LOGGER.log(Level.INFO, ()->String.format("frame %d @%d", frames, 8*frame.length));
-			decode(buffer);
+			decode(in, buffer);
 			LOGGER.log(Level.INFO, ()->String.format("left %d", in.getBitsLeft()));
 		}
 		catch(EOSException e) {
@@ -105,7 +103,7 @@ public class Decoder {
 		}
 	}
 
-	private void decode(SampleBuffer buffer) {
+	private void decode(BitStream in, SampleBuffer buffer) {
 		if(ADIFHeader.isPresent(in)) {
 			adifHeader = ADIFHeader.readHeader(in);
 			final PCE pce = adifHeader.getFirstPCE();

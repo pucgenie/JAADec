@@ -95,7 +95,7 @@ public class AACAudioFileReader extends AudioFileReader {
 			canHandle = false;	//Ogg stream ?
 		}
 		else {
-			final BitStream bit = new BitStream(head);
+			//final BitStream bit = new BitStream(head);
 			try {
 				ADTSDemultiplexer adts = new ADTSDemultiplexer(in);
 				canHandle = true;
