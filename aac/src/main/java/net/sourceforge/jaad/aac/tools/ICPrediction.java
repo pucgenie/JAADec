@@ -59,10 +59,6 @@ public class ICPrediction {
 		}*/
 	}
 
-	public void setPredictionUnused(int sfb) {
-		predictionUsed[sfb] = false;
-	}
-
 	public void process(ICStream ics, float[] data, SampleFrequency sf) {
 		final ICSInfo info = ics.getInfo();
 
@@ -71,9 +67,8 @@ public class ICPrediction {
 		else {
 			final int len = Math.min(sf.getMaximalPredictionSFB(), info.getMaxSFB());
 			final int[] swbOffsets = info.getSWBOffsets();
-			int k;
 			for(int sfb = 0; sfb<len; sfb++) {
-				for(k = swbOffsets[sfb]; k<swbOffsets[sfb+1]; k++) {
+				for(int k = swbOffsets[sfb]; k<swbOffsets[sfb+1]; k++) {
 					predict(data, k, predictionUsed[sfb]);
 				}
 			}
@@ -95,15 +90,13 @@ public class ICPrediction {
 	}
 
 	private void resetAllPredictors() {
-		int i;
-		for(i = 0; i<states.length; i++) {
+		for(int i = 0; i<states.length; i++) {
 			resetPredictState(i);
 		}
 	}
 
 	private void resetPredictorGroup(int group) {
-		int i;
-		for(i = group-1; i<states.length; i += 30) {
+		for(int i = group-1; i<states.length; i += 30) {
 			resetPredictState(i);
 		}
 	}

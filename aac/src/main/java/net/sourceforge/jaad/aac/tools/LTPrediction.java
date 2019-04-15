@@ -9,13 +9,15 @@ import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.ICSInfo;
 import net.sourceforge.jaad.aac.syntax.ICStream;
 
-import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Long-term prediction
  * @author in-somnia
  */
 public class LTPrediction implements Constants {
+
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.LTPrediction"); //for debugging
 
 	private static final float[] CODEBOOK = {
 		0.570829f,
@@ -27,6 +29,9 @@ public class LTPrediction implements Constants {
 		1.194601f,
 		1.369533f
 	};
+
+	private boolean isPresent = false;
+
 	private final int frameLength;
 	private final int[] states;
 	private int coef, lag, lastBand;
@@ -39,8 +44,18 @@ public class LTPrediction implements Constants {
 		states = new int[4*frameLength];
 	}
 
+	public boolean isPresent() {
+		return isPresent;
+	}
+
 	public void decode(BitStream in, ICSInfo info, Profile profile) {
 		lag = 0;
+
+		isPresent = in.readBool();
+		if(!isPresent) {
+			return;
+		}
+
 		if(profile.equals(Profile.AAC_LD)) {
 			lagUpdate = in.readBool();
 			if(lagUpdate)
@@ -76,12 +91,11 @@ public class LTPrediction implements Constants {
 		}
 	}
 
-	public void setPredictionUnused(int sfb) {
-		if(longUsed!=null)
-			longUsed[sfb] = false;
-	}
-
 	public void process(ICStream ics, float[] data, FilterBank filterBank, SampleFrequency sf) {
+
+		if(!isPresent)
+			return;
+
 		final ICSInfo info = ics.getInfo();
 
 		if(!info.isEightShortFrame()) {
@@ -101,13 +115,12 @@ public class LTPrediction implements Constants {
 
 			final int[] swbOffsets = info.getSWBOffsets();
 			final int swbOffsetMax = info.getSWBOffsetMax();
-			int low, high, bin;
 			for(int sfb = 0; sfb<lastBand; sfb++) {
 				if(longUsed[sfb]) {
-					low = swbOffsets[sfb];
-					high = Math.min(swbOffsets[sfb+1], swbOffsetMax);
+					int low = swbOffsets[sfb];
+					int high = Math.min(swbOffsets[sfb+1], swbOffsetMax);
 
-					for(bin = low; bin<high; bin++) {
+					for(int bin = low; bin<high; bin++) {
 						data[bin] += out[bin];
 					}
 				}
@@ -116,9 +129,8 @@ public class LTPrediction implements Constants {
 	}
 
 	public void updateState(float[] time, float[] overlap, Profile profile) {
-		int i;
 		if(profile.equals(Profile.AAC_LD)) {
-			for(i = 0; i<frameLength; i++) {
+			for(int i = 0; i<frameLength; i++) {
 				states[i] = states[i+frameLength];
 				states[frameLength+i] = states[i+(frameLength*2)];
 				states[(frameLength*2)+i] = Math.round(time[i]);
@@ -126,27 +138,29 @@ public class LTPrediction implements Constants {
 			}
 		}
 		else {
-			for(i = 0; i<frameLength; i++) {
+			for(int i = 0; i<frameLength; i++) {
 				states[i] = states[i+frameLength];
 				states[frameLength+i] = Math.round(time[i]);
 				states[(frameLength*2)+i] = Math.round(overlap[i]);
 			}
 		}
+		isPresent = false;
 	}
 
 	public static boolean isLTPProfile(Profile profile) {
 		return profile.equals(Profile.AAC_LTP)||profile.equals(Profile.ER_AAC_LTP)||profile.equals(Profile.AAC_LD);
 	}
 
-	public void copy(LTPrediction ltp) {
+	public void copyOf(LTPrediction ltp) {
 		System.arraycopy(ltp.states, 0, states, 0, states.length);
 		coef = ltp.coef;
 		lag = ltp.lag;
 		lastBand = ltp.lastBand;
 		lagUpdate = ltp.lagUpdate;
-		shortUsed = Arrays.copyOf(ltp.shortUsed, ltp.shortUsed.length);
-		shortLagPresent = Arrays.copyOf(ltp.shortLagPresent, ltp.shortLagPresent.length);
-		shortLag = Arrays.copyOf(ltp.shortLag, ltp.shortLag.length);
-		longUsed = Arrays.copyOf(ltp.longUsed, ltp.longUsed.length);
+		shortUsed = Constants.copyOf(ltp.shortUsed);
+		shortLagPresent = Constants.copyOf(ltp.shortLagPresent);
+		shortLag = Constants.copyOf(ltp.shortLag);
+		longUsed = Constants.copyOf(ltp.longUsed);
 	}
+
 }

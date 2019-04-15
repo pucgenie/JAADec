@@ -1,5 +1,7 @@
 package net.sourceforge.jaad.aac;
 
+import javax.sound.sampled.AudioFormat;
+
 /**
  * The SampleBuffer holds the decoded AAC frame. It contains the raw PCM data
  * and its format.
@@ -18,6 +20,14 @@ public class SampleBuffer {
 		channels = 0;
 		bitsPerSample = 0;
 		bigEndian = true;
+	}
+
+	public SampleBuffer(AudioFormat af) {
+		data = new byte[0];
+		sampleRate = (int) af.getSampleRate();
+		channels = af.getChannels();
+		bitsPerSample = af.getSampleSizeInBits();
+		bigEndian = af.isBigEndian();
 	}
 
 	/**

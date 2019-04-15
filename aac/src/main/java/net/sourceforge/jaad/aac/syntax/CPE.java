@@ -7,6 +7,8 @@ import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.tools.MSMask;
 
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * channel_pair_element: abbreviation CPE.
@@ -20,17 +22,18 @@ import java.util.Arrays;
  */
 
 public class CPE extends Element implements Constants {
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.CPE"); //for debugging
 
 	private MSMask msMask;
 	private boolean[] msUsed;
 	private boolean commonWindow;
 	ICStream icsL, icsR;
 
-	CPE(int frameLength) {
+	CPE(DecoderConfig config) {
 		super();
 		msUsed = new boolean[MAX_MS_MASK];
-		icsL = new ICStream(frameLength);
-		icsR = new ICStream(frameLength);
+		icsL = new ICStream(config);
+		icsR = new ICStream(config);
 	}
 
 	void decode(BitStream in, DecoderConfig conf) {
@@ -42,15 +45,19 @@ public class CPE extends Element implements Constants {
 		readElementInstanceTag(in);
 
 		commonWindow = in.readBool();
-		final ICSInfo info = icsL.getInfo();
+		final ICSInfo infoL = icsL.getInfo();
+		final ICSInfo infoR = icsR.getInfo();
+
+		LOGGER.log(Level.FINE, ()->String.format("CPE %s", commonWindow? "common":""));
+
 		if(commonWindow) {
-			info.decode(in, conf, commonWindow);
-			icsR.getInfo().setData(info);
+			infoL.decode(in, conf, commonWindow);
+			infoR.setCommonData(in, conf, infoL);
 
 			msMask = MSMask.forInt(in.readBits(2));
 			if(msMask.equals(MSMask.TYPE_USED)) {
-				final int maxSFB = info.getMaxSFB();
-				final int windowGroupCount = info.getWindowGroupCount();
+				final int maxSFB = infoL.getMaxSFB();
+				final int windowGroupCount = infoL.getWindowGroupCount();
 
 				for(int idx = 0; idx<windowGroupCount*maxSFB; idx++) {
 					msUsed[idx] = in.readBool();
@@ -68,11 +75,6 @@ public class CPE extends Element implements Constants {
 		else {
 			msMask = MSMask.TYPE_ALL_0;
 			Arrays.fill(msUsed, false);
-		}
-
-		if(profile.isErrorResilientProfile()&&(info.isLTPrediction1Present())) {
-			if(info.ltpData2Present = in.readBool())
-				info.getLTPrediction2().decode(in, info, profile);
 		}
 
 		icsL.decode(in, commonWindow, conf);

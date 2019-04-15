@@ -6,6 +6,7 @@ import net.sourceforge.jaad.aac.syntax.PCE;
 import net.sourceforge.jaad.aac.syntax.SyntacticElements;
 import net.sourceforge.jaad.aac.transport.ADIFHeader;
 
+import javax.sound.sampled.AudioFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +21,7 @@ public class Decoder {
 	private final DecoderConfig config;
 	private final SyntacticElements syntacticElements;
 	private final FilterBank filterBank;
-	private int frames=0;
+	public int frames=0;
 	private ADIFHeader adifHeader;
 
 	/**
@@ -71,9 +72,9 @@ public class Decoder {
 		filterBank = new FilterBank(config.isSmallFrameUsed(), config.getChannelConfiguration().getChannelCount());
 
 
-		LOGGER.log(Level.FINE, "profile: {0}", config.getProfile());
-		LOGGER.log(Level.FINE, "sf: {0}", config.getSampleFrequency().getFrequency());
-		LOGGER.log(Level.FINE, "channels: {0}", config.getChannelConfiguration().getDescription());
+		LOGGER.log(Level.INFO, "profile: {0}", config.getProfile());
+		LOGGER.log(Level.INFO, "sf: {0}", config.getSampleFrequency().getFrequency());
+		LOGGER.log(Level.INFO, "channels: {0}", config.getChannelConfiguration().getDescription());
 	}
 
 	public DecoderConfig getConfig() {
@@ -92,9 +93,9 @@ public class Decoder {
 		BitStream in = BitStream.open(frame);
 
 		try {
-			LOGGER.log(Level.INFO, ()->String.format("frame %d @%d", frames, 8*frame.length));
+			LOGGER.log(Level.FINE, ()->String.format("frame %d @%d", frames, 8*frame.length));
 			decode(in, buffer);
-			LOGGER.log(Level.INFO, ()->String.format("left %d", in.getBitsLeft()));
+			LOGGER.log(Level.FINEST, ()->String.format("left %d", in.getBitsLeft()));
 		}
 		catch(EOSException e) {
 			LOGGER.log(Level.WARNING,"unexpected end of frame",e);
@@ -132,5 +133,11 @@ public class Decoder {
 			else
 				throw new AACException(e);
 		}
+	}
+
+	public AudioFormat getAudioFormat() {
+		int mult = 1;
+		final int freq = mult*config.getSampleFrequency().getFrequency();
+		return new AudioFormat(freq,16,2, true, false);
 	}
 }

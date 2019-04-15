@@ -1,5 +1,7 @@
 package net.sourceforge.jaad.aac.syntax;
 
+import net.sourceforge.jaad.aac.DecoderConfig;
+
 /**
  * data_stream_element Abbreviation DSE.
  *
@@ -15,7 +17,7 @@ class DSE extends Element {
 
 	private byte[] dataStreamBytes;
 
-	DSE() {
+	DSE(DecoderConfig config) {
 		super();
 	}
 

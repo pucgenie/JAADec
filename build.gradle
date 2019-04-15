@@ -27,10 +27,13 @@ allprojects {
         }
 
     }
+    
+    repositories {
+        mavenCentral()
+    }
 }
 
 dependencies {
     compile (project(':aac'))
     compile (project(':mp4'))
-
 }

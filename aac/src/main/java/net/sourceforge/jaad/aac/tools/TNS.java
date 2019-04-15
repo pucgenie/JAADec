@@ -7,11 +7,15 @@ import net.sourceforge.jaad.aac.syntax.Constants;
 import net.sourceforge.jaad.aac.syntax.ICSInfo;
 import net.sourceforge.jaad.aac.syntax.ICStream;
 
+import java.util.logging.Logger;
+
 /**
  * Temporal Noise Shaping
  * @author in-somnia
  */
 public class TNS implements Constants, TNSTables {
+
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.TNS"); //for debugging
 
 	private static final int TNS_MAX_ORDER = 20;
 	private static final int[] SHORT_BITS = {1, 4, 3}, LONG_BITS = {2, 6, 5};
@@ -33,23 +37,22 @@ public class TNS implements Constants, TNSTables {
 		final int windowCount = info.getWindowCount();
 		final int[] bits = info.isEightShortFrame() ? SHORT_BITS : LONG_BITS;
 
-		int w, i, filt, coefLen, coefRes, coefCompress, tmp;
-		for(w = 0; w<windowCount; w++) {
+		for(int w = 0; w<windowCount; w++) {
 			if((nFilt[w] = in.readBits(bits[0]))!=0) {
-				coefRes = in.readBit();
+				int coefRes = in.readBit();
 
-				for(filt = 0; filt<nFilt[w]; filt++) {
+				for(int filt = 0; filt<nFilt[w]; filt++) {
 					length[w][filt] = in.readBits(bits[1]);
 
 					if((order[w][filt] = in.readBits(bits[2]))>20)
 						throw new AACException("TNS filter out of range: "+order[w][filt]);
 					else if(order[w][filt]!=0) {
 						direction[w][filt] = in.readBool();
-						coefCompress = in.readBit();
-						coefLen = coefRes+3-coefCompress;
-						tmp = 2*coefCompress+coefRes;
+						int coefCompress = in.readBit();
+						int coefLen = coefRes+3-coefCompress;
+						int tmp = 2*coefCompress+coefRes;
 
-						for(i = 0; i<order[w][filt]; i++) {
+						for(int i = 0; i<order[w][filt]; i++) {
 							coef[w][filt][i] = TNS_TABLES[tmp][in.readBits(coefLen)];
 						}
 					}
@@ -59,6 +62,9 @@ public class TNS implements Constants, TNSTables {
 	}
 
 	public void process(ICStream ics, float[] spec, SampleFrequency sf, boolean decode) {
+
+		LOGGER.warning("TNS unavailable");
+		//throw new AACException("TNS unupported");
 		//TODO...
 	}
 }

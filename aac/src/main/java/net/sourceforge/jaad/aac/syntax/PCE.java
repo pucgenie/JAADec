@@ -89,7 +89,7 @@ public class PCE extends Element {
 	public void decode(BitStream in) {
 		readElementInstanceTag(in);
 
-		profile = Profile.forInt(in.readBits(2));
+		profile = Profile.forInt(1+in.readBits(2));
 
 		sampleFrequency = SampleFrequency.forInt(in.readBits(4));
 

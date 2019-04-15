@@ -7,9 +7,10 @@ import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.tools.ICPrediction;
 import net.sourceforge.jaad.aac.tools.LTPrediction;
 
-import java.util.Arrays;
+import java.util.logging.Logger;
 
 public class ICSInfo implements Constants, ScaleFactorBands {
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.ICSInfo"); //for debugging
 
 	public static final int WINDOW_SHAPE_SINE = 0;
 	public static final int WINDOW_SHAPE_KAISER = 1;
@@ -51,8 +52,7 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 	//prediction
 	private boolean predictionDataPresent;
 	private ICPrediction icPredict;
-	boolean ltpData1Present, ltpData2Present;
-	private LTPrediction ltPredict1, ltPredict2;
+	private LTPrediction ltPredict;
 	//windows/sfbs
 	private int windowCount;
 	private int windowGroupCount;
@@ -60,13 +60,14 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 	private int swbCount;
 	private int[] swbOffsets;
 
-	public ICSInfo(int frameLength) {
-		this.frameLength = frameLength;
+	public ICSInfo(DecoderConfig config) {
+		this.frameLength = config.getFrameLength();
 		windowShape = new int[2];
 		windowSequence = WindowSequence.ONLY_LONG_SEQUENCE;
 		windowGroupLength = new int[MAX_WINDOW_GROUP_COUNT];
-		ltpData1Present = false;
-		ltpData2Present = false;
+
+		if(LTPrediction.isLTPProfile(config.getProfile()))
+			ltPredict = new LTPrediction(frameLength);
 	}
 
 	/* ========== decoding ========== */
@@ -110,6 +111,8 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 	}
 
 	private void readPredictionData(BitStream in, Profile profile, SampleFrequency sf, boolean commonWindow) {
+
+		LOGGER.fine("prediction present");
 		switch(profile) {
 			case AAC_MAIN:
 				if(icPredict==null)
@@ -117,27 +120,9 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 				icPredict.decode(in, maxSFB, sf);
 				break;
 			case AAC_LTP:
-				if(ltpData1Present = in.readBool()) {
-					if(ltPredict1==null)
-						ltPredict1 = new LTPrediction(frameLength);
-					ltPredict1.decode(in, this, profile);
-				}
-				if(commonWindow) {
-					if(ltpData2Present = in.readBool()) {
-						if(ltPredict2==null)
-							ltPredict2 = new LTPrediction(frameLength);
-						ltPredict2.decode(in, this, profile);
-					}
-				}
-				break;
 			case ER_AAC_LTP:
-				if(!commonWindow) {
-					if(ltpData1Present = in.readBool()) {
-						if(ltPredict1==null)
-							ltPredict1 = new LTPrediction(frameLength);
-						ltPredict1.decode(in, this, profile);
-					}
-				}
+				ltPredict.decode(in, this, profile);
+
 				break;
 			default:
 				throw new AACException("unexpected profile for LTP: "+profile);
@@ -193,49 +178,27 @@ public class ICSInfo implements Constants, ScaleFactorBands {
 		return icPredict;
 	}
 
-	public boolean isLTPrediction1Present() {
-		return ltpData1Present;
+	public LTPrediction getLTPrediction() {
+		return ltPredict;
 	}
 
-	public LTPrediction getLTPrediction1() {
-		return ltPredict1;
-	}
+	public void setCommonData(BitStream in, DecoderConfig conf, ICSInfo info) {
 
-	public boolean isLTPrediction2Present() {
-		return ltpData2Present;
-	}
-
-	public LTPrediction getLTPrediction2() {
-		return ltPredict2;
-	}
-
-	public void unsetPredictionSFB(int sfb) {
-		if(predictionDataPresent)
-			icPredict.setPredictionUnused(sfb);
-		if(ltpData1Present)
-			ltPredict1.setPredictionUnused(sfb);
-		if(ltpData2Present)
-			ltPredict2.setPredictionUnused(sfb);
-	}
-
-	public void setData(ICSInfo info) {
 		windowSequence = WindowSequence.valueOf(info.windowSequence.name());
 		windowShape[PREVIOUS] = windowShape[CURRENT];
 		windowShape[CURRENT] = info.windowShape[CURRENT];
 		maxSFB = info.maxSFB;
-		predictionDataPresent = info.predictionDataPresent;
-		if(predictionDataPresent)
-			icPredict = info.icPredict;
 
-		ltpData1Present = info.ltpData1Present;
-		if(ltpData1Present) {
-			ltPredict1.copy(info.ltPredict1);
-			ltPredict2.copy(info.ltPredict2);
-		}
+		predictionDataPresent = info.predictionDataPresent;
+		icPredict = null;
+
 		windowCount = info.windowCount;
 		windowGroupCount = info.windowGroupCount;
-		windowGroupLength = Arrays.copyOf(info.windowGroupLength, info.windowGroupLength.length);
+		windowGroupLength = Constants.copyOf(info.windowGroupLength);
 		swbCount = info.swbCount;
-		swbOffsets = Arrays.copyOf(info.swbOffsets, info.swbOffsets.length);
+		swbOffsets = Constants.copyOf(info.swbOffsets);
+
+		if(predictionDataPresent && ltPredict!=null)
+			ltPredict.decode(in, this, conf.getProfile());
 	}
 }

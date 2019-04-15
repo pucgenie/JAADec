@@ -119,46 +119,47 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 				}
 				break;
 		}
+
+		return;
 	}
 
 	//only for LTP: no overlapping, no short blocks
 	public void processLTP(WindowSequence windowSequence, int windowShape, int windowShapePrev, float[] in, float[] out) {
-		int i;
 
 		switch(windowSequence) {
 			case ONLY_LONG_SEQUENCE:
-				for(i = length-1; i>=0; i--) {
+				for(int i = length-1; i>=0; i--) {
 					buf[i] = in[i]*LONG_WINDOWS[windowShapePrev][i];
 					buf[i+length] = in[i+length]*LONG_WINDOWS[windowShape][length-1-i];
 				}
 				break;
 
 			case LONG_START_SEQUENCE:
-				for(i = 0; i<length; i++) {
+				for(int i = 0; i<length; i++) {
 					buf[i] = in[i]*LONG_WINDOWS[windowShapePrev][i];
 				}
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					buf[i+length] = in[i+length];
 				}
-				for(i = 0; i<shortLen; i++) {
+				for(int i = 0; i<shortLen; i++) {
 					buf[i+length+mid] = in[i+length+mid]*SHORT_WINDOWS[windowShape][shortLen-1-i];
 				}
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					buf[i+length+mid+shortLen] = 0;
 				}
 				break;
 
 			case LONG_STOP_SEQUENCE:
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					buf[i] = 0;
 				}
-				for(i = 0; i<shortLen; i++) {
+				for(int i = 0; i<shortLen; i++) {
 					buf[i+mid] = in[i+mid]*SHORT_WINDOWS[windowShapePrev][i];
 				}
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					buf[i+mid+shortLen] = in[i+mid+shortLen];
 				}
-				for(i = 0; i<length; i++) {
+				for(int i = 0; i<length; i++) {
 					buf[i+length] = in[i+length]*LONG_WINDOWS[windowShape][length-1-i];
 				}
 				break;

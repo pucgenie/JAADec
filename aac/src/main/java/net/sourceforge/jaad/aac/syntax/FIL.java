@@ -1,6 +1,7 @@
 package net.sourceforge.jaad.aac.syntax;
 
 import net.sourceforge.jaad.aac.AACException;
+import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.SampleFrequency;
 
 /**
@@ -45,9 +46,9 @@ class FIL extends Element implements Constants {
 	private final boolean downSampledSBR;
 	private DynamicRangeInfo dri;
 
-	FIL(boolean downSampledSBR) {
+	FIL(DecoderConfig config) {
 		super();
-		this.downSampledSBR = downSampledSBR;
+		this.downSampledSBR = config.isSBRDownSampled();
 	}
 
 	void decode(BitStream in, Element prev, SampleFrequency sf, boolean sbrEnabled, boolean smallFrames) {

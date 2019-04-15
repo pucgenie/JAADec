@@ -1,6 +1,6 @@
 package net.sourceforge.jaad.aac.syntax;
 
-import java.util.logging.Logger;
+import java.util.Arrays;
 
 public interface Constants {
 
@@ -28,4 +28,16 @@ public interface Constants {
 	int MAX_SECTIONS = 120;
 	int MAX_MS_MASK = 128;
 	float SQRT2 = 1.414213562f;
+
+	static boolean[] copyOf(boolean[] array) {
+		return array==null ? null : Arrays.copyOf(array, array.length);
+	}
+
+	static int[] copyOf(int[] array) {
+		return array==null ? null : Arrays.copyOf(array, array.length);
+	}
+
+	static float[] copyOf(float[] array) {
+		return array==null ? null : Arrays.copyOf(array, array.length);
+	}
 }
