@@ -17,9 +17,9 @@ public class SyntacticElements implements Constants {
 	private DecoderConfig config;
 	private boolean sbrPresent, psPresent;
 	private int bitsRead;
+	private int frame = 0;
 	//elements
 	private final PCE pce;
-	public CPE cpe;
 	private final Element[] elements; //SCE, LFE and CPE
 	private final CCE[] cces;
 	private final DSE[] dses;
@@ -52,6 +52,7 @@ public class SyntacticElements implements Constants {
 	}
 
 	public void decode(BitStream in) {
+		++frame;
 		final int start = in.getPosition(); //should be 0
 
 		int type;
@@ -155,7 +156,6 @@ public class SyntacticElements implements Constants {
 			elements[curElem] = new CPE(config);
 
 		CPE cpe = ((CPE) elements[curElem]);
-		this.cpe = cpe;
 		cpe.decode(in, config);
 		curElem++;
 
