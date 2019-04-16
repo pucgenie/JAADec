@@ -21,19 +21,23 @@ import java.util.logging.Logger;
  * as far as element_instance_tag, and number of occurrences.
  */
 
-public class CPE extends Element implements Constants {
+public class CPE extends ChannelElement {
 	static final Logger LOGGER = Logger.getLogger("jaad.aac.syntax.CPE"); //for debugging
 
 	private MSMask msMask;
 	private boolean[] msUsed;
 	private boolean commonWindow;
-	ICStream icsL, icsR;
+	private final ICStream icsL, icsR;
 
 	CPE(DecoderConfig config) {
 		super();
 		msUsed = new boolean[MAX_MS_MASK];
 		icsL = new ICStream(config);
 		icsR = new ICStream(config);
+	}
+
+	public boolean isStereo() {
+ 		return true;
 	}
 
 	void decode(BitStream in, DecoderConfig conf) {

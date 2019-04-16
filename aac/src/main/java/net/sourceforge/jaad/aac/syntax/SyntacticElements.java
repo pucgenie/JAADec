@@ -20,7 +20,7 @@ public class SyntacticElements implements Constants {
 	private int frame = 0;
 	//elements
 	private final PCE pce;
-	private final Element[] elements; //SCE, LFE and CPE
+	private final ChannelElement[] elements; //SCE, LFE and CPE
 	private final CCE[] cces;
 	private final DSE[] dses;
 	private final FIL[] fils;
@@ -33,7 +33,7 @@ public class SyntacticElements implements Constants {
 		this.config = config;
 
 		pce = new PCE();
-		elements = new Element[4*MAX_ELEMENTS];
+		elements = new ChannelElement[4*MAX_ELEMENTS];
 		cces = new CCE[MAX_ELEMENTS];
 		dses = new DSE[MAX_ELEMENTS];
 		fils = new FIL[MAX_ELEMENTS];
@@ -56,7 +56,7 @@ public class SyntacticElements implements Constants {
 		final int start = in.getPosition(); //should be 0
 
 		int type;
-		Element prev = null;
+		ChannelElement prev = null;
 		boolean content = true;
 		if(!config.getProfile().isErrorResilientProfile()) {
 			while(content&&(type = in.readBits(3))!=ELEMENT_END) {
@@ -141,24 +141,22 @@ public class SyntacticElements implements Constants {
 		bitsRead = in.getPosition()-start;
 	}
 
-	private Element decodeSCE_LFE(BitStream in) {
+	private ChannelElement decodeSCE_LFE(BitStream in) {
 		if(elements[curElem]==null)
 			elements[curElem] = new SCE_LFE(config);
 
-		((SCE_LFE) elements[curElem]).decode(in, config);
+		elements[curElem].decode(in, config);
 		curElem++;
 		return elements[curElem-1];
 	}
 
-	private Element decodeCPE(BitStream in) {
+	private ChannelElement decodeCPE(BitStream in) {
 
 		if(elements[curElem]==null)
 			elements[curElem] = new CPE(config);
 
-		CPE cpe = ((CPE) elements[curElem]);
-		cpe.decode(in, config);
+		elements[curElem].decode(in, config);
 		curElem++;
-
 		return elements[curElem-1];
 	}
 
@@ -191,7 +189,7 @@ public class SyntacticElements implements Constants {
 		config.setChannelConfiguration(ChannelConfiguration.forInt(pce.getChannelCount()));
 	}
 
-	private void decodeFIL(BitStream in, Element prev) {
+	private void decodeFIL(BitStream in, ChannelElement prev) {
 		if(curFIL==MAX_ELEMENTS)
 			throw new AACException("too much FIL elements");
 
@@ -235,11 +233,6 @@ public class SyntacticElements implements Constants {
 			else if(e instanceof CPE) {
 				processPair((CPE) e, filterBank, channel, profile, sf);
 				channel += 2;
-			}
-			else if(e instanceof CCE) {
-				//applies invquant and save the result in the CCE
-				((CCE) e).process();
-				channel++;
 			}
 		}
 	}
@@ -387,7 +380,7 @@ public class SyntacticElements implements Constants {
 		}
 	}
 
-	private void processIndependentCoupling(boolean channelPair, int elementID, float[] data1, float[] data2) {
+	void processIndependentCoupling(boolean channelPair, int elementID, float[] data1, float[] data2) {
 		int index, c, chSelect;
 		CCE cce;
 		for(int i = 0; i<cces.length; i++) {
@@ -414,7 +407,7 @@ public class SyntacticElements implements Constants {
 		}
 	}
 
-	private void processDependentCoupling(boolean channelPair, int elementID, int couplingPoint, float[] data1, float[] data2) {
+	void processDependentCoupling(boolean channelPair, int elementID, int couplingPoint, float[] data1, float[] data2) {
 		for(int i = 0; i<cces.length; i++) {
 			CCE cce = cces[i];
 			int index = 0;

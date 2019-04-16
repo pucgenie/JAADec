@@ -19,7 +19,7 @@ import net.sourceforge.jaad.aac.DecoderConfig;
  * as for single_channel_element’s.
  */
 
-class SCE_LFE extends Element {
+class SCE_LFE extends ChannelElement {
 
 	private final ICStream ics;
 
