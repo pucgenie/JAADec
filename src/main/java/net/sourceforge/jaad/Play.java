@@ -135,6 +135,7 @@ public class Play {
 			while(true) {
 				byte[] b = adts.readNextFrame();
 				dec.decodeFrame(b, buf);
+				b = buf.getData();
 				line.write(b, 0, b.length);
 			}
 		}
