@@ -24,7 +24,7 @@ class SCE_LFE extends ChannelElement {
 	private final ICStream ics;
 
 	SCE_LFE(DecoderConfig config) {
-		super();
+		super(config);
 		ics = new ICStream(config);
 	}
 
@@ -35,5 +35,20 @@ class SCE_LFE extends ChannelElement {
 
 	public ICStream getICStream() {
 		return ics;
+	}
+
+	@Override
+	public boolean isChannelPair() {
+		return false;
+	}
+
+	@Override
+	public boolean isStereo() {
+		if(sbr!=null&&config.isSBREnabled()) {
+			if(sbr.isPSUsed())
+				return true;
+		}
+
+		return false;
 	}
 }

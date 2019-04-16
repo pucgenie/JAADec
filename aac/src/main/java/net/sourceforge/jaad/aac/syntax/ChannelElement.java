@@ -12,13 +12,27 @@ import net.sourceforge.jaad.aac.sbr.SBR;
  */
 abstract public class ChannelElement extends Element {
 
-    abstract void decode(BitStream in, DecoderConfig conf);
+	protected final DecoderConfig config;
 
-    public boolean isStereo() {
-    	return false;
+	protected ChannelElement(DecoderConfig config) {
+		this.config = config;
 	}
 
-    private SBR sbr;
+	abstract void decode(BitStream in, DecoderConfig conf);
+
+	/**
+	 * @return if this element represents a channel pair.
+	 */
+	abstract public boolean isChannelPair();
+
+	/**
+	 * A single channel may produce stereo using parametric stereo.
+	 * @return if this stereo.
+	 */
+	abstract public boolean isStereo();
+
+
+	protected SBR sbr;
 
     int decodeSBR(BitStream in, SampleFrequency sf, int count, boolean crc, boolean downSampled, boolean smallFrames) {
 
@@ -27,7 +41,7 @@ abstract public class ChannelElement extends Element {
    			int fq = sf.getFrequency();
    			if(fq<24000 && !downSampled)
    			    sf = SampleFrequency.forFrequency(2*fq);
-   			sbr = new SBR(smallFrames, isStereo(), sf, downSampled);
+   			sbr = new SBR(smallFrames, isChannelPair(), sf, downSampled);
    		}
 
    		return sbr.decode(in, count, crc);
@@ -40,4 +54,39 @@ abstract public class ChannelElement extends Element {
    	SBR getSBR() {
    		return sbr;
    	}
+
+    private float[] dataL, dataR;
+
+    public float[] getDataL() {
+    	if(dataL==null)
+			dataL = new float[config.getFrameLength()];
+    	return dataL;
+	}
+
+	public float[] getDataR() {
+		if(dataR==null)
+			dataR = new float[config.getFrameLength()];
+		return dataR;
+    }
+
+	/**
+	 * A SCE or LFE may return a second channel if isStereo()
+	 * Else the left channel is returned for both.
+	 *
+	 * @param ch to read.
+	 * @return a float array.
+	 */
+	public float[] getChannelData(int ch) {
+		if(ch==0)
+			return getDataL();
+
+		if(ch==1) {
+			if(isStereo())
+				return getDataR();
+			else
+				return getDataL();
+		}
+
+		throw new IndexOutOfBoundsException("invalid channel: " + ch);
+	}
 }

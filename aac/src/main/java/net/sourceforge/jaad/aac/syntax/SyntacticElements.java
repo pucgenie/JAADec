@@ -7,6 +7,8 @@ import net.sourceforge.jaad.aac.tools.IS;
 import net.sourceforge.jaad.aac.tools.LTPrediction;
 import net.sourceforge.jaad.aac.tools.MS;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,9 +27,8 @@ public class SyntacticElements implements Constants {
 	private final DSE[] dses;
 	private final FIL[] fils;
 	private int curElem, curCCE, curDSE, curFIL;
-	private float[][] data;
 
-	private int firstChannel = 0;
+	private List<float[]> channels = new ArrayList<>();
 
 	public SyntacticElements(DecoderConfig config) {
 		this.config = config;
@@ -210,34 +211,29 @@ public class SyntacticElements implements Constants {
 		final Profile profile = config.getProfile();
 		final SampleFrequency sf = config.getSampleFrequency();
 		//final ChannelConfiguration channels = config.getChannelConfiguration();
+		channels.clear();
 
-		int chs = config.getChannelConfiguration().getChannelCount();
-		if(chs==1&&psPresent)
-			chs++;
+		//int chs = config.getChannelConfiguration().getChannelCount();
 
-		final int mult = sbrPresent ? 2 : 1;
-		//only reallocate if needed
-		if(data==null||chs!=data.length||(mult*config.getFrameLength())!=data[0].length)
-			data = new float[chs][mult*config.getFrameLength()];
-
-		int channel = 0;
-		firstChannel = 0;
-		for(int i = 0; i<elements.length&&channel<chs; i++) {
-			Element e = elements[i];
+		for(int i = 0; i<elements.length; i++) {
+			ChannelElement e = elements[i];
 			if(e==null)
 				continue;
 
 			if(e instanceof SCE_LFE) {
-				channel += processSingle((SCE_LFE) e, filterBank, channel, profile, sf);
+				processSingle((SCE_LFE) e, filterBank, profile, sf);
 			}
 			else if(e instanceof CPE) {
-				processPair((CPE) e, filterBank, channel, profile, sf);
-				channel += 2;
+				processPair((CPE) e, filterBank, profile, sf);
 			}
+
+			channels.add(e.getDataL());
+			if(e.isStereo())
+				channels.add(e.getDataR());
 		}
 	}
 
-	private int processSingle(SCE_LFE scelfe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) {
+	private int processSingle(SCE_LFE scelfe, FilterBank filterBank, Profile profile, SampleFrequency sf) {
 		final ICStream ics = scelfe.getICStream();
 		final ICSInfo info = ics.getInfo();
 		final LTPrediction ltp = info.getLTPrediction();
@@ -246,7 +242,7 @@ public class SyntacticElements implements Constants {
 		//inverse quantization
 		final float[] iqData = ics.getInvQuantData();
 
-		final float[] dataL = data[channel];
+		final float[] dataL = scelfe.getDataL();
 
 		//prediction
 		if(profile.equals(Profile.AAC_MAIN)&&info.isICPredictionPresent())
@@ -281,13 +277,13 @@ public class SyntacticElements implements Constants {
 		//SBR
 		int chs = 1;
 		if(sbrPresent&&config.isSBREnabled()) {
-			if(data.length==config.getFrameLength())
+			if(dataL.length==config.getFrameLength())
 				LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
 
 			final SBR sbr = scelfe.getSBR();
 			if(sbr.isPSUsed()) {
 				chs = 2;
-				float[] dataR = data[channel+1];
+				float[] dataR = scelfe.getDataR();
 				scelfe.getSBR().processPS(dataL, dataR, false);
 			}
 			else
@@ -296,7 +292,7 @@ public class SyntacticElements implements Constants {
 		return chs;
 	}
 
-	private void processPair(CPE cpe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) {
+	private void processPair(CPE cpe, FilterBank filterBank, Profile profile, SampleFrequency sf) {
 
 		//if(cpe.getElementInstanceTag() == pce.stereoMixdownElementNumber)
 		//	firstChannel = channel;
@@ -306,8 +302,8 @@ public class SyntacticElements implements Constants {
 		final ICSInfo info1 = ics1.getInfo();
 		final ICSInfo info2 = ics2.getInfo();
 
-		final float[] data1 = data[channel];
-		final float[] data2 = data[channel+1];
+		final float[] data1 = cpe.getDataL();
+		final float[] data2 = cpe.getDataR();
 
 		final int elementID = cpe.getElementInstanceTag();
 
@@ -455,8 +451,8 @@ public class SyntacticElements implements Constants {
 
 		for(int ch = 0; ch<chs; ch++) {
 			// duplicate possible mono channel
-			int chi = Math.min(ch+firstChannel, data.length-1);
-			float[] cur = data[chi];
+			int chi = Math.min(ch, channels.size()-1);
+			float[] cur = channels.get(chi);
 			for(int l = 0; l<length; l++) {
 				short s = (short) Math.max(Math.min(Math.round(cur[l]), Short.MAX_VALUE), Short.MIN_VALUE);
 				int off = (l*chs+ch)*2;

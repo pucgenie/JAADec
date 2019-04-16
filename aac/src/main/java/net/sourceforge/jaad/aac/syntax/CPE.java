@@ -30,10 +30,14 @@ public class CPE extends ChannelElement {
 	private final ICStream icsL, icsR;
 
 	CPE(DecoderConfig config) {
-		super();
+		super(config);
 		msUsed = new boolean[MAX_MS_MASK];
 		icsL = new ICStream(config);
 		icsR = new ICStream(config);
+	}
+
+	public boolean isChannelPair() {
+ 		return true;
 	}
 
 	public boolean isStereo() {
