@@ -40,6 +40,8 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 	private int reorderedSpectralDataLen, longestCodewordLen;
 	private RVLC rvlc;
 
+	private float[] overlap;
+
 	public ICStream(DecoderConfig config) {
 		this.frameLength = config.getFrameLength();
 		info = new ICSInfo(config);
@@ -47,6 +49,7 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 		sectEnd = new int[MAX_SECTIONS];
 		data = new float[frameLength];
 		scaleFactors = new float[MAX_SECTIONS];
+		overlap = new float[frameLength];
 	}
 
 	/* ========= decoding ========== */
@@ -280,6 +283,10 @@ public class ICStream implements Constants, HCB, ScaleFactorTable, IQTable {
 	 */
 	public float[] getInvQuantData() {
 		return data;
+	}
+
+	public float[] getOverlap() {
+		return overlap;
 	}
 
 	public ICSInfo getInfo() {

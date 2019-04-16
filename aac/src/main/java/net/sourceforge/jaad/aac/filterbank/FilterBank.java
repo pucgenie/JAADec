@@ -10,7 +10,6 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 	private final int length, shortLen, mid, trans;
 	private final MDCT mdctShort, mdctLong;
 	private final float[] buf;
-	private final float[][] overlaps;
 
 	public FilterBank(boolean smallFrames, int channels) {
 		if(smallFrames) {
@@ -31,54 +30,51 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 		mdctShort = new MDCT(shortLen*2);
 		mdctLong = new MDCT(length*2);
 
-		overlaps = new float[channels][length];
 		buf = new float[2*length];
 	}
-
-	public void process(WindowSequence windowSequence, int windowShape, int windowShapePrev, float[] in, float[] out, int channel) {
-		int i;
-		float[] overlap = overlaps[channel];
+	
+	public void process(WindowSequence windowSequence, int windowShape, int windowShapePrev, float[] in, float[] out, float[] overlap) {
 		switch(windowSequence) {
 			case ONLY_LONG_SEQUENCE:
 				mdctLong.process(in, 0, buf, 0);
 				//add second half output of previous frame to windowed output of current frame
-				for(i = 0; i<length; i++) {
+				for(int i = 0; i<length; i++) {
 					out[i] = overlap[i]+(buf[i]*LONG_WINDOWS[windowShapePrev][i]);
 				}
 
 				//window the second half and save as overlap for next frame
-				for(i = 0; i<length; i++) {
+				for(int i = 0; i<length; i++) {
 					overlap[i] = buf[length+i]*LONG_WINDOWS[windowShape][length-1-i];
 				}
 				break;
 			case LONG_START_SEQUENCE:
 				mdctLong.process(in, 0, buf, 0);
 				//add second half output of previous frame to windowed output of current frame
-				for(i = 0; i<length; i++) {
+				for(int i = 0; i<length; i++) {
 					out[i] = overlap[i]+(buf[i]*LONG_WINDOWS[windowShapePrev][i]);
 				}
 
 				//window the second half and save as overlap for next frame
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					overlap[i] = buf[length+i];
 				}
-				for(i = 0; i<shortLen; i++) {
+				for(int i = 0; i<shortLen; i++) {
 					overlap[mid+i] = buf[length+mid+i]*SHORT_WINDOWS[windowShape][shortLen-i-1];
 				}
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					overlap[mid+shortLen+i] = 0;
 				}
 				break;
 			case EIGHT_SHORT_SEQUENCE:
-				for(i = 0; i<8; i++) {
+				for(int i = 0; i<8; i++) {
 					mdctShort.process(in, i*shortLen, buf, 2*i*shortLen);
 				}
 
 				//add second half output of previous frame to windowed output of current frame
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					out[i] = overlap[i];
 				}
-				for(i = 0; i<shortLen; i++) {
+				for(int i = 0; i<shortLen; i++) {
 					out[mid+i] = overlap[mid+i]+(buf[i]*SHORT_WINDOWS[windowShapePrev][i]);
 					out[mid+1*shortLen+i] = overlap[mid+shortLen*1+i]+(buf[shortLen*1+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*2+i]*SHORT_WINDOWS[windowShape][i]);
 					out[mid+2*shortLen+i] = overlap[mid+shortLen*2+i]+(buf[shortLen*3+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*4+i]*SHORT_WINDOWS[windowShape][i]);
@@ -88,7 +84,7 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 				}
 
 				//window the second half and save as overlap for next frame
-				for(i = 0; i<shortLen; i++) {
+				for(int i = 0; i<shortLen; i++) {
 					if(i>=trans)
 						overlap[mid+4*shortLen+i-length] = (buf[shortLen*7+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*8+i]*SHORT_WINDOWS[windowShape][i]);
 					overlap[mid+5*shortLen+i-length] = (buf[shortLen*9+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*10+i]*SHORT_WINDOWS[windowShape][i]);
@@ -96,7 +92,7 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 					overlap[mid+7*shortLen+i-length] = (buf[shortLen*13+i]*SHORT_WINDOWS[windowShape][shortLen-1-i])+(buf[shortLen*14+i]*SHORT_WINDOWS[windowShape][i]);
 					overlap[mid+8*shortLen+i-length] = (buf[shortLen*15+i]*SHORT_WINDOWS[windowShape][shortLen-1-i]);
 				}
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					overlap[mid+shortLen+i] = 0;
 				}
 				break;
@@ -104,17 +100,17 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 				mdctLong.process(in, 0, buf, 0);
 				//add second half output of previous frame to windowed output of current frame
 				//construct first half window using padding with 1's and 0's
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					out[i] = overlap[i];
 				}
-				for(i = 0; i<shortLen; i++) {
+				for(int i = 0; i<shortLen; i++) {
 					out[mid+i] = overlap[mid+i]+(buf[mid+i]*SHORT_WINDOWS[windowShapePrev][i]);
 				}
-				for(i = 0; i<mid; i++) {
+				for(int i = 0; i<mid; i++) {
 					out[mid+shortLen+i] = overlap[mid+shortLen+i]+buf[mid+shortLen+i];
 				}
 				//window the second half and save as overlap for next frame
-				for(i = 0; i<length; i++) {
+				for(int i = 0; i<length; i++) {
 					overlap[i] = buf[length+i]*LONG_WINDOWS[windowShape][length-1-i];
 				}
 				break;
@@ -165,9 +161,5 @@ public class FilterBank implements Constants, SineWindows, KBDWindows {
 				break;
 		}
 		mdctLong.processForward(buf, out);
-	}
-
-	public float[] getOverlap(int channel) {
-		return overlaps[channel];
 	}
 }

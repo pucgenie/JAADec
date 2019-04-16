@@ -91,3 +91,22 @@ LTP needs FFT forward processing which used a wrong scaling factor. FFT was siml
 Temporary double[] arrays are often allocated for each call. This is no problem within C-code,
 but with Java this is very inefficient and produces a lot of garbage objects. 
 Some of those arrays are turned into member variables to be reusable.
+
+**2019-04-16**
+
+SyntacticElements manages most of the business depending of the actual type of the elements 
+since the code was transcribed from C-code (faad) which can not use OOP.
+This results into complicated nested if/else cascades and specialized functions.
+Try to introduce interfaces and individual method implementations.
+
+SFE and LFE must be separated else there may be conflicting element instance tags.
+
+The output data per channel is managed by SyntacticElements.
+Also FilterBank manages temporary data arrays (overlaps) for individual channels.
+
+Instead those data arrays should be allocated by SCE and CPE internally.
+
+The function SyntacticElements.sendToOutput() heavily depends on SampleBuffer internals.
+Instead a lookup function channel -> data[] seems much easier.
+Copy to a SampleBuffer shall be done externally.
+This also opens the possibility to provide more than two channels. 

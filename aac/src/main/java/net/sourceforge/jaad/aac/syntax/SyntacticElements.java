@@ -246,6 +246,8 @@ public class SyntacticElements implements Constants {
 		//inverse quantization
 		final float[] iqData = ics.getInvQuantData();
 
+		final float[] dataL = data[channel];
+
 		//prediction
 		if(profile.equals(Profile.AAC_MAIN)&&info.isICPredictionPresent())
 			info.getICPrediction().process(ics, iqData, sf);
@@ -264,13 +266,13 @@ public class SyntacticElements implements Constants {
 		processDependentCoupling(false, elementID, CCE.AFTER_TNS, iqData, null);
 
 		//filterbank
-		filterBank.process(info.getWindowSequence(), info.getWindowShape(ICSInfo.CURRENT), info.getWindowShape(ICSInfo.PREVIOUS), iqData, data[channel], channel);
+		filterBank.process(info.getWindowSequence(), info.getWindowShape(ICSInfo.CURRENT), info.getWindowShape(ICSInfo.PREVIOUS), iqData, dataL, ics.getOverlap());
 
 		if(ltp!=null)
-			ltp.updateState(data[channel], filterBank.getOverlap(channel), profile);
+			ltp.updateState(dataL, ics.getOverlap(), profile);
 
 		//dependent coupling
-		processIndependentCoupling(false, elementID, data[channel], null);
+		processIndependentCoupling(false, elementID, dataL, null);
 
 		//gain control
 		if(ics.isGainControlPresent())
@@ -279,29 +281,33 @@ public class SyntacticElements implements Constants {
 		//SBR
 		int chs = 1;
 		if(sbrPresent&&config.isSBREnabled()) {
-			if(data[channel].length==config.getFrameLength())
+			if(data.length==config.getFrameLength())
 				LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
 
 			final SBR sbr = scelfe.getSBR();
 			if(sbr.isPSUsed()) {
 				chs = 2;
-				scelfe.getSBR().processPS(data[channel], data[channel+1], false);
+				float[] dataR = data[channel+1];
+				scelfe.getSBR().processPS(dataL, dataR, false);
 			}
 			else
-				scelfe.getSBR().process(data[channel], false);
+				scelfe.getSBR().process(dataL, false);
 		}
 		return chs;
 	}
 
 	private void processPair(CPE cpe, FilterBank filterBank, int channel, Profile profile, SampleFrequency sf) {
 
-		if(cpe.getElementInstanceTag() == pce.stereoMixdownElementNumber)
-			firstChannel = channel;
+		//if(cpe.getElementInstanceTag() == pce.stereoMixdownElementNumber)
+		//	firstChannel = channel;
 
 		final ICStream ics1 = cpe.getLeftChannel();
 		final ICStream ics2 = cpe.getRightChannel();
 		final ICSInfo info1 = ics1.getInfo();
 		final ICSInfo info2 = ics2.getInfo();
+
+		final float[] data1 = data[channel];
+		final float[] data2 = data[channel+1];
 
 		final int elementID = cpe.getElementInstanceTag();
 
@@ -352,17 +358,17 @@ public class SyntacticElements implements Constants {
 		processDependentCoupling(true, elementID, CCE.AFTER_TNS, iqData1, iqData2);
 
 		//filterbank
-		filterBank.process(info1.getWindowSequence(), info1.getWindowShape(ICSInfo.CURRENT), info1.getWindowShape(ICSInfo.PREVIOUS), iqData1, data[channel], channel);
-		filterBank.process(info2.getWindowSequence(), info2.getWindowShape(ICSInfo.CURRENT), info2.getWindowShape(ICSInfo.PREVIOUS), iqData2, data[channel+1], channel+1);
+		filterBank.process(info1.getWindowSequence(), info1.getWindowShape(ICSInfo.CURRENT), info1.getWindowShape(ICSInfo.PREVIOUS), iqData1, data1, ics1.getOverlap());
+		filterBank.process(info2.getWindowSequence(), info2.getWindowShape(ICSInfo.CURRENT), info2.getWindowShape(ICSInfo.PREVIOUS), iqData2, data2, ics2.getOverlap());
 
 		if(ltp1!=null)
-			ltp1.updateState(data[channel], filterBank.getOverlap(channel), profile);
+			ltp1.updateState(data1, ics1.getOverlap(), profile);
 
 		if(ltp2!=null)
-			ltp2.updateState(data[channel+1], filterBank.getOverlap(channel+1), profile);
+			ltp2.updateState(data2, ics2.getOverlap(), profile);
 
 		//independent coupling
-		processIndependentCoupling(true, elementID, data[channel], data[channel+1]);
+		processIndependentCoupling(true, elementID, data1, data2);
 
 		//gain control
 		if(ics1.isGainControlPresent())
@@ -373,10 +379,10 @@ public class SyntacticElements implements Constants {
 
 		//SBR
 		if(sbrPresent&&config.isSBREnabled()) {
-			if(data[channel].length==config.getFrameLength())
+			if(data1.length==config.getFrameLength())
 				LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
 
-			cpe.getSBR().process(data[channel], data[channel+1], false);
+			cpe.getSBR().process(data1, data2, false);
 		}
 	}
 
