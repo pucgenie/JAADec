@@ -110,3 +110,7 @@ The function SyntacticElements.sendToOutput() heavily depends on SampleBuffer in
 Instead a lookup function channel -> data[] seems much easier.
 Copy to a SampleBuffer shall be done externally.
 This also opens the possibility to provide more than two channels. 
+
+todo:
+The PCE (if given) knows the assignment of ChannelElements to real channels according to their element_istance_tags.
+A mixdown of more than two channels to stereo or mono is also missing.
