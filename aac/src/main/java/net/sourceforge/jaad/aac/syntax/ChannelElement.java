@@ -34,14 +34,20 @@ abstract public class ChannelElement extends Element {
 
 	protected SBR sbr;
 
-    int decodeSBR(BitStream in, SampleFrequency sf, int count, boolean crc, boolean downSampled, boolean smallFrames) {
+    int decodeSBR(BitStream in, int count, boolean crc) {
+
+    	if(!config.isSBREnabled()) {
+			in.skipBits(count);
+			return 0;
+		}
 
    		if(sbr==null) {
                /* implicit SBR signalling, see 4.6.18.2.6 */
+			SampleFrequency sf = config.getSampleFrequency();
    			int fq = sf.getFrequency();
-   			if(fq<24000 && !downSampled)
+   			if(fq<24000 && !config.isSBRDownSampled())
    			    sf = SampleFrequency.forFrequency(2*fq);
-   			sbr = new SBR(smallFrames, isChannelPair(), sf, downSampled);
+   			sbr = new SBR(config.isSmallFrameUsed(), isChannelPair(), sf, config.isSBRDownSampled());
    		}
 
    		return sbr.decode(in, count, crc);

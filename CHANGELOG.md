@@ -120,3 +120,9 @@ A mixdown of more than two channels to stereo or mono is also missing.
 SBR needs double sized data arrays.
 MONO AAC_LC results in stereo assuming SBR.
 
+FIL element decodes extension payloads. Supported ones are SBR and DRC.
+Decoding SBR is already delegated to the previously read ChannelElement.
+DRC is currently unused but was extracted to a separate class with its own decoding methods.
+If used in future it should saved by SyntacticElements along with its PCE.
+Then FIL elements turn to be empty and need no saving/caching any more.
+

@@ -195,9 +195,9 @@ public class SyntacticElements implements Constants {
 			throw new AACException("too much FIL elements");
 
 		if(fils[curFIL]==null)
-			fils[curFIL] = new FIL(config);
+			fils[curFIL] = new FIL();
 
-		fils[curFIL].decode(in, prev, config.getSampleFrequency(), config.isSBREnabled(), config.isSmallFrameUsed());
+		fils[curFIL].decode(in, prev);
 		curFIL++;
 
 		if(prev!=null&&prev.isSBRPresent()) {

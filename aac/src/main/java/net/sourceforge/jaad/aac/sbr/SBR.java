@@ -360,7 +360,8 @@ public class SBR implements Constants, net.sourceforge.jaad.aac.syntax.Constants
 
 		if(crc) {
 			this.bs_sbr_crc_bits = ld.readBits(10);
-		}
+		} else
+			this.bs_sbr_crc_bits = -1;
 
 		/* save old header values, in case the new ones are corrupted */
 		saved_start_freq = this.bs_start_freq;
