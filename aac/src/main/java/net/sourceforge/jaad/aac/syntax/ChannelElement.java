@@ -57,15 +57,22 @@ abstract public class ChannelElement extends Element {
 
     private float[] dataL, dataR;
 
+    private float[] newData() {
+    	int len = config.getFrameLength();
+    	if(isSBRPresent())
+    		len *= 2;
+    	return new float[len];
+	}
+
     public float[] getDataL() {
     	if(dataL==null)
-			dataL = new float[config.getFrameLength()];
+			dataL = newData();
     	return dataL;
 	}
 
 	public float[] getDataR() {
 		if(dataR==null)
-			dataR = new float[config.getFrameLength()];
+			dataR = newData();
 		return dataR;
     }
 

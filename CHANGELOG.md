@@ -114,3 +114,9 @@ This also opens the possibility to provide more than two channels.
 todo:
 The PCE (if given) knows the assignment of ChannelElements to real channels according to their element_istance_tags.
 A mixdown of more than two channels to stereo or mono is also missing.
+
+**2019-04-17**
+
+SBR needs double sized data arrays.
+MONO AAC_LC results in stereo assuming SBR.
+

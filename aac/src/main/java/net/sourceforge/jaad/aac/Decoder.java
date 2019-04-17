@@ -136,8 +136,15 @@ public class Decoder {
 	}
 
 	public AudioFormat getAudioFormat() {
-		int mult = 1;
-		final int freq = mult*config.getSampleFrequency().getFrequency();
+
+		int freq = config.getSampleFrequency().getFrequency();
+
+		// assume SBR/PS
+		if(!config.getProfile().isErrorResilientProfile()
+				&& config.getChannelConfiguration()==ChannelConfiguration.CHANNEL_CONFIG_MONO
+				&& freq < 24000)
+			freq *= 2;
+
 		return new AudioFormat(freq,16,2, true, false);
 	}
 }
