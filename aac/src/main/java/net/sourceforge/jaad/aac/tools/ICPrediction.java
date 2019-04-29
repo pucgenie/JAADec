@@ -52,11 +52,9 @@ public class ICPrediction {
 		for(int sfb = 0; sfb<length; sfb++) {
 			predictionUsed[sfb] = in.readBool();
 		}
-		LOGGER.log(Level.WARNING, "ICPrediction: maxSFB={0}, maxPredSFB={1}", new int[]{maxSFB, maxPredSFB});
-		/*//if maxSFB<maxPredSFB set remaining to false
-		for(int sfb = length; sfb<maxPredSFB; sfb++) {
-		predictionUsed[sfb] = false;
-		}*/
+		if(LOGGER.isLoggable(Level.WARNING))
+			LOGGER.log(Level.WARNING, "ICPrediction: maxSFB={0}, maxPredSFB={1}",
+					new Integer[]{maxSFB, maxPredSFB});
 	}
 
 	public void process(ICStream ics, float[] data, SampleFrequency sf) {
