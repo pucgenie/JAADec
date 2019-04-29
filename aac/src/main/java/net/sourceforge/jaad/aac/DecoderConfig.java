@@ -47,7 +47,7 @@ public class DecoderConfig {
 	public ChannelConfiguration getChannelConfiguration() {
 		return channelConfiguration;
 	}
-	
+
 	public DecoderConfig setAudioDecoderInfo(AudioDecoderInfo info) {
 		profile = info.getProfile();
 		outputFrequency =
