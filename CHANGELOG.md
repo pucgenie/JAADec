@@ -179,3 +179,10 @@ Presence of PS tool is not known before it occurs the first time.
 Thus config.getChannelCount() returns 2 for ChannelConfiguration.MONO.
 If however, no Parametric-Stereo occurs the generated single channel
 must be duplicated to emulate the promised stereo output.
+
+
+**2020-12-25**
+
+Introduced a Speaker enumeration. Each ChannelConfiguration provides a list of speakers now.
+To simplify lookup by channel count an additional (but invalid) ChannelConfiguration for 7 Speakers was inserted. 
+
