@@ -187,7 +187,7 @@ class NoiseEnvelope {
 		{1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f}
 	};
 
-	public static void extract_envelope_data(SBR sbr, SBR.Channel ch) {
+	public static void extract_envelope_data(SBR sbr, Channel ch) {
 		int l, k;
 
 		for(l = 0; l<ch.L_E; l++) {
@@ -253,7 +253,7 @@ class NoiseEnvelope {
 		}
 	}
 
-	public static void extract_noise_floor_data(SBR sbr, SBR.Channel ch) {
+	public static void extract_noise_floor_data(SBR sbr, Channel ch) {
 		int l, k;
 
 		for(l = 0; l<ch.L_Q; l++) {
@@ -279,7 +279,7 @@ class NoiseEnvelope {
 
 	/* calculates 1/(1+Q) */
 	/* [0..1] */
-	public static float calc_Q_div(SBR sbr, SBR.Channel ch, int m, int l) {
+	public static float calc_Q_div(SBR sbr, Channel ch, int m, int l) {
 		if(sbr.bs_coupling) {
 			/* left channel */
 			if((sbr.ch0.Q[m][l]<0||sbr.ch0.Q[m][l]>30)
@@ -309,7 +309,7 @@ class NoiseEnvelope {
 
 	/* calculates Q/(1+Q) */
 	/* [0..1] */
-	public static float calc_Q_div2(SBR sbr, SBR.Channel ch, int m, int l) {
+	public static float calc_Q_div2(SBR sbr, Channel ch, int m, int l) {
 		if(sbr.bs_coupling) {
 			if((sbr.ch0.Q[m][l]<0||sbr.ch0.Q[m][l]>30)
 				||(sbr.ch1.Q[m][l]<0||sbr.ch1.Q[m][l]>24 /* 2*panOffset(1) */)) {
@@ -336,7 +336,7 @@ class NoiseEnvelope {
 		}
 	}
 
-	public static void dequantChannel(SBR sbr, SBR.Channel ch) {
+	public static void dequantChannel(SBR sbr, Channel ch) {
 		if(!sbr.bs_coupling) {
 			int exp;
 			int l, k;

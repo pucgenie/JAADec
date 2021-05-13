@@ -15,7 +15,7 @@ class HFAdjustment implements NoiseTable {
 	private float[][] Q_M_lim_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 	private float[][] S_M_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 
-	public static int hf_adjustment(SBR sbr, float[][][] Xsbr, SBR.Channel ch) {
+	public static int hf_adjustment(SBR sbr, float[][][] Xsbr, Channel ch) {
 		HFAdjustment adj = new HFAdjustment();
 		int ret = 0;
 
@@ -46,7 +46,7 @@ class HFAdjustment implements NoiseTable {
 		return 0;
 	}
 
-	private static int get_S_mapped(SBR sbr, SBR.Channel ch, int l, int current_band) {
+	private static int get_S_mapped(SBR sbr, Channel ch, int l, int current_band) {
 		if(ch.f[l]== FBT.HI_RES) {
 			/* in case of using f_table_high we just have 1 to 1 mapping
 			 * from bs_add_harmonic[l][k]
@@ -84,7 +84,7 @@ class HFAdjustment implements NoiseTable {
 	}
 
 	private static int estimate_current_envelope(SBR sbr, HFAdjustment adj,
-		float[][][] Xsbr, SBR.Channel ch) {
+		float[][][] Xsbr, Channel ch) {
 		int m, l, j, k, k_l, k_h, p;
 		float nrg, div;
 
@@ -147,7 +147,7 @@ class HFAdjustment implements NoiseTable {
 	}
 
 	private static void hf_assembly(SBR sbr, HFAdjustment adj,
-		float[][][] Xsbr, SBR.Channel ch) {
+		float[][][] Xsbr, Channel ch) {
 
 		int m, l, i, n;
 		int fIndexNoise = 0;
@@ -247,7 +247,7 @@ class HFAdjustment implements NoiseTable {
 		ch.psi_is_prev = fIndexSine;
 	}
 
-	private static void calculate_gain(SBR sbr, HFAdjustment adj, SBR.Channel ch) {
+	private static void calculate_gain(SBR sbr, HFAdjustment adj, Channel ch) {
 		int m, l, k;
 
 		int current_t_noise_band = 0;

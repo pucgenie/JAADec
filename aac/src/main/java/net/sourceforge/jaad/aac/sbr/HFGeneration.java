@@ -15,7 +15,7 @@ class HFGeneration {
 	}
 
 	public static void hf_generation(SBR sbr, float[][][] Xlow,
-		float[][][] Xhigh, SBR.Channel ch) {
+		float[][][] Xhigh, Channel ch) {
 		int l, i, x;
 		float[][] alpha_0 = new float[64][2], alpha_1 = new float[64][2];
 
@@ -228,7 +228,7 @@ class HFGeneration {
 	}
 
 	/* FIXED POINT: bwArray = COEF */
-	private static void calc_chirp_factors(SBR sbr, SBR.Channel ch) {
+	private static void calc_chirp_factors(SBR sbr, Channel ch) {
 		int i;
 
 		for(i = 0; i<sbr.N_Q; i++) {

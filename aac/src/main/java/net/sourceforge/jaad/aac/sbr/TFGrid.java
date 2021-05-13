@@ -5,7 +5,7 @@ class TFGrid  {
 
 	/* function constructs new time border vector */
 	/* first build into temp vector to be able to use previous vector on error */
-	public static int envelope_time_border_vector(SBR sbr, SBR.Channel ch) {
+	public static int envelope_time_border_vector(SBR sbr, Channel ch) {
 		int l, border, temp;
 		int[] t_E_temp = new int[6];
 
@@ -98,7 +98,7 @@ class TFGrid  {
 		return 0;
 	}
 
-	public static void noise_floor_time_border_vector(SBR sbr, SBR.Channel ch) {
+	public static void noise_floor_time_border_vector(SBR sbr, Channel ch) {
 		ch.t_Q[0] = ch.t_E[0];
 
 		if(ch.L_E==1) {
@@ -112,7 +112,7 @@ class TFGrid  {
 		}
 	}
 
-	private static int middleBorder(SBR sbr, SBR.Channel ch) {
+	private static int middleBorder(SBR sbr, Channel ch) {
 		int retval = 0;
 
 		switch(ch.bs_frame_class) {
