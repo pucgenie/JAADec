@@ -304,11 +304,11 @@ class FBT {
 		}
 
 		sbr.N_Q = 0;
-		if(sbr.bs_noise_bands==0) {
+		if(sbr.hdr.bs_noise_bands==0) {
 			sbr.N_Q = 1;
 		}
 		else {
-			sbr.N_Q = (Math.max(1, find_bands(0, sbr.bs_noise_bands, sbr.kx, k2)));
+			sbr.N_Q = (Math.max(1, find_bands(0, sbr.hdr.bs_noise_bands, sbr.kx, k2)));
 			sbr.N_Q = Math.min(5, sbr.N_Q);
 		}
 

@@ -25,7 +25,7 @@ class HFGeneration {
 
 		calc_chirp_factors(sbr, ch);
 
-		if((ch==0)&&(sbr.Reset))
+		if((ch==0)&&(sbr.reset))
 			patch_construction(sbr);
 
 		/* calculate the prediction coefficients */
@@ -96,7 +96,7 @@ class HFGeneration {
 			}
 		}
 
-		if(sbr.Reset) {
+		if(sbr.reset) {
 			FBT.limiter_frequency_table(sbr);
 		}
 	}

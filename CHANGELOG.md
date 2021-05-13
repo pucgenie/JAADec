@@ -189,3 +189,8 @@ To simplify lookup by channel count an additional (but invalid) ChannelConfigura
 **2020-12-28**
 
 removed unused justSeek flag from SBR
+
+**2021-05-13**
+
+An SBR.Header class was separated.
+Upgrade to Gradle 7.0.1

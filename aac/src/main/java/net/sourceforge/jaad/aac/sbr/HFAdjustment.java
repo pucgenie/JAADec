@@ -88,7 +88,7 @@ class HFAdjustment implements NoiseTable {
 		int m, l, j, k, k_l, k_h, p;
 		float nrg, div;
 
-		if(sbr.bs_interpol_freq) {
+		if(sbr.hdr.bs_interpol_freq) {
 			for(l = 0; l<sbr.L_E[ch]; l++) {
 				int i, l_i, u_i;
 
@@ -158,7 +158,7 @@ class HFAdjustment implements NoiseTable {
 
 		int h_SL;
 
-		if(sbr.Reset) {
+		if(sbr.reset) {
 			assembly_reset = true;
 			fIndexNoise = 0;
 		}
@@ -170,7 +170,7 @@ class HFAdjustment implements NoiseTable {
 		for(l = 0; l<sbr.L_E[ch]; l++) {
 			boolean no_noise = (l==sbr.l_A[ch]||l==sbr.prevEnvIsShort[ch]);
 
-			h_SL = (sbr.bs_smoothing_mode) ? 0 : 4;
+			h_SL = (sbr.hdr.bs_smoothing_mode) ? 0 : 4;
 			h_SL = (no_noise ? 0 : h_SL);
 
 			if(assembly_reset) {
@@ -272,7 +272,7 @@ class HFAdjustment implements NoiseTable {
 				current_t_noise_band++;
 			}
 
-			for(k = 0; k<sbr.N_L[sbr.bs_limiter_bands]; k++) {
+			for(k = 0; k<sbr.N_L[sbr.hdr.bs_limiter_bands]; k++) {
 				float G_max;
 				float den = 0;
 				float acc1 = 0;
@@ -281,8 +281,8 @@ class HFAdjustment implements NoiseTable {
 
 				int ml1, ml2;
 
-				ml1 = sbr.f_table_lim[sbr.bs_limiter_bands][k];
-				ml2 = sbr.f_table_lim[sbr.bs_limiter_bands][k+1];
+				ml1 = sbr.f_table_lim[sbr.hdr.bs_limiter_bands][k];
+				ml2 = sbr.f_table_lim[sbr.hdr.bs_limiter_bands][k+1];
 
 
 				/* calculate the accumulated E_orig and E_curr over the limiter band */
@@ -299,7 +299,7 @@ class HFAdjustment implements NoiseTable {
 				/* ratio of the energy of the original signal and the energy
 				 * of the HF generated signal
 				 */
-				G_max = ((EPS+acc1)/(EPS+acc2))*limGain[sbr.bs_limiter_gains];
+				G_max = ((EPS+acc1)/(EPS+acc2))*limGain[sbr.hdr.bs_limiter_gains];
 				G_max = Math.min(G_max, 1e10f);
 
 				for(m = ml1; m<ml2; m++) {

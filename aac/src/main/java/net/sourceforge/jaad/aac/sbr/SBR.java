@@ -1,5 +1,6 @@
 package net.sourceforge.jaad.aac.sbr;
 
+import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.SampleFrequency;
 import net.sourceforge.jaad.aac.SampleRate;
@@ -29,7 +30,6 @@ public class SBR {
 
 	private final boolean downSampledSBR;
 	final SampleFrequency sample_rate;
-	int maxAACLine;
 
 	boolean valid = false;
 
@@ -42,7 +42,6 @@ public class SBR {
 	}
 
 	int rate;
-	int ret;
 
 	boolean[] amp_res = new boolean[2];
 
@@ -109,13 +108,6 @@ public class SBR {
 	int[] index_noise_prev = new int[2];
 	int[] psi_is_prev = new int[2];
 
-	int bs_start_freq_prev;
-	int bs_stop_freq_prev;
-	int bs_xover_band_prev;
-	int bs_freq_scale_prev;
-	boolean bs_alter_scale_prev;
-	int bs_noise_bands_prev;
-
 	int[] prevEnvIsShort = new int[2];
 
 	int kx_prev;
@@ -123,9 +115,8 @@ public class SBR {
 	int bsco_prev;
 	int M_prev;
 
-	boolean Reset;
+	boolean reset;
 	int frame;
-	int header_count;
 
 	boolean stereo;
 	AnalysisFilterbank[] qmfa = new AnalysisFilterbank[2];
@@ -146,21 +137,82 @@ public class SBR {
 	/* to get it compiling
 	/* we'll see during the coding of all the tools, whether these are all used or not.
 	 */
-	boolean bs_header_flag;
-	int bs_crc_flag;
 	int bs_sbr_crc_bits;
-	int bs_protocol_version;
-	boolean bs_amp_res;
-	int bs_start_freq;
-	int bs_stop_freq;
-	int bs_xover_band;
-	int bs_freq_scale;
-	boolean bs_alter_scale;
-	int bs_noise_bands;
-	int bs_limiter_bands;
-	int bs_limiter_gains;
-	boolean bs_interpol_freq;
-	boolean bs_smoothing_mode;
+
+	static class Header {
+		boolean bs_amp_res = true;
+		int bs_start_freq = 5 ;
+		int bs_stop_freq;
+		int bs_xover_band;
+		int bs_freq_scale = 2;
+		boolean bs_alter_scale = true;
+		int bs_noise_bands = 2;
+		int bs_limiter_bands = 2;
+		int bs_limiter_gains = 2;
+		boolean bs_interpol_freq;
+		boolean bs_smoothing_mode;
+
+		public void decode(BitStream ld) {
+
+			this.bs_amp_res = ld.readBool();
+
+			/* bs_start_freq and bs_stop_freq must define a frequency band that does
+			 not exceed 48 channels */
+			this.bs_start_freq = ld.readBits(4);
+			this.bs_stop_freq = ld.readBits(4);
+			this.bs_xover_band = ld.readBits(3);
+
+			ld.readBits(2); //reserved
+
+			boolean bs_header_extra_1 = ld.readBool();
+			boolean bs_header_extra_2 = ld.readBool();
+
+			if(bs_header_extra_1) {
+				this.bs_freq_scale = ld.readBits(2);
+				this.bs_alter_scale = ld.readBool();
+				this.bs_noise_bands = ld.readBits(2);
+			}
+			else {
+				/* Default values */
+				this.bs_freq_scale = 2;
+				this.bs_alter_scale = true;
+				this.bs_noise_bands = 2;
+			}
+
+			if(bs_header_extra_2) {
+				this.bs_limiter_bands = ld.readBits(2);
+				this.bs_limiter_gains = ld.readBits(2);
+				this.bs_interpol_freq = ld.readBool();
+				this.bs_smoothing_mode = ld.readBool();
+			}
+			else {
+				/* Default values */
+				this.bs_limiter_bands = 2;
+				this.bs_limiter_gains = 2;
+				this.bs_interpol_freq = true;
+				this.bs_smoothing_mode = true;
+			}
+		}
+
+		/**
+		 * If ay of these parameters differs the system must is reset.
+		 * @param prev header to compare
+		 * @return if any relevant parameter differs or the previous header was null.
+		 */
+		public boolean differs(Header prev) {
+			return prev==null
+					|| this.bs_start_freq!=prev.bs_start_freq
+					|| this.bs_stop_freq!=prev.bs_stop_freq
+				    || this.bs_freq_scale!=prev.bs_freq_scale
+					|| this.bs_alter_scale!=prev.bs_alter_scale
+					|| this.bs_xover_band!=prev.bs_xover_band
+					|| this.bs_noise_bands!=prev.bs_noise_bands;
+		}
+	}
+	
+	Header hdr = null;
+	Header hdr_saved = null;
+	
 	int bs_samplerate_mode;
 	boolean[] bs_add_harmonic_flag = new boolean[2];
 	boolean[] bs_add_harmonic_flag_prev = new boolean[2];
@@ -190,20 +242,9 @@ public class SBR {
 		this.stereo = stereo;
 		this.sample_rate = sample_rate.getNominal();
 
-		this.bs_freq_scale = 2;
-		this.bs_alter_scale = true;
-		this.bs_noise_bands = 2;
-		this.bs_limiter_bands = 2;
-		this.bs_limiter_gains = 2;
-		this.bs_interpol_freq = true;
-		this.bs_smoothing_mode = true;
-		this.bs_start_freq = 5;
-		this.bs_amp_res = true;
 		this.bs_samplerate_mode = 1;
 		this.prevEnvIsShort[0] = -1;
 		this.prevEnvIsShort[1] = -1;
-		this.header_count = 0;
-		this.Reset = true;
 
 		this.tHFGen = T_HFGEN;
 		this.tHFAdj = T_HFADJ;
@@ -211,9 +252,6 @@ public class SBR {
 		this.bsco = 0;
 		this.bsco_prev = 0;
 		this.M_prev = 0;
-
-		/* force sbr reset */
-		this.bs_start_freq_prev = -1;
 
 		if(smallFrames) {
 			this.numTimeSlotsRate = RATE*NO_TIME_SLOTS_960;
@@ -276,27 +314,16 @@ public class SBR {
 
 		this.GQ_ringbuf_index[0] = 0;
 		this.GQ_ringbuf_index[1] = 0;
-		this.header_count = 0;
-		this.Reset = true;
 
 		this.L_E_prev[0] = 0;
 		this.L_E_prev[1] = 0;
-		this.bs_freq_scale = 2;
-		this.bs_alter_scale = true;
-		this.bs_noise_bands = 2;
-		this.bs_limiter_bands = 2;
-		this.bs_limiter_gains = 2;
-		this.bs_interpol_freq = true;
-		this.bs_smoothing_mode = true;
-		this.bs_start_freq = 5;
-		this.bs_amp_res = true;
+
 		this.bs_samplerate_mode = 1;
 		this.prevEnvIsShort[0] = -1;
 		this.prevEnvIsShort[1] = -1;
 		this.bsco = 0;
 		this.bsco_prev = 0;
 		this.M_prev = 0;
-		this.bs_start_freq_prev = -1;
 
 		this.f_prev[0] = 0;
 		this.f_prev[1] = 0;
@@ -312,38 +339,13 @@ public class SBR {
 		this.bs_add_harmonic_flag_prev[1] = false;
 	}
 
-	void sbr_reset() {
-
-		/* if these are different from the previous frame: Reset = 1 */
-		if((this.bs_start_freq!=this.bs_start_freq_prev)
-			||(this.bs_stop_freq!=this.bs_stop_freq_prev)
-			||(this.bs_freq_scale!=this.bs_freq_scale_prev)
-			||(this.bs_alter_scale!=this.bs_alter_scale_prev)
-			||(this.bs_xover_band!=this.bs_xover_band_prev)
-			||(this.bs_noise_bands!=this.bs_noise_bands_prev)) {
-			this.Reset = true;
-		}
-		else {
-			this.Reset = false;
-		}
-
-		this.bs_start_freq_prev = this.bs_start_freq;
-		this.bs_stop_freq_prev = this.bs_stop_freq;
-		this.bs_freq_scale_prev = this.bs_freq_scale;
-		this.bs_alter_scale_prev = this.bs_alter_scale;
-		this.bs_xover_band_prev = this.bs_xover_band;
-		this.bs_noise_bands_prev = this.bs_noise_bands;
-	}
-
-	int calc_sbr_tables(int start_freq, int stop_freq,
-		int samplerate_mode, int freq_scale,
-		boolean alter_scale, int xover_band) {
+	int calc_sbr_tables(Header hdr) {
 		int result = 0;
 		int k2;
 
 		/* calculate the Master Frequency Table */
-		k0 = FBT.qmf_start_channel(start_freq, samplerate_mode, this.sample_rate);
-		k2 = FBT.qmf_stop_channel(stop_freq, this.sample_rate, k0);
+		k0 = FBT.qmf_start_channel(hdr.bs_start_freq, this.bs_samplerate_mode, this.sample_rate);
+		k2 = FBT.qmf_stop_channel(hdr.bs_stop_freq, this.sample_rate, k0);
 
 		/* check k0 and k2 */
 		if(this.sample_rate.getFrequency()>=48000) {
@@ -360,13 +362,13 @@ public class SBR {
 				result += 1;
 		}
 
-		if(freq_scale==0) {
-			result += FBT.master_frequency_table_fs0(this, k0, k2, alter_scale);
+		if(hdr.bs_freq_scale==0) {
+			result += FBT.master_frequency_table_fs0(this, k0, k2, hdr.bs_alter_scale);
 		}
 		else {
-			result += FBT.master_frequency_table(this, k0, k2, freq_scale, alter_scale);
+			result += FBT.master_frequency_table(this, k0, k2, hdr.bs_freq_scale, hdr.bs_alter_scale);
 		}
-		result += FBT.derived_frequency_table(this, xover_band, k2);
+		result += FBT.derived_frequency_table(this, hdr.bs_xover_band, k2);
 
 		result = (result>0) ? 1 : 0;
 
@@ -376,112 +378,64 @@ public class SBR {
 	/* table 2 */
 	public void decode(BitStream ld, boolean crc) {
 
-		int saved_start_freq, saved_samplerate_mode;
-		int saved_stop_freq, saved_freq_scale;
-		int saved_xover_band;
-		boolean saved_alter_scale;
-
 		if(crc) {
 			this.bs_sbr_crc_bits = ld.readBits(10);
 		} else
 			this.bs_sbr_crc_bits = -1;
 
-		/* save old header values, in case the new ones are corrupted */
-		saved_start_freq = this.bs_start_freq;
-		saved_samplerate_mode = this.bs_samplerate_mode;
-		saved_stop_freq = this.bs_stop_freq;
-		saved_freq_scale = this.bs_freq_scale;
-		saved_alter_scale = this.bs_alter_scale;
-		saved_xover_band = this.bs_xover_band;
+		reset = readHeader(ld);
 
-		this.bs_header_flag = ld.readBool();
+		if(reset) {
+			int rt = calc_sbr_tables(this.hdr);
 
-		if(this.bs_header_flag)
-			sbr_header(ld);
-
-		/* Reset? */
-		sbr_reset();
-
-		/* first frame should have a header */
-		//if (!(sbr.frame == 0 && sbr.bs_header_flag == 0))
-		if(this.header_count!=0) {
-			if(this.Reset) {
-				int rt = calc_sbr_tables(this.bs_start_freq, this.bs_stop_freq,
-					this.bs_samplerate_mode, this.bs_freq_scale,
-					this.bs_alter_scale, this.bs_xover_band);
-
-				/* if an error occured with the new header values revert to the old ones */
-				if(rt>0) {
-					calc_sbr_tables(saved_start_freq, saved_stop_freq,
-						saved_samplerate_mode, saved_freq_scale,
-						saved_alter_scale, saved_xover_band);
-				}
+			/* if an error occurred with the new header values revert to the old ones */
+			if (rt > 0) {
+				calc_sbr_tables(swapHeaders());
 			}
+		}
 
+		if(this.hdr!=null) {
 			int result = sbr_data(ld);
-
-				/* sbr_data() returning an error means that there was an error in
-				 envelope_time_border_vector().
-				 In this case the old time border vector is saved and all the previous
-				 data normally read after sbr_grid() is saved.
-				 */
-			/* to be on the safe side, calculate old sbr tables in case of error */
-			if((result>0)
-				&&(this.Reset)) {
-				calc_sbr_tables(saved_start_freq, saved_stop_freq,
-					saved_samplerate_mode, saved_freq_scale,
-					saved_alter_scale, saved_xover_band);
-			}
-
-			/* we should be able to safely set result to 0 now, */
-			/* but practise indicates this doesn't work well */
 
 			valid = (result==0);
 		} else
 			valid = true;
 	}
 
-	/* table 3 */
-	private void sbr_header(BitStream ld) {
-		this.header_count++;
+	/**
+	 * Save current header and return the previously saved header.
+	 * @return the saved header.
+	 */
+	private Header swapHeaders() {
 
-		this.bs_amp_res = ld.readBool();
+		// save current header and recycle old one (if exists)
+		Header hdr = this.hdr_saved;
+		this.hdr_saved = this.hdr;
 
-		/* bs_start_freq and bs_stop_freq must define a fequency band that does
-		 not exceed 48 channels */
-		this.bs_start_freq = ld.readBits(4);
-		this.bs_stop_freq = ld.readBits(4);
-		this.bs_xover_band = ld.readBits(3);
-		ld.readBits(2); //reserved
-		boolean bs_header_extra_1 = ld.readBool();
-		boolean bs_header_extra_2 = ld.readBool();
+		if(hdr==null)
+			hdr = new Header();
+		this.hdr = hdr;
 
-		if(bs_header_extra_1) {
-			this.bs_freq_scale = ld.readBits(2);
-			this.bs_alter_scale = ld.readBool();
-			this.bs_noise_bands = ld.readBits(2);
-		}
-		else {
-			/* Default values */
-			this.bs_freq_scale = 2;
-			this.bs_alter_scale = true;
-			this.bs_noise_bands = 2;
-		}
+		return hdr;
+	}
 
-		if(bs_header_extra_2) {
-			this.bs_limiter_bands = ld.readBits(2);
-			this.bs_limiter_gains = ld.readBits(2);
-			this.bs_interpol_freq = ld.readBool();
-			this.bs_smoothing_mode = ld.readBool();
-		}
-		else {
-			/* Default values */
-			this.bs_limiter_bands = 2;
-			this.bs_limiter_gains = 2;
-			this.bs_interpol_freq = true;
-			this.bs_smoothing_mode = true;
-		}
+	/**
+	 * Read a new header and return if the header parameter changed.
+	 * See: 5.3.1 Decoding process.
+	 * 
+	 * @param ld input data.
+	 * @return true if relevant parameters changed.
+	 */
 
+	private boolean readHeader(BitStream ld) {
+		boolean bs_header_flag = ld.readBool();
+
+		if(bs_header_flag) {
+			Header hdr = swapHeaders();
+			hdr.decode(ld);
+			return hdr.differs(hdr_saved);
+		} else
+			return false;
 	}
 
 	/* table 4 */
@@ -916,7 +870,7 @@ public class SBR {
 		if((this.L_E[ch]==1)&&(this.bs_frame_class[ch]== FrameClass.FIXFIX))
 			this.amp_res[ch] = false;
 		else
-			this.amp_res[ch] = this.bs_amp_res;
+			this.amp_res[ch] = this.hdr.bs_amp_res;
 
 		if((this.bs_coupling)&&(ch==1)) {
 			delta = 1;
@@ -1154,18 +1108,14 @@ public class SBR {
 
 		/* case can occur due to bit errors */
 		if(!stereo)
-			return 21;
+			throw new AACException("unexpected SBR stereo channel");
 
-		if(this.ret!=0||(this.header_count==0)) {
+		if(this.hdr==null) {
 			/* don't process just upsample */
 			dont_process = true;
-
-			/* Re-activate reset for next frame */
-			if(this.ret!=0&&this.Reset)
-				this.bs_start_freq_prev = -1;
 		}
 
-		this.ret += sbr_process_channel(left_chan, X, 0, dont_process);
+		ret += sbr_process_channel(left_chan, X, 0, dont_process);
 		/* subband synthesis */
 		if(downSampledSBR) {
 			qmfs[0].sbr_qmf_synthesis_32(this, X, left_chan);
@@ -1174,7 +1124,7 @@ public class SBR {
 			qmfs[0].sbr_qmf_synthesis_64(this, X, left_chan);
 		}
 
-		this.ret += sbr_process_channel(right_chan, X, 1, dont_process);
+		ret += sbr_process_channel(right_chan, X, 1, dont_process);
 		/* subband synthesis */
 		if(downSampledSBR) {
 			qmfs[1].sbr_qmf_synthesis_32(this, X, right_chan);
@@ -1183,7 +1133,7 @@ public class SBR {
 			qmfs[1].sbr_qmf_synthesis_64(this, X, right_chan);
 		}
 
-		if(this.header_count!=0&&this.ret==0) {
+		if(this.hdr!=null&&ret==0) {
 			ret = sbr_save_prev_data(0);
 			if(ret!=0)
 				return ret;
@@ -1207,18 +1157,14 @@ public class SBR {
 
 		/* case can occur due to bit errors */
 		if(stereo)
-			return 21;
+			throw new AACException("unexpected SBR mono channel");
 
-		if(this.ret!=0||(this.header_count==0)) {
+		if(this.hdr==null) {
 			/* don't process just upsample */
 			dont_process = true;
-
-			/* Re-activate reset for next frame */
-			if(this.ret!=0&&this.Reset)
-				this.bs_start_freq_prev = -1;
 		}
 
-		this.ret += sbr_process_channel(channel, X, 0, dont_process);
+		ret += sbr_process_channel(channel, X, 0, dont_process);
 		/* subband synthesis */
 		if(downSampledSBR) {
 			qmfs[0].sbr_qmf_synthesis_32(this, X, channel);
@@ -1227,7 +1173,7 @@ public class SBR {
 			qmfs[0].sbr_qmf_synthesis_64(this, X, channel);
 		}
 
-		if(this.header_count!=0&&this.ret==0) {
+		if(this.hdr!=null&&ret==0) {
 			ret = sbr_save_prev_data(0);
 			if(ret!=0)
 				return ret;
@@ -1249,22 +1195,18 @@ public class SBR {
 
 		/* case can occur due to bit errors */
 		if(stereo)
-			return 21;
+			throw new AACException("PS on mono channel");
 
-		if(this.ret!=0||(this.header_count==0)) {
+		if(this.hdr==null) {
 			/* don't process just upsample */
 			dont_process = true;
-
-			/* Re-activate reset for next frame */
-			if(this.ret!=0&&this.Reset)
-				this.bs_start_freq_prev = -1;
 		}
 
 		if(this.qmfs[1]==null) {
 			this.qmfs[1] = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
 		}
 
-		this.ret += sbr_process_channel(left_channel, X_left, 0, dont_process);
+		ret += sbr_process_channel(left_channel, X_left, 0, dont_process);
 
 		/* copy some extra data for PS */
 		for(l = this.numTimeSlotsRate; l<this.numTimeSlotsRate+6; l++) {
@@ -1287,7 +1229,7 @@ public class SBR {
 			qmfs[1].sbr_qmf_synthesis_64(this, X_right, right_channel);
 		}
 
-		if(this.header_count!=0&&this.ret==0) {
+		if(this.hdr!=null&&ret==0) {
 			ret = sbr_save_prev_data(0);
 			if(ret!=0)
 				return ret;
