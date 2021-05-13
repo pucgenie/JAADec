@@ -15,24 +15,24 @@ class HFAdjustment implements NoiseTable {
 	private float[][] Q_M_lim_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 	private float[][] S_M_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 
-	public static int hf_adjustment(SBR sbr, float[][][] Xsbr, int ch) {
+	public static int hf_adjustment(SBR sbr, float[][][] Xsbr, SBR.Channel ch) {
 		HFAdjustment adj = new HFAdjustment();
 		int ret = 0;
 
-		if(sbr.bs_frame_class[ch]== FrameClass.FIXFIX) {
-			sbr.l_A[ch] = -1;
+		if(ch.bs_frame_class== FrameClass.FIXFIX) {
+			ch.l_A = -1;
 		}
-		else if(sbr.bs_frame_class[ch]== FrameClass.VARFIX) {
-			if(sbr.bs_pointer[ch]>1)
-				sbr.l_A[ch] = sbr.bs_pointer[ch]-1;
+		else if(ch.bs_frame_class== FrameClass.VARFIX) {
+			if(ch.bs_pointer>1)
+				ch.l_A = ch.bs_pointer-1;
 			else
-				sbr.l_A[ch] = -1;
+				ch.l_A = -1;
 		}
 		else {
-			if(sbr.bs_pointer[ch]==0)
-				sbr.l_A[ch] = -1;
+			if(ch.bs_pointer==0)
+				ch.l_A = -1;
 			else
-				sbr.l_A[ch] = sbr.L_E[ch]+1-sbr.bs_pointer[ch];
+				ch.l_A = ch.L_E+1-ch.bs_pointer;
 		}
 
 		ret = estimate_current_envelope(sbr, adj, Xsbr, ch);
@@ -46,14 +46,14 @@ class HFAdjustment implements NoiseTable {
 		return 0;
 	}
 
-	private static int get_S_mapped(SBR sbr, int ch, int l, int current_band) {
-		if(sbr.f[ch][l]== FBT.HI_RES) {
+	private static int get_S_mapped(SBR sbr, SBR.Channel ch, int l, int current_band) {
+		if(ch.f[l]== FBT.HI_RES) {
 			/* in case of using f_table_high we just have 1 to 1 mapping
 			 * from bs_add_harmonic[l][k]
 			 */
-			if((l>=sbr.l_A[ch])
-				||(sbr.bs_add_harmonic_prev[ch][current_band]!=0&&sbr.bs_add_harmonic_flag_prev[ch])) {
-				return sbr.bs_add_harmonic[ch][current_band];
+			if((l>=ch.l_A)
+				||(ch.bs_add_harmonic_prev[current_band]!=0&&ch.bs_add_harmonic_flag_prev)) {
+				return ch.bs_add_harmonic[current_band];
 			}
 		}
 		else {
@@ -72,9 +72,9 @@ class HFAdjustment implements NoiseTable {
 
 			/* check all HI_RES bands in current LO_RES band for sinusoid */
 			for(b = lb; b<ub; b++) {
-				if((l>=sbr.l_A[ch])
-					||(sbr.bs_add_harmonic_prev[ch][b]!=0&&sbr.bs_add_harmonic_flag_prev[ch])) {
-					if(sbr.bs_add_harmonic[ch][b]==1)
+				if((l>=ch.l_A)
+					||(ch.bs_add_harmonic_prev[b]!=0&&ch.bs_add_harmonic_flag_prev)) {
+					if(ch.bs_add_harmonic[b]==1)
 						return 1;
 				}
 			}
@@ -84,16 +84,16 @@ class HFAdjustment implements NoiseTable {
 	}
 
 	private static int estimate_current_envelope(SBR sbr, HFAdjustment adj,
-		float[][][] Xsbr, int ch) {
+		float[][][] Xsbr, SBR.Channel ch) {
 		int m, l, j, k, k_l, k_h, p;
 		float nrg, div;
 
 		if(sbr.hdr.bs_interpol_freq) {
-			for(l = 0; l<sbr.L_E[ch]; l++) {
+			for(l = 0; l<ch.L_E; l++) {
 				int i, l_i, u_i;
 
-				l_i = sbr.t_E[ch][l];
-				u_i = sbr.t_E[ch][l+1];
+				l_i = ch.t_E[l];
+				u_i = ch.t_E[l+1];
 
 				div = (float) (u_i-l_i);
 
@@ -108,22 +108,22 @@ class HFAdjustment implements NoiseTable {
 							+(Xsbr[i][m+sbr.kx][1]*Xsbr[i][m+sbr.kx][1]);
 					}
 
-					sbr.E_curr[ch][m][l] = nrg/div;
+					ch.E_curr[m][l] = nrg/div;
 				}
 			}
 		}
 		else {
-			for(l = 0; l<sbr.L_E[ch]; l++) {
-				for(p = 0; p<sbr.n[sbr.f[ch][l]]; p++) {
-					k_l = sbr.f_table_res[sbr.f[ch][l]][p];
-					k_h = sbr.f_table_res[sbr.f[ch][l]][p+1];
+			for(l = 0; l<ch.L_E; l++) {
+				for(p = 0; p<sbr.n[ch.f[l]]; p++) {
+					k_l = sbr.f_table_res[ch.f[l]][p];
+					k_h = sbr.f_table_res[ch.f[l]][p+1];
 
 					for(k = k_l; k<k_h; k++) {
 						int i, l_i, u_i;
 						nrg = 0;
 
-						l_i = sbr.t_E[ch][l];
-						u_i = sbr.t_E[ch][l+1];
+						l_i = ch.t_E[l];
+						u_i = ch.t_E[l+1];
 
 						div = (float) ((u_i-l_i)*(k_h-k_l));
 
@@ -137,7 +137,7 @@ class HFAdjustment implements NoiseTable {
 							}
 						}
 
-						sbr.E_curr[ch][k-sbr.kx][l] = nrg/div;
+						ch.E_curr[k-sbr.kx][l] = nrg/div;
 					}
 				}
 			}
@@ -147,7 +147,7 @@ class HFAdjustment implements NoiseTable {
 	}
 
 	private static void hf_assembly(SBR sbr, HFAdjustment adj,
-		float[][][] Xsbr, int ch) {
+		float[][][] Xsbr, SBR.Channel ch) {
 
 		int m, l, i, n;
 		int fIndexNoise = 0;
@@ -163,30 +163,30 @@ class HFAdjustment implements NoiseTable {
 			fIndexNoise = 0;
 		}
 		else {
-			fIndexNoise = sbr.index_noise_prev[ch];
+			fIndexNoise = ch.index_noise_prev;
 		}
-		fIndexSine = sbr.psi_is_prev[ch];
+		fIndexSine = ch.psi_is_prev;
 
-		for(l = 0; l<sbr.L_E[ch]; l++) {
-			boolean no_noise = (l==sbr.l_A[ch]||l==sbr.prevEnvIsShort[ch]);
+		for(l = 0; l<ch.L_E; l++) {
+			boolean no_noise = (l==ch.l_A||l==ch.prevEnvIsShort);
 
 			h_SL = (sbr.hdr.bs_smoothing_mode) ? 0 : 4;
 			h_SL = (no_noise ? 0 : h_SL);
 
 			if(assembly_reset) {
 				for(n = 0; n<4; n++) {
-					System.arraycopy(adj.G_lim_boost[l], 0, sbr.G_temp_prev[ch][n], 0, sbr.M);
-					System.arraycopy(adj.Q_M_lim_boost[l], 0, sbr.Q_temp_prev[ch][n], 0, sbr.M);
+					System.arraycopy(adj.G_lim_boost[l], 0, ch.G_temp_prev[n], 0, sbr.M);
+					System.arraycopy(adj.Q_M_lim_boost[l], 0, ch.Q_temp_prev[n], 0, sbr.M);
 				}
 				/* reset ringbuffer index */
-				sbr.GQ_ringbuf_index[ch] = 4;
+				ch.GQ_ringbuf_index = 4;
 				assembly_reset = false;
 			}
 
-			for(i = sbr.t_E[ch][l]; i<sbr.t_E[ch][l+1]; i++) {
+			for(i = ch.t_E[l]; i<ch.t_E[l+1]; i++) {
 				/* load new values into ringbuffer */
-				System.arraycopy(adj.G_lim_boost[l], 0, sbr.G_temp_prev[ch][sbr.GQ_ringbuf_index[ch]], 0, sbr.M);
-				System.arraycopy(adj.Q_M_lim_boost[l], 0, sbr.Q_temp_prev[ch][sbr.GQ_ringbuf_index[ch]], 0, sbr.M);
+				System.arraycopy(adj.G_lim_boost[l], 0, ch.G_temp_prev[ch.GQ_ringbuf_index], 0, sbr.M);
+				System.arraycopy(adj.Q_M_lim_boost[l], 0, ch.Q_temp_prev[ch.GQ_ringbuf_index], 0, sbr.M);
 
 				for(m = 0; m<sbr.M; m++) {
 					float[] psi = new float[2];
@@ -195,19 +195,19 @@ class HFAdjustment implements NoiseTable {
 					Q_filt = 0;
 
 					if(h_SL!=0) {
-						int ri = sbr.GQ_ringbuf_index[ch];
+						int ri = ch.GQ_ringbuf_index;
 						for(n = 0; n<=4; n++) {
 							float curr_h_smooth = h_smooth[n];
 							ri++;
 							if(ri>=5)
 								ri -= 5;
-							G_filt += (sbr.G_temp_prev[ch][ri][m]*curr_h_smooth);
-							Q_filt += (sbr.Q_temp_prev[ch][ri][m]*curr_h_smooth);
+							G_filt += (ch.G_temp_prev[ri][m]*curr_h_smooth);
+							Q_filt += (ch.Q_temp_prev[ri][m]*curr_h_smooth);
 						}
 					}
 					else {
-						G_filt = sbr.G_temp_prev[ch][sbr.GQ_ringbuf_index[ch]][m];
-						Q_filt = sbr.Q_temp_prev[ch][sbr.GQ_ringbuf_index[ch]][m];
+						G_filt = ch.G_temp_prev[ch.GQ_ringbuf_index][m];
+						Q_filt = ch.Q_temp_prev[ch.GQ_ringbuf_index][m];
 					}
 
 					Q_filt = (adj.S_M_boost[l][m]!=0||no_noise) ? 0 : Q_filt;
@@ -237,17 +237,17 @@ class HFAdjustment implements NoiseTable {
 				fIndexSine = (fIndexSine+1)&3;
 
 				/* update the ringbuffer index used for filtering G and Q with h_smooth */
-				sbr.GQ_ringbuf_index[ch]++;
-				if(sbr.GQ_ringbuf_index[ch]>=5)
-					sbr.GQ_ringbuf_index[ch] = 0;
+				ch.GQ_ringbuf_index++;
+				if(ch.GQ_ringbuf_index>=5)
+					ch.GQ_ringbuf_index = 0;
 			}
 		}
 
-		sbr.index_noise_prev[ch] = fIndexNoise;
-		sbr.psi_is_prev[ch] = fIndexSine;
+		ch.index_noise_prev = fIndexNoise;
+		ch.psi_is_prev = fIndexSine;
 	}
 
-	private static void calculate_gain(SBR sbr, HFAdjustment adj, int ch) {
+	private static void calculate_gain(SBR sbr, HFAdjustment adj, SBR.Channel ch) {
 		int m, l, k;
 
 		int current_t_noise_band = 0;
@@ -258,17 +258,17 @@ class HFAdjustment implements NoiseTable {
 		float G_boost;
 		float[] S_M = new float[SBR.MAX_M];
 
-		for(l = 0; l<sbr.L_E[ch]; l++) {
+		for(l = 0; l<ch.L_E; l++) {
 			int current_f_noise_band = 0;
 			int current_res_band = 0;
 			int current_res_band2 = 0;
 			int current_hi_res_band = 0;
 
-			float delta = (l==sbr.l_A[ch]||l==sbr.prevEnvIsShort[ch]) ? 0 : 1;
+			float delta = (l==ch.l_A||l==ch.prevEnvIsShort) ? 0 : 1;
 
 			S_mapped = get_S_mapped(sbr, ch, l, current_res_band2);
 
-			if(sbr.t_E[ch][l+1]>sbr.t_Q[ch][current_t_noise_band+1]) {
+			if(ch.t_E[l+1]>ch.t_Q[current_t_noise_band+1]) {
 				current_t_noise_band++;
 			}
 
@@ -287,11 +287,11 @@ class HFAdjustment implements NoiseTable {
 
 				/* calculate the accumulated E_orig and E_curr over the limiter band */
 				for(m = ml1; m<ml2; m++) {
-					if((m+sbr.kx)==sbr.f_table_res[sbr.f[ch][l]][current_res_band+1]) {
+					if((m+sbr.kx)==sbr.f_table_res[ch.f[l]][current_res_band+1]) {
 						current_res_band++;
 					}
-					acc1 += sbr.E_orig[ch][current_res_band][l];
-					acc2 += sbr.E_curr[ch][m][l];
+					acc1 += ch.E_orig[current_res_band][l];
+					acc2 += ch.E_curr[m][l];
 				}
 
 
@@ -316,7 +316,7 @@ class HFAdjustment implements NoiseTable {
 
 
 					/* check if m is on a resolution band border */
-					if((m+sbr.kx)==sbr.f_table_res[sbr.f[ch][l]][current_res_band2+1]) {
+					if((m+sbr.kx)==sbr.f_table_res[ch.f[l]][current_res_band2+1]) {
 						/* step to next resolution band */
 						current_res_band2++;
 
@@ -339,27 +339,27 @@ class HFAdjustment implements NoiseTable {
 					 * current HI_RES band
 					 */
 					S_index_mapped = 0;
-					if((l>=sbr.l_A[ch])
-						||(sbr.bs_add_harmonic_prev[ch][current_hi_res_band]!=0&&sbr.bs_add_harmonic_flag_prev[ch])) {
+					if((l>=ch.l_A)
+						||(ch.bs_add_harmonic_prev[current_hi_res_band]!=0&&ch.bs_add_harmonic_flag_prev)) {
 						/* find the middle subband of the HI_RES frequency band */
 						if((m+sbr.kx)==(sbr.f_table_res[FBT.HI_RES][current_hi_res_band+1]+sbr.f_table_res[FBT.HI_RES][current_hi_res_band])>>1)
-							S_index_mapped = sbr.bs_add_harmonic[ch][current_hi_res_band];
+							S_index_mapped = ch.bs_add_harmonic[current_hi_res_band];
 					}
 
 
 					/* Q_div: [0..1] (1/(1+Q_mapped)) */
-					Q_div = sbr.Q_div[ch][current_f_noise_band][current_t_noise_band];
+					Q_div = ch.Q_div[current_f_noise_band][current_t_noise_band];
 
 
 					/* Q_div2: [0..1] (Q_mapped/(1+Q_mapped)) */
-					Q_div2 = sbr.Q_div2[ch][current_f_noise_band][current_t_noise_band];
+					Q_div2 = ch.Q_div2[current_f_noise_band][current_t_noise_band];
 
 
 					/* Q_M only depends on E_orig and Q_div2:
 					 * since N_Q <= N_Low <= N_High we only need to recalculate Q_M on
 					 * a change of current noise band
 					 */
-					Q_M = sbr.E_orig[ch][current_res_band2][l]*Q_div2;
+					Q_M = ch.E_orig[current_res_band2][l]*Q_div2;
 
 
 					/* S_M only depends on E_orig, Q_div and S_index_mapped:
@@ -369,7 +369,7 @@ class HFAdjustment implements NoiseTable {
 						S_M[m] = 0;
 					}
 					else {
-						S_M[m] = sbr.E_orig[ch][current_res_band2][l]*Q_div;
+						S_M[m] = ch.E_orig[current_res_band2][l]*Q_div;
 
 						/* accumulate sinusoid part of the total energy */
 						den += S_M[m];
@@ -380,7 +380,7 @@ class HFAdjustment implements NoiseTable {
 					/* ratio of the energy of the original signal and the energy
 					 * of the HF generated signal
 					 */
-					G = sbr.E_orig[ch][current_res_band2][l]/(1.0f+sbr.E_curr[ch][m][l]);
+					G = ch.E_orig[current_res_band2][l]/(1.0f+ch.E_curr[m][l]);
 					if((S_mapped==0)&&(delta==1))
 						G *= Q_div;
 					else if(S_mapped==1)
@@ -400,8 +400,8 @@ class HFAdjustment implements NoiseTable {
 
 
 					/* accumulate the total energy */
-					den += sbr.E_curr[ch][m][l]*G_lim[m];
-					if((S_index_mapped==0)&&(l!=sbr.l_A[ch]))
+					den += ch.E_curr[m][l]*G_lim[m];
+					if((S_index_mapped==0)&&(l!=ch.l_A))
 						den += Q_M_lim[m];
 				}
 

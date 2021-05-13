@@ -187,64 +187,64 @@ class NoiseEnvelope {
 		{1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f}
 	};
 
-	public static void extract_envelope_data(SBR sbr, int ch) {
+	public static void extract_envelope_data(SBR sbr, SBR.Channel ch) {
 		int l, k;
 
-		for(l = 0; l<sbr.L_E[ch]; l++) {
-			if(sbr.bs_df_env[ch][l]==0) {
-				for(k = 1; k<sbr.n[sbr.f[ch][l]]; k++) {
-					sbr.E[ch][k][l] = sbr.E[ch][k-1][l]+sbr.E[ch][k][l];
-					if(sbr.E[ch][k][l]<0)
-						sbr.E[ch][k][l] = 0;
+		for(l = 0; l<ch.L_E; l++) {
+			if(ch.bs_df_env[l]==0) {
+				for(k = 1; k<sbr.n[ch.f[l]]; k++) {
+					ch.E[k][l] = ch.E[k-1][l]+ch.E[k][l];
+					if(ch.E[k][l]<0)
+						ch.E[k][l] = 0;
 				}
 
 			}
 			else { /* bs_df_env == 1 */
 
-				int g = (l==0) ? sbr.f_prev[ch] : sbr.f[ch][l-1];
+				int g = (l==0) ? ch.f_prev : ch.f[l-1];
 				int E_prev;
 
-				if(sbr.f[ch][l]==g) {
-					for(k = 0; k<sbr.n[sbr.f[ch][l]]; k++) {
+				if(ch.f[l]==g) {
+					for(k = 0; k<sbr.n[ch.f[l]]; k++) {
 						if(l==0)
-							E_prev = sbr.E_prev[ch][k];
+							E_prev = ch.E_prev[k];
 						else
-							E_prev = sbr.E[ch][k][l-1];
+							E_prev = ch.E[k][l-1];
 
-						sbr.E[ch][k][l] = E_prev+sbr.E[ch][k][l];
+						ch.E[k][l] = E_prev+ch.E[k][l];
 					}
 
 				}
-				else if((g==1)&&(sbr.f[ch][l]==0)) {
+				else if((g==1)&&(ch.f[l]==0)) {
 					int i;
 
-					for(k = 0; k<sbr.n[sbr.f[ch][l]]; k++) {
+					for(k = 0; k<sbr.n[ch.f[l]]; k++) {
 						for(i = 0; i<sbr.N_high; i++) {
 							if(sbr.f_table_res[FBT.HI_RES][i]==sbr.f_table_res[FBT.LO_RES][k]) {
 								if(l==0)
-									E_prev = sbr.E_prev[ch][i];
+									E_prev = ch.E_prev[i];
 								else
-									E_prev = sbr.E[ch][i][l-1];
+									E_prev = ch.E[i][l-1];
 
-								sbr.E[ch][k][l] = E_prev+sbr.E[ch][k][l];
+								ch.E[k][l] = E_prev+ch.E[k][l];
 							}
 						}
 					}
 
 				}
-				else if((g==0)&&(sbr.f[ch][l]==1)) {
+				else if((g==0)&&(ch.f[l]==1)) {
 					int i;
 
-					for(k = 0; k<sbr.n[sbr.f[ch][l]]; k++) {
+					for(k = 0; k<sbr.n[ch.f[l]]; k++) {
 						for(i = 0; i<sbr.N_low; i++) {
 							if((sbr.f_table_res[FBT.LO_RES][i]<=sbr.f_table_res[FBT.HI_RES][k])
 								&&(sbr.f_table_res[FBT.HI_RES][k]<sbr.f_table_res[FBT.LO_RES][i+1])) {
 								if(l==0)
-									E_prev = sbr.E_prev[ch][i];
+									E_prev = ch.E_prev[i];
 								else
-									E_prev = sbr.E[ch][i][l-1];
+									E_prev = ch.E[i][l-1];
 
-								sbr.E[ch][k][l] = E_prev+sbr.E[ch][k][l];
+								ch.E[k][l] = E_prev+ch.E[k][l];
 							}
 						}
 					}
@@ -253,24 +253,24 @@ class NoiseEnvelope {
 		}
 	}
 
-	public static void extract_noise_floor_data(SBR sbr, int ch) {
+	public static void extract_noise_floor_data(SBR sbr, SBR.Channel ch) {
 		int l, k;
 
-		for(l = 0; l<sbr.L_Q[ch]; l++) {
-			if(sbr.bs_df_noise[ch][l]==0) {
+		for(l = 0; l<ch.L_Q; l++) {
+			if(ch.bs_df_noise[l]==0) {
 				for(k = 1; k<sbr.N_Q; k++) {
-					sbr.Q[ch][k][l] = sbr.Q[ch][k][l]+sbr.Q[ch][k-1][l];
+					ch.Q[k][l] = ch.Q[k][l]+ch.Q[k-1][l];
 				}
 			}
 			else {
 				if(l==0) {
 					for(k = 0; k<sbr.N_Q; k++) {
-						sbr.Q[ch][k][l] = sbr.Q_prev[ch][k]+sbr.Q[ch][k][0];
+						ch.Q[k][l] = ch.Q_prev[k]+ch.Q[k][0];
 					}
 				}
 				else {
 					for(k = 0; k<sbr.N_Q; k++) {
-						sbr.Q[ch][k][l] = sbr.Q[ch][k][l-1]+sbr.Q[ch][k][l];
+						ch.Q[k][l] = ch.Q[k][l-1]+ch.Q[k][l];
 					}
 				}
 			}
@@ -279,95 +279,95 @@ class NoiseEnvelope {
 
 	/* calculates 1/(1+Q) */
 	/* [0..1] */
-	public static float calc_Q_div(SBR sbr, int ch, int m, int l) {
+	public static float calc_Q_div(SBR sbr, SBR.Channel ch, int m, int l) {
 		if(sbr.bs_coupling) {
 			/* left channel */
-			if((sbr.Q[0][m][l]<0||sbr.Q[0][m][l]>30)
-				||(sbr.Q[1][m][l]<0||sbr.Q[1][m][l]>24 /* 2*panOffset(1) */)) {
+			if((sbr.ch0.Q[m][l]<0||sbr.ch0.Q[m][l]>30)
+				||(sbr.ch1.Q[m][l]<0||sbr.ch1.Q[m][l]>24 /* 2*panOffset(1) */)) {
 				return 0;
 			}
 			else {
 				/* the pan parameter is always even */
-				if(ch==0) {
-					return Q_div_tab_left[sbr.Q[0][m][l]][sbr.Q[1][m][l]>>1];
+				if(ch==sbr.ch0) {
+					return Q_div_tab_left[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
 				}
 				else {
-					return Q_div_tab_right[sbr.Q[0][m][l]][sbr.Q[1][m][l]>>1];
+					return Q_div_tab_right[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
 				}
 			}
 		}
 		else {
 			/* no coupling */
-			if(sbr.Q[ch][m][l]<0||sbr.Q[ch][m][l]>30) {
+			if(ch.Q[m][l]<0||ch.Q[m][l]>30) {
 				return 0;
 			}
 			else {
-				return Q_div_tab[sbr.Q[ch][m][l]];
+				return Q_div_tab[ch.Q[m][l]];
 			}
 		}
 	}
 
 	/* calculates Q/(1+Q) */
 	/* [0..1] */
-	public static float calc_Q_div2(SBR sbr, int ch, int m, int l) {
+	public static float calc_Q_div2(SBR sbr, SBR.Channel ch, int m, int l) {
 		if(sbr.bs_coupling) {
-			if((sbr.Q[0][m][l]<0||sbr.Q[0][m][l]>30)
-				||(sbr.Q[1][m][l]<0||sbr.Q[1][m][l]>24 /* 2*panOffset(1) */)) {
+			if((sbr.ch0.Q[m][l]<0||sbr.ch0.Q[m][l]>30)
+				||(sbr.ch1.Q[m][l]<0||sbr.ch1.Q[m][l]>24 /* 2*panOffset(1) */)) {
 				return 0;
 			}
 			else {
 				/* the pan parameter is always even */
-				if(ch==0) {
-					return Q_div2_tab_left[sbr.Q[0][m][l]][sbr.Q[1][m][l]>>1];
+				if(ch==sbr.ch0) {
+					return Q_div2_tab_left[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
 				}
 				else {
-					return Q_div2_tab_right[sbr.Q[0][m][l]][sbr.Q[1][m][l]>>1];
+					return Q_div2_tab_right[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
 				}
 			}
 		}
 		else {
 			/* no coupling */
-			if(sbr.Q[ch][m][l]<0||sbr.Q[ch][m][l]>30) {
+			if(ch.Q[m][l]<0||ch.Q[m][l]>30) {
 				return 0;
 			}
 			else {
-				return Q_div2_tab[sbr.Q[ch][m][l]];
+				return Q_div2_tab[ch.Q[m][l]];
 			}
 		}
 	}
 
-	public static void dequantChannel(SBR sbr, int ch) {
+	public static void dequantChannel(SBR sbr, SBR.Channel ch) {
 		if(!sbr.bs_coupling) {
 			int exp;
 			int l, k;
-			int amp = (sbr.amp_res[ch]) ? 0 : 1;
+			int amp = (ch.amp_res) ? 0 : 1;
 
-			for(l = 0; l<sbr.L_E[ch]; l++) {
-				for(k = 0; k<sbr.n[sbr.f[ch][l]]; k++) {
+			for(l = 0; l<ch.L_E; l++) {
+				for(k = 0; k<sbr.n[ch.f[l]]; k++) {
 					/* +6 for the *64 and -10 for the /32 in the synthesis QMF (fixed)
 					 * since this is a energy value: (x/32)^2 = (x^2)/1024
 					 */
-					/* exp = (sbr.E[ch][k][l] >> amp) + 6; */
-					exp = (sbr.E[ch][k][l]>>amp);
+					/* exp = (ch.E[k][l] >> amp) + 6; */
+					exp = (ch.E[k][l]>>amp);
 
 					if((exp<0)||(exp>=64)) {
-						sbr.E_orig[ch][k][l] = 0;
+						ch.E_orig[k][l] = 0;
 					}
 					else {
-						sbr.E_orig[ch][k][l] = E_deq_tab[exp];
+						ch.E_orig[k][l] = E_deq_tab[exp];
 
 						/* save half the table size at the cost of 1 multiply */
-						if(amp!=0&&(sbr.E[ch][k][l]&1)!=0) {
-							sbr.E_orig[ch][k][l] = (sbr.E_orig[ch][k][l]*1.414213562f);
+						if(amp!=0&&(ch.E[k][l]&1)!=0) {
+							ch.E_orig[k][l] = (ch.E_orig[k][l]*1.414213562f);
 						}
 					}
 				}
 			}
 
-			for(l = 0; l<sbr.L_Q[ch]; l++) {
+			for(l = 0; l<ch.L_Q; l++) {
 				for(k = 0; k<sbr.N_Q; k++) {
-					sbr.Q_div[ch][k][l] = calc_Q_div(sbr, ch, k, l);
-					sbr.Q_div2[ch][k][l] = calc_Q_div2(sbr, ch, k, l);
+					ch.Q_div[k][l] = calc_Q_div(sbr, ch, k, l);
+					ch.Q_div2[k][l] = calc_Q_div2(sbr, ch, k, l);
 				}
 			}
 		}
@@ -393,45 +393,45 @@ class NoiseEnvelope {
 		float tmp;
 		int exp0, exp1;
 		int l, k;
-		int amp0 = (sbr.amp_res[0]) ? 0 : 1;
-		int amp1 = (sbr.amp_res[1]) ? 0 : 1;
+		int amp0 = (sbr.ch0.amp_res) ? 0 : 1;
+		int amp1 = (sbr.ch1.amp_res) ? 0 : 1;
 
-		for(l = 0; l<sbr.L_E[0]; l++) {
-			for(k = 0; k<sbr.n[sbr.f[0][l]]; k++) {
+		for(l = 0; l<sbr.ch0.L_E; l++) {
+			for(k = 0; k<sbr.n[sbr.ch0.f[l]]; k++) {
 				/* +6: * 64 ; +1: * 2 ; */
-				exp0 = (sbr.E[0][k][l]>>amp0)+1;
+				exp0 = (sbr.ch0.E[k][l]>>amp0)+1;
 
 				/* UN_MAP removed: (x / 4096) same as (x >> 12) */
 				/* E[1] is always even so no need for compensating the divide by 2 with
 				 * an extra multiplication
 				 */
-				/* exp1 = (sbr.E[1][k][l] >> amp1) - 12; */
-				exp1 = (sbr.E[1][k][l]>>amp1);
+				/* exp1 = (sbr.ch1.E[k][l] >> amp1) - 12; */
+				exp1 = (sbr.ch1.E[k][l]>>amp1);
 
 				if((exp0<0)||(exp0>=64)
 					||(exp1<0)||(exp1>24)) {
-					sbr.E_orig[1][k][l] = 0;
-					sbr.E_orig[0][k][l] = 0;
+					sbr.ch1.E_orig[k][l] = 0;
+					sbr.ch0.E_orig[k][l] = 0;
 				}
 				else {
 					tmp = E_deq_tab[exp0];
-					if(amp0!=0&&(sbr.E[0][k][l]&1)!=0) {
+					if(amp0!=0&&(sbr.ch0.E[k][l]&1)!=0) {
 						tmp *= 1.414213562;
 					}
 
 					/* panning */
-					sbr.E_orig[0][k][l] = (tmp*E_pan_tab[exp1]);
-					sbr.E_orig[1][k][l] = (tmp*E_pan_tab[24-exp1]);
+					sbr.ch0.E_orig[k][l] = (tmp*E_pan_tab[exp1]);
+					sbr.ch1.E_orig[k][l] = (tmp*E_pan_tab[24-exp1]);
 				}
 			}
 		}
 
-		for(l = 0; l<sbr.L_Q[0]; l++) {
+		for(l = 0; l<sbr.ch0.L_Q; l++) {
 			for(k = 0; k<sbr.N_Q; k++) {
-				sbr.Q_div[0][k][l] = calc_Q_div(sbr, 0, k, l);
-				sbr.Q_div[1][k][l] = calc_Q_div(sbr, 1, k, l);
-				sbr.Q_div2[0][k][l] = calc_Q_div2(sbr, 0, k, l);
-				sbr.Q_div2[1][k][l] = calc_Q_div2(sbr, 1, k, l);
+				sbr.ch0.Q_div[k][l] = calc_Q_div(sbr, sbr.ch0, k, l);
+				sbr.ch1.Q_div[k][l] = calc_Q_div(sbr, sbr.ch1, k, l);
+				sbr.ch0.Q_div2[k][l] = calc_Q_div2(sbr, sbr.ch0, k, l);
+				sbr.ch1.Q_div2[k][l] = calc_Q_div2(sbr, sbr.ch1, k, l);
 			}
 		}
 	}

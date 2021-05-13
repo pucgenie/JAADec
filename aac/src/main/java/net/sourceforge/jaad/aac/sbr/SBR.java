@@ -19,6 +19,8 @@ public class SBR {
 	static final int EXTENSION_ID_PS = 2;
 	static final int MAX_NTSR = 32; //max number_time_slots * rate, ok for DRM and not DRM mode
 	static final int MAX_M = 49; //maximum value for M
+	public static final int MAX_L_E = 5; //maximum value for L_E
+
 	static final int EXT_SBR_DATA = 13;
 	static final int EXT_SBR_DATA_CRC = 14;
 	static final int NO_TIME_SLOTS_960 = 15;
@@ -43,8 +45,6 @@ public class SBR {
 
 	int rate;
 
-	boolean[] amp_res = new boolean[2];
-
 	int k0;
 	int kx;
 	int M;
@@ -62,54 +62,84 @@ public class SBR {
 
 	int[] table_map_k_to_g = new int[64];
 
-	int[] abs_bord_lead = new int[2];
-	int[] abs_bord_trail = new int[2];
-	int[] n_rel_lead = new int[2];
-	int[] n_rel_trail = new int[2];
+	class Channel {
 
-	int[] L_E = new int[2];
-	int[] L_E_prev = new int[2];
-	int[] L_Q = new int[2];
+		boolean amp_res;
 
-	public static final int MAX_L_E = 5; //maximum value for L_E
-	int[][] t_E = new int[2][MAX_L_E+1];
-	int[][] t_Q = new int[2][3];
-	int[][] f = new int[2][MAX_L_E+1];
-	int[] f_prev = new int[2];
+		int abs_bord_lead;
+		int abs_bord_trail;
+		int n_rel_lead;
+		int n_rel_trail;
 
-	float[][][] G_temp_prev = new float[2][5][64];
-	float[][][] Q_temp_prev = new float[2][5][64];
-	int[] GQ_ringbuf_index = new int[2];
+		int L_E;
+		int L_E_prev;
+		int L_Q;
 
-	int[][][] E = new int[2][64][MAX_L_E];
-	int[][] E_prev = new int[2][64];
-	float[][][] E_orig = new float[2][64][MAX_L_E];
-	float[][][] E_curr = new float[2][64][MAX_L_E];
-	int[][][] Q = new int[2][64][2];
-	float[][][] Q_div = new float[2][64][2];
-	float[][][] Q_div2 = new float[2][64][2];
-	int[][] Q_prev = new int[2][64];
+		int[] t_E = new int[MAX_L_E+1];
+		int[] t_Q = new int[3];
+		int[] f = new int[MAX_L_E+1];
+		int f_prev;
 
-	int[] l_A = new int[2];
-	int[] l_A_prev = new int[2];
+		float[][] G_temp_prev = new float[5][64];
+		float[][] Q_temp_prev = new float[5][64];
+		int GQ_ringbuf_index = 0;
 
-	int[][] bs_invf_mode = new int[2][MAX_L_E];
-	int[][] bs_invf_mode_prev = new int[2][MAX_L_E];
-	float[][] bwArray = new float[2][64];
-	float[][] bwArray_prev = new float[2][64];
+		int[][] E = new int[64][MAX_L_E];
+		int[] E_prev = new int[64];
+		float[][] E_orig = new float[64][MAX_L_E];
+		float[][] E_curr = new float[64][MAX_L_E];
+		int[][] Q = new int[64][2];
+		float[][] Q_div = new float[64][2];
+		float[][] Q_div2 = new float[64][2];
+		int[] Q_prev = new int[64];
 
-	int noPatches;
-	int[] patchNoSubbands = new int[64];
-	int[] patchStartSubband = new int[64];
+		int l_A;
+		int l_A_prev;
 
-	int[][] bs_add_harmonic = new int[2][64];
-	int[][] bs_add_harmonic_prev = new int[2][64];
+		int[] bs_invf_mode = new int[MAX_L_E];
+		int[] bs_invf_mode_prev = new int[MAX_L_E];
+		float[] bwArray = new float[64];
+		float[] bwArray_prev = new float[64];
 
-	int[] index_noise_prev = new int[2];
-	int[] psi_is_prev = new int[2];
+		int[] bs_add_harmonic = new int[64];
+		int[] bs_add_harmonic_prev = new int[64];
 
-	int[] prevEnvIsShort = new int[2];
+		int index_noise_prev;
+		int psi_is_prev;
 
+		int prevEnvIsShort = -1;
+
+		final AnalysisFilterbank qmfa;
+
+		public static final int MAX_NTSRHFG = 40; //maximum of number_time_slots * rate + HFGen. 16*2+8
+		float[][][] Xsbr = new float[MAX_NTSRHFG][64][2];
+
+		FrameClass bs_frame_class;
+		int[] bs_rel_bord = new int[9];
+		int[] bs_rel_bord_0 = new int[9];
+		int[] bs_rel_bord_1 = new int[9];
+		int bs_pointer;
+		int bs_abs_bord_0;
+		int bs_abs_bord_1;
+		int bs_num_rel_0;
+		int bs_num_rel_1;
+		int[] bs_df_env = new int[9];
+		int[] bs_df_noise = new int[3];
+
+		boolean bs_add_harmonic_flag;
+		boolean bs_add_harmonic_flag_prev;
+		
+		public Channel() {
+			qmfa = new AnalysisFilterbank(32);
+		}
+	}
+	
+	final Channel ch0;
+	final Channel ch1;
+
+	final SynthesisFilterbank qmfs0;
+	SynthesisFilterbank qmfs1;
+	
 	int kx_prev;
 	int bsco;
 	int bsco_prev;
@@ -119,11 +149,10 @@ public class SBR {
 	int frame;
 
 	boolean stereo;
-	AnalysisFilterbank[] qmfa = new AnalysisFilterbank[2];
-	SynthesisFilterbank[] qmfs = new SynthesisFilterbank[2];
 
-	public static final int MAX_NTSRHFG = 40; //maximum of number_time_slots * rate + HFGen. 16*2+8
-	float[][][][] Xsbr = new float[2][MAX_NTSRHFG][64][2];
+	int noPatches;
+	int[] patchNoSubbands = new int[64];
+	int[] patchStartSubband = new int[64];
 
 	int numTimeSlotsRate;
 	int numTimeSlots;
@@ -214,23 +243,11 @@ public class SBR {
 	Header hdr_saved = null;
 	
 	int bs_samplerate_mode;
-	boolean[] bs_add_harmonic_flag = new boolean[2];
-	boolean[] bs_add_harmonic_flag_prev = new boolean[2];
+
 	boolean bs_extended_data;
 	int bs_extension_id;
 	int bs_extension_data;
 	boolean bs_coupling;
-	FrameClass[] bs_frame_class = new FrameClass[2];
-	int[][] bs_rel_bord = new int[2][9];
-	int[][] bs_rel_bord_0 = new int[2][9];
-	int[][] bs_rel_bord_1 = new int[2][9];
-	int[] bs_pointer = new int[2];
-	int[] bs_abs_bord_0 = new int[2];
-	int[] bs_abs_bord_1 = new int[2];
-	int[] bs_num_rel_0 = new int[2];
-	int[] bs_num_rel_1 = new int[2];
-	int[][] bs_df_env = new int[2][9];
-	int[][] bs_df_noise = new int[2][3];
 
 	public static SBR open(DecoderConfig config, boolean stereo) {
 		config.setSBRPresent();
@@ -243,8 +260,6 @@ public class SBR {
 		this.sample_rate = sample_rate.getNominal();
 
 		this.bs_samplerate_mode = 1;
-		this.prevEnvIsShort[0] = -1;
-		this.prevEnvIsShort[1] = -1;
 
 		this.tHFGen = T_HFGEN;
 		this.tHFAdj = T_HFADJ;
@@ -262,81 +277,78 @@ public class SBR {
 			this.numTimeSlots = NO_TIME_SLOTS;
 		}
 
-		this.GQ_ringbuf_index[0] = 0;
-		this.GQ_ringbuf_index[1] = 0;
-
 		if(stereo) {
-			/* stereo */
-			int j;
-			this.qmfa[0] = new AnalysisFilterbank(32);
-			this.qmfa[1] = new AnalysisFilterbank(32);
-			this.qmfs[0] = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
-			this.qmfs[1] = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+			ch0 = new Channel();
+			qmfs0 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+			
+			ch1 = new Channel();
+			qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
 		}
 		else {
-			/* mono */
-			this.qmfa[0] = new AnalysisFilterbank(32);
-			this.qmfs[0] = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
-			this.qmfs[1] = null;
+			ch0 = new Channel();
+			qmfs0 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+			
+			ch1 = null;
+			qmfs1 = null;
 		}
 	}
 
 	void sbrReset() {
 		int j;
-		if(this.qmfa[0]!=null)
-			qmfa[0].reset();
-		if(this.qmfa[1]!=null)
-			qmfa[1].reset();
-		if(this.qmfs[0]!=null)
-			qmfs[0].reset();
-		if(this.qmfs[1]!=null)
-			qmfs[1].reset();
+		if(ch0.qmfa!=null)
+			ch0.qmfa.reset();
+		if(ch1.qmfa!=null)
+			ch1.qmfa.reset();
+		if(qmfs0!=null)
+			qmfs0.reset();
+		if(qmfs1!=null)
+			qmfs1.reset();
 
 		for(j = 0; j<5; j++) {
-			if(this.G_temp_prev[0][j]!=null)
-				Arrays.fill(G_temp_prev[0][j], 0);
-			if(this.G_temp_prev[1][j]!=null)
-				Arrays.fill(G_temp_prev[1][j], 0);
-			if(this.Q_temp_prev[0][j]!=null)
-				Arrays.fill(Q_temp_prev[0][j], 0);
-			if(this.Q_temp_prev[1][j]!=null)
-				Arrays.fill(Q_temp_prev[1][j], 0);
+			if(ch0.G_temp_prev[j]!=null)
+				Arrays.fill(ch0.G_temp_prev[j], 0);
+			if(ch1.G_temp_prev[j]!=null)
+				Arrays.fill(ch1.G_temp_prev[j], 0);
+			if(ch0.Q_temp_prev[j]!=null)
+				Arrays.fill(ch0.Q_temp_prev[j], 0);
+			if(ch1.Q_temp_prev[j]!=null)
+				Arrays.fill(ch1.Q_temp_prev[j], 0);
 		}
 
 		for(int i = 0; i<40; i++) {
 			for(int k = 0; k<64; k++) {
-				Xsbr[0][i][j][0] = 0;
-				Xsbr[0][i][j][1] = 0;
-				Xsbr[1][i][j][0] = 0;
-				Xsbr[1][i][j][1] = 0;
+				ch0.Xsbr[i][j][0] = 0;
+				ch0.Xsbr[i][j][1] = 0;
+				ch1.Xsbr[i][j][0] = 0;
+				ch1.Xsbr[i][j][1] = 0;
 			}
 		}
 
-		this.GQ_ringbuf_index[0] = 0;
-		this.GQ_ringbuf_index[1] = 0;
+		ch0.GQ_ringbuf_index = 0;
+		ch1.GQ_ringbuf_index = 0;
 
-		this.L_E_prev[0] = 0;
-		this.L_E_prev[1] = 0;
+		ch0.L_E_prev = 0;
+		ch1.L_E_prev = 0;
 
 		this.bs_samplerate_mode = 1;
-		this.prevEnvIsShort[0] = -1;
-		this.prevEnvIsShort[1] = -1;
+		ch0.prevEnvIsShort = -1;
+		ch1.prevEnvIsShort = -1;
 		this.bsco = 0;
 		this.bsco_prev = 0;
 		this.M_prev = 0;
 
-		this.f_prev[0] = 0;
-		this.f_prev[1] = 0;
+		ch0.f_prev = 0;
+		ch1.f_prev = 0;
 		for(j = 0; j<MAX_M; j++) {
-			this.E_prev[0][j] = 0;
-			this.Q_prev[0][j] = 0;
-			this.E_prev[1][j] = 0;
-			this.Q_prev[1][j] = 0;
-			this.bs_add_harmonic_prev[0][j] = 0;
-			this.bs_add_harmonic_prev[1][j] = 0;
+			ch0.E_prev[j] = 0;
+			ch0.Q_prev[j] = 0;
+			ch1.E_prev[j] = 0;
+			ch1.Q_prev[j] = 0;
+			ch0.bs_add_harmonic_prev[j] = 0;
+			ch1.bs_add_harmonic_prev[j] = 0;
 		}
-		this.bs_add_harmonic_flag_prev[0] = false;
-		this.bs_add_harmonic_flag_prev[1] = false;
+		ch0.bs_add_harmonic_flag_prev = false;
+		ch1.bs_add_harmonic_flag_prev = false;
 	}
 
 	int calc_sbr_tables(Header hdr) {
@@ -464,22 +476,22 @@ public class SBR {
 			ld.readBits(4); //reserved
 		}
 
-		if((result = sbr_grid(ld, 0))>0)
+		if((result = sbr_grid(ld, ch0))>0)
 			return result;
 
-		sbr_dtdf(ld, 0);
-		invf_mode(ld, 0);
-		sbr_envelope(ld, 0);
-		sbr_noise(ld, 0);
+		sbr_dtdf(ld, ch0);
+		invf_mode(ld, ch0);
+		sbr_envelope(ld, ch0);
+		sbr_noise(ld, ch0);
 
-		NoiseEnvelope.dequantChannel(this, 0);
+		NoiseEnvelope.dequantChannel(this, ch0);
 
-		Arrays.fill(bs_add_harmonic[0], 0, 64, 0);
-		Arrays.fill(bs_add_harmonic[1], 0, 64, 0);
+		Arrays.fill(ch0.bs_add_harmonic, 0, 64, 0);
+		//Arrays.fill(ch1.bs_add_harmonic, 0, 64, 0);
 
-		this.bs_add_harmonic_flag[0] = ld.readBool();
-		if(this.bs_add_harmonic_flag[0])
-			sinusoidal_coding(ld, 0);
+		ch0.bs_add_harmonic_flag = ld.readBool();
+		if(ch0.bs_add_harmonic_flag)
+			sinusoidal_coding(ld, ch0);
 
 		this.bs_extended_data = ld.readBool();
 
@@ -541,99 +553,99 @@ public class SBR {
 		this.bs_coupling = ld.readBool();
 
 		if(this.bs_coupling) {
-			if((result = sbr_grid(ld, 0))>0)
+			if((result = sbr_grid(ld, ch0))>0)
 				return result;
 
 			/* need to copy some data from left to right */
-			this.bs_frame_class[1] = this.bs_frame_class[0];
-			this.L_E[1] = this.L_E[0];
-			this.L_Q[1] = this.L_Q[0];
-			this.bs_pointer[1] = this.bs_pointer[0];
+			ch1.bs_frame_class = ch0.bs_frame_class;
+			ch1.L_E = ch0.L_E;
+			ch1.L_Q = ch0.L_Q;
+			ch1.bs_pointer = ch0.bs_pointer;
 
-			for(n = 0; n<=this.L_E[0]; n++) {
-				this.t_E[1][n] = this.t_E[0][n];
-				this.f[1][n] = this.f[0][n];
+			for(n = 0; n<=ch0.L_E; n++) {
+				ch1.t_E[n] = ch0.t_E[n];
+				ch1.f[n] = ch0.f[n];
 			}
-			for(n = 0; n<=this.L_Q[0]; n++) {
-				this.t_Q[1][n] = this.t_Q[0][n];
+			for(n = 0; n<=ch0.L_Q; n++) {
+				ch1.t_Q[n] = ch0.t_Q[n];
 			}
 
-			sbr_dtdf(ld, 0);
-			sbr_dtdf(ld, 1);
-			invf_mode(ld, 0);
+			sbr_dtdf(ld, ch0);
+			sbr_dtdf(ld, ch1);
+			invf_mode(ld, ch0);
 
 			/* more copying */
 			for(n = 0; n<this.N_Q; n++) {
-				this.bs_invf_mode[1][n] = this.bs_invf_mode[0][n];
+				ch1.bs_invf_mode[n] = ch0.bs_invf_mode[n];
 			}
 
-			sbr_envelope(ld, 0);
-			sbr_noise(ld, 0);
-			sbr_envelope(ld, 1);
-			sbr_noise(ld, 1);
+			sbr_envelope(ld, ch0);
+			sbr_noise(ld, ch0);
+			sbr_envelope(ld, ch1);
+			sbr_noise(ld, ch1);
 
-			Arrays.fill(bs_add_harmonic[0], 0, 64, 0);
-			Arrays.fill(bs_add_harmonic[1], 0, 64, 0);
+			Arrays.fill(ch0.bs_add_harmonic, 0, 64, 0);
+			Arrays.fill(ch1.bs_add_harmonic, 0, 64, 0);
 
-			this.bs_add_harmonic_flag[0] = ld.readBool();
-			if(this.bs_add_harmonic_flag[0])
-				sinusoidal_coding(ld, 0);
+			ch0.bs_add_harmonic_flag = ld.readBool();
+			if(ch0.bs_add_harmonic_flag)
+				sinusoidal_coding(ld, ch0);
 
-			this.bs_add_harmonic_flag[1] = ld.readBool();
-			if(this.bs_add_harmonic_flag[1])
-				sinusoidal_coding(ld, 1);
+			ch1.bs_add_harmonic_flag = ld.readBool();
+			if(ch1.bs_add_harmonic_flag)
+				sinusoidal_coding(ld, ch1);
 		}
 		else {
 			int[] saved_t_E = new int[6], saved_t_Q = new int[3];
-			int saved_L_E = this.L_E[0];
-			int saved_L_Q = this.L_Q[0];
-			FrameClass saved_frame_class = this.bs_frame_class[0];
+			int saved_L_E = ch0.L_E;
+			int saved_L_Q = ch0.L_Q;
+			FrameClass saved_frame_class = ch0.bs_frame_class;
 
 			for(n = 0; n<saved_L_E; n++) {
-				saved_t_E[n] = this.t_E[0][n];
+				saved_t_E[n] = ch0.t_E[n];
 			}
 			for(n = 0; n<saved_L_Q; n++) {
-				saved_t_Q[n] = this.t_Q[0][n];
+				saved_t_Q[n] = ch0.t_Q[n];
 			}
 
-			if((result = sbr_grid(ld, 0))>0)
+			if((result = sbr_grid(ld, ch0))>0)
 				return result;
-			if((result = sbr_grid(ld, 1))>0) {
+			if((result = sbr_grid(ld, ch1))>0) {
 				/* restore first channel data as well */
-				this.bs_frame_class[0] = saved_frame_class;
-				this.L_E[0] = saved_L_E;
-				this.L_Q[0] = saved_L_Q;
+				ch0.bs_frame_class = saved_frame_class;
+				ch0.L_E = saved_L_E;
+				ch0.L_Q = saved_L_Q;
 				for(n = 0; n<6; n++) {
-					this.t_E[0][n] = saved_t_E[n];
+					ch0.t_E[n] = saved_t_E[n];
 				}
 				for(n = 0; n<3; n++) {
-					this.t_Q[0][n] = saved_t_Q[n];
+					ch0.t_Q[n] = saved_t_Q[n];
 				}
 
 				return result;
 			}
-			sbr_dtdf(ld, 0);
-			sbr_dtdf(ld, 1);
-			invf_mode(ld, 0);
-			invf_mode(ld, 1);
-			sbr_envelope(ld, 0);
-			sbr_envelope(ld, 1);
-			sbr_noise(ld, 0);
-			sbr_noise(ld, 1);
+			sbr_dtdf(ld, ch0);
+			sbr_dtdf(ld, ch1);
+			invf_mode(ld, ch0);
+			invf_mode(ld, ch1);
+			sbr_envelope(ld, ch0);
+			sbr_envelope(ld, ch1);
+			sbr_noise(ld, ch0);
+			sbr_noise(ld, ch1);
 
-			Arrays.fill(bs_add_harmonic[0], 0, 64, 0);
-			Arrays.fill(bs_add_harmonic[1], 0, 64, 0);
+			Arrays.fill(ch0.bs_add_harmonic, 0, 64, 0);
+			Arrays.fill(ch1.bs_add_harmonic, 0, 64, 0);
 
-			this.bs_add_harmonic_flag[0] = ld.readBool();
-			if(this.bs_add_harmonic_flag[0])
-				sinusoidal_coding(ld, 0);
+			ch0.bs_add_harmonic_flag = ld.readBool();
+			if(ch0.bs_add_harmonic_flag)
+				sinusoidal_coding(ld, ch0);
 
-			this.bs_add_harmonic_flag[1] = ld.readBool();
-			if(this.bs_add_harmonic_flag[1])
-				sinusoidal_coding(ld, 1);
+			ch1.bs_add_harmonic_flag = ld.readBool();
+			if(ch1.bs_add_harmonic_flag)
+				sinusoidal_coding(ld, ch1);
 		}
-		NoiseEnvelope.dequantChannel(this, 0);
-		NoiseEnvelope.dequantChannel(this, 1);
+		NoiseEnvelope.dequantChannel(this, ch0);
+		NoiseEnvelope.dequantChannel(this, ch1);
 
 		if(this.bs_coupling)
 			NoiseEnvelope.unmap(this);
@@ -681,17 +693,17 @@ public class SBR {
 
 
 	/* table 7 */
-	private int sbr_grid(BitStream ld, int ch) {
+	private int sbr_grid(BitStream ld, Channel ch) {
 		int i, env, rel, result;
 		int bs_abs_bord, bs_abs_bord_1;
 		int bs_num_env = 0;
-		int saved_L_E = this.L_E[ch];
-		int saved_L_Q = this.L_Q[ch];
-		FrameClass saved_frame_class = this.bs_frame_class[ch];
+		int saved_L_E = ch.L_E;
+		int saved_L_Q = ch.L_Q;
+		FrameClass saved_frame_class = ch.bs_frame_class;
 
-		this.bs_frame_class[ch] = FrameClass.read(ld);
+		ch.bs_frame_class = FrameClass.read(ld);
 
-		switch(this.bs_frame_class[ch]) {
+		switch(ch.bs_frame_class) {
 			case FIXFIX:
 				i = ld.readBits(2);
 
@@ -699,13 +711,13 @@ public class SBR {
 
 				i = ld.readBit();
 				for(env = 0; env<bs_num_env; env++) {
-					this.f[ch][env] = i;
+					ch.f[env] = i;
 				}
 
-				this.abs_bord_lead[ch] = 0;
-				this.abs_bord_trail[ch] = this.numTimeSlots;
-				this.n_rel_lead[ch] = bs_num_env-1;
-				this.n_rel_trail[ch] = 0;
+				ch.abs_bord_lead = 0;
+				ch.abs_bord_trail = this.numTimeSlots;
+				ch.n_rel_lead = bs_num_env-1;
+				ch.n_rel_trail = 0;
 				break;
 
 			case FIXVAR:
@@ -713,19 +725,19 @@ public class SBR {
 				bs_num_env = ld.readBits(2)+1;
 
 				for(rel = 0; rel<bs_num_env-1; rel++) {
-					this.bs_rel_bord[ch][rel] = 2*ld.readBits(2)+2;
+					ch.bs_rel_bord[rel] = 2*ld.readBits(2)+2;
 				}
 				i = sbr_log2(bs_num_env+1);
-				this.bs_pointer[ch] = ld.readBits(i);
+				ch.bs_pointer = ld.readBits(i);
 
 				for(env = 0; env<bs_num_env; env++) {
-					this.f[ch][bs_num_env-env-1] = ld.readBit();
+					ch.f[bs_num_env-env-1] = ld.readBit();
 				}
 
-				this.abs_bord_lead[ch] = 0;
-				this.abs_bord_trail[ch] = bs_abs_bord;
-				this.n_rel_lead[ch] = 0;
-				this.n_rel_trail[ch] = bs_num_env-1;
+				ch.abs_bord_lead = 0;
+				ch.abs_bord_trail = bs_abs_bord;
+				ch.n_rel_lead = 0;
+				ch.n_rel_trail = bs_num_env-1;
 				break;
 
 			case VARFIX:
@@ -733,67 +745,67 @@ public class SBR {
 				bs_num_env = ld.readBits(2)+1;
 
 				for(rel = 0; rel<bs_num_env-1; rel++) {
-					this.bs_rel_bord[ch][rel] = 2*ld.readBits(2)+2;
+					ch.bs_rel_bord[rel] = 2*ld.readBits(2)+2;
 				}
 				i = sbr_log2(bs_num_env+1);
-				this.bs_pointer[ch] = ld.readBits(i);
+				ch.bs_pointer = ld.readBits(i);
 
 				for(env = 0; env<bs_num_env; env++) {
-					this.f[ch][env] = ld.readBit();
+					ch.f[env] = ld.readBit();
 				}
 
-				this.abs_bord_lead[ch] = bs_abs_bord;
-				this.abs_bord_trail[ch] = this.numTimeSlots;
-				this.n_rel_lead[ch] = bs_num_env-1;
-				this.n_rel_trail[ch] = 0;
+				ch.abs_bord_lead = bs_abs_bord;
+				ch.abs_bord_trail = this.numTimeSlots;
+				ch.n_rel_lead = bs_num_env-1;
+				ch.n_rel_trail = 0;
 				break;
 
 			case VARVAR:
 				bs_abs_bord = ld.readBits(2);
 				bs_abs_bord_1 = ld.readBits(2)+this.numTimeSlots;
-				this.bs_num_rel_0[ch] = ld.readBits(2);
-				this.bs_num_rel_1[ch] = ld.readBits(2);
+				ch.bs_num_rel_0 = ld.readBits(2);
+				ch.bs_num_rel_1 = ld.readBits(2);
 
-				bs_num_env = Math.min(5, this.bs_num_rel_0[ch]+this.bs_num_rel_1[ch]+1);
+				bs_num_env = Math.min(5, ch.bs_num_rel_0+ch.bs_num_rel_1+1);
 
-				for(rel = 0; rel<this.bs_num_rel_0[ch]; rel++) {
-					this.bs_rel_bord_0[ch][rel] = 2*ld.readBits(2)+2;
+				for(rel = 0; rel<ch.bs_num_rel_0; rel++) {
+					ch.bs_rel_bord_0[rel] = 2*ld.readBits(2)+2;
 				}
-				for(rel = 0; rel<this.bs_num_rel_1[ch]; rel++) {
-					this.bs_rel_bord_1[ch][rel] = 2*ld.readBits(2)+2;
+				for(rel = 0; rel<ch.bs_num_rel_1; rel++) {
+					ch.bs_rel_bord_1[rel] = 2*ld.readBits(2)+2;
 				}
-				i = sbr_log2(this.bs_num_rel_0[ch]+this.bs_num_rel_1[ch]+2);
-				this.bs_pointer[ch] = ld.readBits(i);
+				i = sbr_log2(ch.bs_num_rel_0+ch.bs_num_rel_1+2);
+				ch.bs_pointer = ld.readBits(i);
 
 				for(env = 0; env<bs_num_env; env++) {
-					this.f[ch][env] = ld.readBit();
+					ch.f[env] = ld.readBit();
 				}
 
-				this.abs_bord_lead[ch] = bs_abs_bord;
-				this.abs_bord_trail[ch] = bs_abs_bord_1;
-				this.n_rel_lead[ch] = this.bs_num_rel_0[ch];
-				this.n_rel_trail[ch] = this.bs_num_rel_1[ch];
+				ch.abs_bord_lead = bs_abs_bord;
+				ch.abs_bord_trail = bs_abs_bord_1;
+				ch.n_rel_lead = ch.bs_num_rel_0;
+				ch.n_rel_trail = ch.bs_num_rel_1;
 				break;
 		}
 
-		if(this.bs_frame_class[ch]== FrameClass.VARVAR)
-			this.L_E[ch] = Math.min(bs_num_env, 5);
+		if(ch.bs_frame_class== FrameClass.VARVAR)
+			ch.L_E = Math.min(bs_num_env, 5);
 		else
-			this.L_E[ch] = Math.min(bs_num_env, 4);
+			ch.L_E = Math.min(bs_num_env, 4);
 
-		if(this.L_E[ch]<=0)
+		if(ch.L_E<=0)
 			return 1;
 
-		if(this.L_E[ch]>1)
-			this.L_Q[ch] = 2;
+		if(ch.L_E>1)
+			ch.L_Q = 2;
 		else
-			this.L_Q[ch] = 1;
+			ch.L_Q = 1;
 
 		/* TODO: this code can probably be integrated into the code above! */
 		if((result = TFGrid.envelope_time_border_vector(this, ch))>0) {
-			this.bs_frame_class[ch] = saved_frame_class;
-			this.L_E[ch] = saved_L_E;
-			this.L_Q[ch] = saved_L_Q;
+			ch.bs_frame_class = saved_frame_class;
+			ch.L_E = saved_L_E;
+			ch.L_Q = saved_L_Q;
 			return result;
 		}
 		TFGrid.noise_floor_time_border_vector(this, ch);
@@ -802,24 +814,24 @@ public class SBR {
 	}
 
 	/* table 8 */
-	private void sbr_dtdf(BitStream ld, int ch) {
+	private void sbr_dtdf(BitStream ld, Channel ch) {
 		int i;
 
-		for(i = 0; i<this.L_E[ch]; i++) {
-			this.bs_df_env[ch][i] = ld.readBit();
+		for(i = 0; i<ch.L_E; i++) {
+			ch.bs_df_env[i] = ld.readBit();
 		}
 
-		for(i = 0; i<this.L_Q[ch]; i++) {
-			this.bs_df_noise[ch][i] = ld.readBit();
+		for(i = 0; i<ch.L_Q; i++) {
+			ch.bs_df_noise[i] = ld.readBit();
 		}
 	}
 
 	/* table 9 */
-	private void invf_mode(BitStream ld, int ch) {
+	private void invf_mode(BitStream ld, Channel ch) {
 		int n;
 
 		for(n = 0; n<this.N_Q; n++) {
-			this.bs_invf_mode[ch][n] = ld.readBits(2);
+			ch.bs_invf_mode[n] = ld.readBits(2);
 		}
 	}
 
@@ -830,6 +842,7 @@ public class SBR {
 			case EXTENSION_ID_PS:
 				if(ps==null) {
 					this.ps = new PS(this.sample_rate, this.numTimeSlotsRate);
+					this.qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
 				}
 				if(this.psResetFlag) {
 					this.ps.header_read = false;
@@ -853,28 +866,28 @@ public class SBR {
 	}
 
 	/* table 12 */
-	private void sinusoidal_coding(BitStream ld, int ch) {
+	private void sinusoidal_coding(BitStream ld, Channel ch) {
 		int n;
 
 		for(n = 0; n<this.N_high; n++) {
-			this.bs_add_harmonic[ch][n] = ld.readBit();
+			ch.bs_add_harmonic[n] = ld.readBit();
 		}
 	}
 	/* table 10 */
 
-	private void sbr_envelope(BitStream ld, int ch) {
+	private void sbr_envelope(BitStream ld, Channel ch) {
 		int env, band;
 		int delta = 0;
 		int[][] t_huff, f_huff;
 
-		if((this.L_E[ch]==1)&&(this.bs_frame_class[ch]== FrameClass.FIXFIX))
-			this.amp_res[ch] = false;
+		if((ch.L_E==1)&&(ch.bs_frame_class== FrameClass.FIXFIX))
+			ch.amp_res = false;
 		else
-			this.amp_res[ch] = this.hdr.bs_amp_res;
+			ch.amp_res = this.hdr.bs_amp_res;
 
-		if((this.bs_coupling)&&(ch==1)) {
+		if((this.bs_coupling)&&(ch==ch1)) {
 			delta = 1;
-			if(this.amp_res[ch]) {
+			if(ch.amp_res) {
 				t_huff = T_HUFFMAN_ENV_BAL_3_0DB;
 				f_huff = F_HUFFMAN_ENV_BAL_3_0DB;
 			}
@@ -885,7 +898,7 @@ public class SBR {
 		}
 		else {
 			delta = 0;
-			if(this.amp_res[ch]) {
+			if(ch.amp_res) {
 				t_huff = T_HUFFMAN_ENV_3_0DB;
 				f_huff = F_HUFFMAN_ENV_3_0DB;
 			}
@@ -895,33 +908,33 @@ public class SBR {
 			}
 		}
 
-		for(env = 0; env<this.L_E[ch]; env++) {
-			if(this.bs_df_env[ch][env]==0) {
-				if(this.bs_coupling&&(ch==1)) {
-					if(this.amp_res[ch]) {
-						this.E[ch][0][env] = ld.readBits(5)<<delta;
+		for(env = 0; env<ch.L_E; env++) {
+			if(ch.bs_df_env[env]==0) {
+				if(this.bs_coupling&&(ch==ch1)) {
+					if(ch.amp_res) {
+						ch.E[0][env] = ld.readBits(5)<<delta;
 					}
 					else {
-						this.E[ch][0][env] = ld.readBits(6)<<delta;
+						ch.E[0][env] = ld.readBits(6)<<delta;
 					}
 				}
 				else {
-					if(this.amp_res[ch]) {
-						this.E[ch][0][env] = ld.readBits(6)<<delta;
+					if(ch.amp_res) {
+						ch.E[0][env] = ld.readBits(6)<<delta;
 					}
 					else {
-						this.E[ch][0][env] = ld.readBits(7)<<delta;
+						ch.E[0][env] = ld.readBits(7)<<delta;
 					}
 				}
 
-				for(band = 1; band<this.n[this.f[ch][env]]; band++) {
-					this.E[ch][band][env] = (decodeHuffman(ld, f_huff)<<delta);
+				for(band = 1; band<this.n[ch.f[env]]; band++) {
+					ch.E[band][env] = (decodeHuffman(ld, f_huff)<<delta);
 				}
 
 			}
 			else {
-				for(band = 0; band<this.n[this.f[ch][env]]; band++) {
-					this.E[ch][band][env] = (decodeHuffman(ld, t_huff)<<delta);
+				for(band = 0; band<this.n[ch.f[env]]; band++) {
+					ch.E[band][env] = (decodeHuffman(ld, t_huff)<<delta);
 				}
 			}
 		}
@@ -930,12 +943,12 @@ public class SBR {
 	}
 
 	/* table 11 */
-	private void sbr_noise(BitStream ld, int ch) {
+	private void sbr_noise(BitStream ld, Channel ch) {
 		int noise, band;
 		int delta = 0;
 		int[][] t_huff, f_huff;
 
-		if(this.bs_coupling&&(ch==1)) {
+		if(this.bs_coupling&&(ch==ch1)) {
 			delta = 1;
 			t_huff = T_HUFFMAN_NOISE_BAL_3_0DB;
 			f_huff = F_HUFFMAN_ENV_BAL_3_0DB;
@@ -946,21 +959,21 @@ public class SBR {
 			f_huff = F_HUFFMAN_ENV_3_0DB;
 		}
 
-		for(noise = 0; noise<this.L_Q[ch]; noise++) {
-			if(this.bs_df_noise[ch][noise]==0) {
-				if(this.bs_coupling&&(ch==1)) {
-					this.Q[ch][0][noise] = ld.readBits(5)<<delta;
+		for(noise = 0; noise<ch.L_Q; noise++) {
+			if(ch.bs_df_noise[noise]==0) {
+				if(this.bs_coupling&&(ch==ch1)) {
+					ch.Q[0][noise] = ld.readBits(5)<<delta;
 				}
 				else {
-					this.Q[ch][0][noise] = ld.readBits(5)<<delta;
+					ch.Q[0][noise] = ld.readBits(5)<<delta;
 				}
 				for(band = 1; band<this.N_Q; band++) {
-					this.Q[ch][band][noise] = (decodeHuffman(ld, f_huff)<<delta);
+					ch.Q[band][noise] = (decodeHuffman(ld, f_huff)<<delta);
 				}
 			}
 			else {
 				for(band = 0; band<this.N_Q; band++) {
-					this.Q[ch][band][noise] = (decodeHuffman(ld, t_huff)<<delta);
+					ch.Q[band][noise] = (decodeHuffman(ld, t_huff)<<delta);
 				}
 			}
 		}
@@ -980,7 +993,7 @@ public class SBR {
 		return index+64;
 	}
 
-	private int sbr_save_prev_data(int ch) {
+	private int sbr_save_prev_data(Channel ch) {
 		int i;
 
 		/* save data for next frame */
@@ -988,50 +1001,50 @@ public class SBR {
 		this.M_prev = this.M;
 		this.bsco_prev = this.bsco;
 
-		this.L_E_prev[ch] = this.L_E[ch];
+		ch.L_E_prev = ch.L_E;
 
 		/* sbr.L_E[ch] can become 0 on files with bit errors */
-		if(this.L_E[ch]<=0)
+		if(ch.L_E<=0)
 			return 19;
 
-		this.f_prev[ch] = this.f[ch][this.L_E[ch]-1];
+		ch.f_prev = ch.f[ch.L_E-1];
 		for(i = 0; i<MAX_M; i++) {
-			this.E_prev[ch][i] = this.E[ch][i][this.L_E[ch]-1];
-			this.Q_prev[ch][i] = this.Q[ch][i][this.L_Q[ch]-1];
+			ch.E_prev[i] = ch.E[i][ch.L_E-1];
+			ch.Q_prev[i] = ch.Q[i][ch.L_Q-1];
 		}
 
 		for(i = 0; i<MAX_M; i++) {
-			this.bs_add_harmonic_prev[ch][i] = this.bs_add_harmonic[ch][i];
+			ch.bs_add_harmonic_prev[i] = ch.bs_add_harmonic[i];
 		}
-		this.bs_add_harmonic_flag_prev[ch] = this.bs_add_harmonic_flag[ch];
+		ch.bs_add_harmonic_flag_prev = ch.bs_add_harmonic_flag;
 
-		if(this.l_A[ch]==this.L_E[ch])
-			this.prevEnvIsShort[ch] = 0;
+		if(ch.l_A==ch.L_E)
+			ch.prevEnvIsShort = 0;
 		else
-			this.prevEnvIsShort[ch] = -1;
+			ch.prevEnvIsShort = -1;
 
 		return 0;
 	}
 
-	private void sbr_save_matrix(int ch) {
+	private void sbr_save_matrix(Channel ch) {
 		int i;
 
 		for(i = 0; i<this.tHFGen; i++) {
 			for(int j = 0; j<64; j++) {
-				Xsbr[ch][i][j][0] = Xsbr[ch][i+numTimeSlotsRate][j][0];
-				Xsbr[ch][i][j][1] = Xsbr[ch][i+numTimeSlotsRate][j][1];
+				ch.Xsbr[i][j][0] = ch.Xsbr[i+numTimeSlotsRate][j][0];
+				ch.Xsbr[i][j][1] = ch.Xsbr[i+numTimeSlotsRate][j][1];
 			}
 		}
-		for(i = this.tHFGen; i<MAX_NTSRHFG; i++) {
+		for(i = this.tHFGen; i<Channel.MAX_NTSRHFG; i++) {
 			for(int j = 0; j<64; j++) {
-				Xsbr[ch][i][j][0] = 0;
-				Xsbr[ch][i][j][1] = 0;
+				ch.Xsbr[i][j][0] = 0;
+				ch.Xsbr[i][j][1] = 0;
 			}
 		}
 	}
 
 	private int sbr_process_channel(float[] channel_buf, float[][][] X,
-		int ch, boolean dont_process) {
+		Channel ch, boolean dont_process) {
 		int k, l;
 		int ret = 0;
 
@@ -1039,18 +1052,18 @@ public class SBR {
 
 		/* subband analysis */
 		if(dont_process)
-			qmfa[ch].sbr_qmf_analysis_32(this, channel_buf, this.Xsbr[ch], this.tHFGen, 32);
+			ch.qmfa.sbr_qmf_analysis_32(this, channel_buf, ch.Xsbr, this.tHFGen, 32);
 		else
-			qmfa[ch].sbr_qmf_analysis_32(this, channel_buf, this.Xsbr[ch], this.tHFGen, this.kx);
+			ch.qmfa.sbr_qmf_analysis_32(this, channel_buf, ch.Xsbr, this.tHFGen, this.kx);
 
 		if(!dont_process) {
 			/* insert high frequencies here */
 			/* hf generation using patching */
-			HFGeneration.hf_generation(this, this.Xsbr[ch], this.Xsbr[ch], ch);
+			HFGeneration.hf_generation(this, ch.Xsbr, ch.Xsbr, ch);
 
 
 			/* hf adjustment */
-			ret = HFAdjustment.hf_adjustment(this, this.Xsbr[ch], ch);
+			ret = HFAdjustment.hf_adjustment(this, ch.Xsbr, ch);
 			if(ret>0) {
 				dont_process = true;
 			}
@@ -1059,8 +1072,8 @@ public class SBR {
 		if(dont_process) {
 			for(l = 0; l<this.numTimeSlotsRate; l++) {
 				for(k = 0; k<32; k++) {
-					X[l][k][0] = this.Xsbr[ch][l+this.tHFAdj][k][0];
-					X[l][k][1] = this.Xsbr[ch][l+this.tHFAdj][k][1];
+					X[l][k][0] = ch.Xsbr[l+this.tHFAdj][k][0];
+					X[l][k][1] = ch.Xsbr[l+this.tHFAdj][k][1];
 				}
 				for(k = 32; k<64; k++) {
 					X[l][k][0] = 0;
@@ -1072,7 +1085,7 @@ public class SBR {
 			for(l = 0; l<this.numTimeSlotsRate; l++) {
 				int kx_band, M_band, bsco_band;
 
-				if(l<this.t_E[ch][0]) {
+				if(l<ch.t_E[0]) {
 					kx_band = this.kx_prev;
 					M_band = this.M_prev;
 					bsco_band = this.bsco_prev;
@@ -1084,12 +1097,12 @@ public class SBR {
 				}
 
 				for(k = 0; k<kx_band+bsco_band; k++) {
-					X[l][k][0] = this.Xsbr[ch][l+this.tHFAdj][k][0];
-					X[l][k][1] = this.Xsbr[ch][l+this.tHFAdj][k][1];
+					X[l][k][0] = ch.Xsbr[l+this.tHFAdj][k][0];
+					X[l][k][1] = ch.Xsbr[l+this.tHFAdj][k][1];
 				}
 				for(k = kx_band+bsco_band; k<kx_band+M_band; k++) {
-					X[l][k][0] = this.Xsbr[ch][l+this.tHFAdj][k][0];
-					X[l][k][1] = this.Xsbr[ch][l+this.tHFAdj][k][1];
+					X[l][k][0] = ch.Xsbr[l+this.tHFAdj][k][0];
+					X[l][k][1] = ch.Xsbr[l+this.tHFAdj][k][1];
 				}
 				for(k = Math.max(kx_band+bsco_band, kx_band+M_band); k<64; k++) {
 					X[l][k][0] = 0;
@@ -1115,35 +1128,35 @@ public class SBR {
 			dont_process = true;
 		}
 
-		ret += sbr_process_channel(left_chan, X, 0, dont_process);
+		ret += sbr_process_channel(left_chan, X, ch0, dont_process);
 		/* subband synthesis */
 		if(downSampledSBR) {
-			qmfs[0].sbr_qmf_synthesis_32(this, X, left_chan);
+			qmfs0.sbr_qmf_synthesis_32(this, X, left_chan);
 		}
 		else {
-			qmfs[0].sbr_qmf_synthesis_64(this, X, left_chan);
+			qmfs0.sbr_qmf_synthesis_64(this, X, left_chan);
 		}
 
-		ret += sbr_process_channel(right_chan, X, 1, dont_process);
+		ret += sbr_process_channel(right_chan, X, ch1, dont_process);
 		/* subband synthesis */
 		if(downSampledSBR) {
-			qmfs[1].sbr_qmf_synthesis_32(this, X, right_chan);
+			qmfs1.sbr_qmf_synthesis_32(this, X, right_chan);
 		}
 		else {
-			qmfs[1].sbr_qmf_synthesis_64(this, X, right_chan);
+			qmfs1.sbr_qmf_synthesis_64(this, X, right_chan);
 		}
 
 		if(this.hdr!=null&&ret==0) {
-			ret = sbr_save_prev_data(0);
+			ret = sbr_save_prev_data(ch0);
 			if(ret!=0)
 				return ret;
-			ret = sbr_save_prev_data(1);
+			ret = sbr_save_prev_data(ch1);
 			if(ret!=0)
 				return ret;
 		}
 
-		sbr_save_matrix(0);
-		sbr_save_matrix(1);
+		sbr_save_matrix(ch0);
+		sbr_save_matrix(ch1);
 
 		this.frame++;
 
@@ -1164,22 +1177,22 @@ public class SBR {
 			dont_process = true;
 		}
 
-		ret += sbr_process_channel(channel, X, 0, dont_process);
+		ret += sbr_process_channel(channel, X, ch0, dont_process);
 		/* subband synthesis */
 		if(downSampledSBR) {
-			qmfs[0].sbr_qmf_synthesis_32(this, X, channel);
+			qmfs0.sbr_qmf_synthesis_32(this, X, channel);
 		}
 		else {
-			qmfs[0].sbr_qmf_synthesis_64(this, X, channel);
+			qmfs0.sbr_qmf_synthesis_64(this, X, channel);
 		}
 
 		if(this.hdr!=null&&ret==0) {
-			ret = sbr_save_prev_data(0);
+			ret = sbr_save_prev_data(ch0);
 			if(ret!=0)
 				return ret;
 		}
 
-		sbr_save_matrix(0);
+		sbr_save_matrix(ch0);
 
 		this.frame++;
 
@@ -1202,17 +1215,17 @@ public class SBR {
 			dont_process = true;
 		}
 
-		if(this.qmfs[1]==null) {
-			this.qmfs[1] = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
-		}
+		//if(qmfs1==null) {
+		//	qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+		//}
 
-		ret += sbr_process_channel(left_channel, X_left, 0, dont_process);
+		ret += sbr_process_channel(left_channel, X_left, ch0, dont_process);
 
 		/* copy some extra data for PS */
 		for(l = this.numTimeSlotsRate; l<this.numTimeSlotsRate+6; l++) {
 			for(k = 0; k<5; k++) {
-				X_left[l][k][0] = this.Xsbr[0][this.tHFAdj+l][k][0];
-				X_left[l][k][1] = this.Xsbr[0][this.tHFAdj+l][k][1];
+				X_left[l][k][0] = ch0.Xsbr[this.tHFAdj+l][k][0];
+				X_left[l][k][1] = ch0.Xsbr[this.tHFAdj+l][k][1];
 			}
 		}
 
@@ -1221,21 +1234,21 @@ public class SBR {
 
 		/* subband synthesis */
 		if(downSampledSBR) {
-			qmfs[0].sbr_qmf_synthesis_32(this, X_left, left_channel);
-			qmfs[1].sbr_qmf_synthesis_32(this, X_right, right_channel);
+			qmfs0.sbr_qmf_synthesis_32(this, X_left, left_channel);
+			qmfs1.sbr_qmf_synthesis_32(this, X_right, right_channel);
 		}
 		else {
-			qmfs[0].sbr_qmf_synthesis_64(this, X_left, left_channel);
-			qmfs[1].sbr_qmf_synthesis_64(this, X_right, right_channel);
+			qmfs0.sbr_qmf_synthesis_64(this, X_left, left_channel);
+			qmfs1.sbr_qmf_synthesis_64(this, X_right, right_channel);
 		}
 
 		if(this.hdr!=null&&ret==0) {
-			ret = sbr_save_prev_data(0);
+			ret = sbr_save_prev_data(ch0);
 			if(ret!=0)
 				return ret;
 		}
 
-		sbr_save_matrix(0);
+		sbr_save_matrix(ch0);
 
 		this.frame++;
 

@@ -15,17 +15,17 @@ class HFGeneration {
 	}
 
 	public static void hf_generation(SBR sbr, float[][][] Xlow,
-		float[][][] Xhigh, int ch) {
+		float[][][] Xhigh, SBR.Channel ch) {
 		int l, i, x;
 		float[][] alpha_0 = new float[64][2], alpha_1 = new float[64][2];
 
 		int offset = sbr.tHFAdj;
-		int first = sbr.t_E[ch][0];
-		int last = sbr.t_E[ch][sbr.L_E[ch]];
+		int first = ch.t_E[0];
+		int last = ch.t_E[ch.L_E];
 
 		calc_chirp_factors(sbr, ch);
 
-		if((ch==0)&&(sbr.reset))
+		if((ch==sbr.ch0)&&(sbr.reset))
 			patch_construction(sbr);
 
 		/* calculate the prediction coefficients */
@@ -46,7 +46,7 @@ class HFGeneration {
 
 				g = sbr.table_map_k_to_g[k];
 
-				bw = sbr.bwArray[ch][g];
+				bw = ch.bwArray[g];
 				bw2 = bw*bw;
 
 				/* do the patching */
@@ -228,25 +228,25 @@ class HFGeneration {
 	}
 
 	/* FIXED POINT: bwArray = COEF */
-	private static void calc_chirp_factors(SBR sbr, int ch) {
+	private static void calc_chirp_factors(SBR sbr, SBR.Channel ch) {
 		int i;
 
 		for(i = 0; i<sbr.N_Q; i++) {
-			sbr.bwArray[ch][i] = mapNewBw(sbr.bs_invf_mode[ch][i], sbr.bs_invf_mode_prev[ch][i]);
+			ch.bwArray[i] = mapNewBw(ch.bs_invf_mode[i], ch.bs_invf_mode_prev[i]);
 
-			if(sbr.bwArray[ch][i]<sbr.bwArray_prev[ch][i])
-				sbr.bwArray[ch][i] = (sbr.bwArray[ch][i]*0.75f)+(sbr.bwArray_prev[ch][i]*0.25f);
+			if(ch.bwArray[i]<ch.bwArray_prev[i])
+				ch.bwArray[i] = (ch.bwArray[i]*0.75f)+(ch.bwArray_prev[i]*0.25f);
 			else
-				sbr.bwArray[ch][i] = (sbr.bwArray[ch][i]*0.90625f)+(sbr.bwArray_prev[ch][i]*0.09375f);
+				ch.bwArray[i] = (ch.bwArray[i]*0.90625f)+(ch.bwArray_prev[i]*0.09375f);
 
-			if(sbr.bwArray[ch][i]<0.015625f)
-				sbr.bwArray[ch][i] = 0.0f;
+			if(ch.bwArray[i]<0.015625f)
+				ch.bwArray[i] = 0.0f;
 
-			if(sbr.bwArray[ch][i]>=0.99609375f)
-				sbr.bwArray[ch][i] = 0.99609375f;
+			if(ch.bwArray[i]>=0.99609375f)
+				ch.bwArray[i] = 0.99609375f;
 
-			sbr.bwArray_prev[ch][i] = sbr.bwArray[ch][i];
-			sbr.bs_invf_mode_prev[ch][i] = sbr.bs_invf_mode[ch][i];
+			ch.bwArray_prev[i] = ch.bwArray[i];
+			ch.bs_invf_mode_prev[i] = ch.bs_invf_mode[i];
 		}
 	}
 
