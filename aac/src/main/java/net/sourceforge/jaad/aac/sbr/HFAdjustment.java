@@ -15,9 +15,8 @@ class HFAdjustment implements NoiseTable {
 	private float[][] Q_M_lim_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 	private float[][] S_M_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 
-	public static int hf_adjustment(SBR sbr, float[][][] Xsbr, Channel ch) {
+	public static void hf_adjustment(SBR sbr, float[][][] Xsbr, Channel ch) {
 		HFAdjustment adj = new HFAdjustment();
-		int ret = 0;
 
 		if(ch.bs_frame_class== FrameClass.FIXFIX) {
 			ch.l_A = -1;
@@ -35,15 +34,11 @@ class HFAdjustment implements NoiseTable {
 				ch.l_A = ch.L_E+1-ch.bs_pointer;
 		}
 
-		ret = estimate_current_envelope(sbr, adj, Xsbr, ch);
-		if(ret>0)
-			return 1;
+		estimate_current_envelope(sbr, adj, Xsbr, ch);
 
 		calculate_gain(sbr, adj, ch);
 
 		hf_assembly(sbr, adj, Xsbr, ch);
-
-		return 0;
 	}
 
 	private static int get_S_mapped(SBR sbr, Channel ch, int l, int current_band) {
@@ -83,7 +78,7 @@ class HFAdjustment implements NoiseTable {
 		return 0;
 	}
 
-	private static int estimate_current_envelope(SBR sbr, HFAdjustment adj,
+	private static void estimate_current_envelope(SBR sbr, HFAdjustment adj,
 		float[][][] Xsbr, Channel ch) {
 		int m, l, j, k, k_l, k_h, p;
 		float nrg, div;
@@ -142,8 +137,6 @@ class HFAdjustment implements NoiseTable {
 				}
 			}
 		}
-
-		return 0;
 	}
 
 	private static void hf_assembly(SBR sbr, HFAdjustment adj,
@@ -219,8 +212,8 @@ class HFAdjustment implements NoiseTable {
 					/* V is defined, not calculated */
 					Xsbr[i+sbr.tHFAdj][m+sbr.kx][0] = G_filt*Xsbr[i+sbr.tHFAdj][m+sbr.kx][0]
 						+(Q_filt*NOISE_TABLE[fIndexNoise][0]);
-					if(sbr.bs_extension_id==3&&sbr.bs_extension_data==42)
-						Xsbr[i+sbr.tHFAdj][m+sbr.kx][0] = 16428320;
+					//if(sbr.bs_extension_id==3&&sbr.bs_extension_data==42)
+					//	Xsbr[i+sbr.tHFAdj][m+sbr.kx][0] = 16428320;  // 0xFAAD20
 					Xsbr[i+sbr.tHFAdj][m+sbr.kx][1] = G_filt*Xsbr[i+sbr.tHFAdj][m+sbr.kx][1]
 						+(Q_filt*NOISE_TABLE[fIndexNoise][1]);
 

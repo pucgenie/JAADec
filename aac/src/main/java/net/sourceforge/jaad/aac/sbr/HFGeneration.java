@@ -14,9 +14,8 @@ class HFGeneration {
 		float det;
 	}
 
-	public static void hf_generation(SBR sbr, float[][][] Xlow,
-		float[][][] Xhigh, Channel ch) {
-		int l, i, x;
+	public static void hf_generation(SBR sbr, float[][][] Xlow, float[][][] Xhigh, Channel ch, boolean reset) {
+
 		float[][] alpha_0 = new float[64][2], alpha_1 = new float[64][2];
 
 		int offset = sbr.tHFAdj;
@@ -25,14 +24,14 @@ class HFGeneration {
 
 		calc_chirp_factors(sbr, ch);
 
-		if((ch==sbr.ch0)&&(sbr.reset))
+		if(reset)
 			patch_construction(sbr);
 
 		/* calculate the prediction coefficients */
 
 		/* actual HF generation */
-		for(i = 0; i<sbr.noPatches; i++) {
-			for(x = 0; x<sbr.patchNoSubbands[i]; x++) {
+		for(int i = 0; i<sbr.noPatches; i++) {
+			for(int x = 0; x<sbr.patchNoSubbands[i]; x++) {
 				float a0_r, a0_i, a1_r, a1_i;
 				float bw, bw2;
 				int q, p, k, g;
@@ -65,7 +64,7 @@ class HFGeneration {
 					temp3_r = (Xlow[first-1+offset][p][0]);
 					temp2_i = (Xlow[first-2+offset][p][1]);
 					temp3_i = (Xlow[first-1+offset][p][1]);
-					for(l = first; l<last; l++) {
+					for(int l = first; l<last; l++) {
 						temp1_r = temp2_r;
 						temp2_r = temp3_r;
 						temp3_r = (Xlow[l+offset][p][0]);
@@ -88,7 +87,7 @@ class HFGeneration {
 					}
 				}
 				else {
-					for(l = first; l<last; l++) {
+					for(int l = first; l<last; l++) {
 						Xhigh[l+offset][k][0] = Xlow[l+offset][p][0];
 						Xhigh[l+offset][k][1] = Xlow[l+offset][p][1];
 					}
@@ -251,8 +250,6 @@ class HFGeneration {
 	}
 
 	private static void patch_construction(SBR sbr) {
-		int i, k;
-		int odd, sb;
 		int msb = sbr.k0;
 		int usb = sbr.kx;
 		/* (uint8_t)(2.048e6/sbr.sample_rate + 0.5); */
@@ -260,8 +257,9 @@ class HFGeneration {
 
 		sbr.noPatches = 0;
 
+		int k = 0;
 		if(goalSb<(sbr.kx+sbr.M)) {
-			for(i = 0, k = 0; sbr.f_master[i]<goalSb; i++) {
+			for(int i = 0; sbr.f_master[i]<goalSb; i++) {
 				k = i+1;
 			}
 		}
@@ -277,8 +275,10 @@ class HFGeneration {
 			return;
 		}
 
+		int sb;
 		do {
 			int j = k+1;
+			int odd;
 
 			do {
 				j--;

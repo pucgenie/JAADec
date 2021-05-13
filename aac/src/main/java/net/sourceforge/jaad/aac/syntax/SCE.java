@@ -74,8 +74,8 @@ class SCE extends ChannelElement {
 	@Override
 	public boolean isStereo() {
 		if(sbr!=null&&config.isSBREnabled()) {
-			if(sbr.isPSUsed())
-				return true;
+			//if(sbr.isPSUsed())
+			return true;
 		}
 
 		return false;
@@ -120,15 +120,9 @@ class SCE extends ChannelElement {
 			if(dataL.length!=config.getSampleLength())
 				LOGGER.log(Level.WARNING, "SBR data present, but buffer has normal size!");
 
-			if(sbr.isPSUsed()) {
-				float[] dataR = getDataR();
-				getSBR().processPS(dataL, dataR);
-				channelData.add(dataR);
-			}
-			else {
-				getSBR().process(dataL);
-				channelData.add(dataL);
-			}
+			float[] dataR = getDataR();
+			getSBR().process(dataL, dataR);
+			channelData.add(dataR);
 		} else if(dataL.length!=config.getFrameLength()) {
 			SBR.upsample(dataL);
 		}
