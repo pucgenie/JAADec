@@ -70,8 +70,9 @@ abstract public class SBR {
 	int[] patchNoSubbands = new int[64];
 	int[] patchStartSubband = new int[64];
 
-	int numTimeSlotsRate;
-	int numTimeSlots;
+	public final int numTimeSlotsRate;
+	public final int numTimeSlots;
+
 	int tHFGen;
 	int tHFAdj;
 

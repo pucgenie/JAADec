@@ -1,9 +1,15 @@
 package net.sourceforge.jaad.aac.ps;
 
-import net.sourceforge.jaad.aac.SampleRate;
+import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
+import java.util.logging.Logger;
+
 public class PS implements PSConstants, PSTables, HuffmanTables {
+
+	static final Logger LOGGER = Logger.getLogger("jaad.aac.Ps");
+
+	final SBR sbr;
 
 	/* bitstream parameters */
 	boolean enable_iid, enable_icc, enable_ext;
@@ -43,7 +49,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	/* hybrid filterbank parameters */
 	Filterbank hyb;
 	boolean use34hybrid_bands;
-	int numTimeSlotsRate;
 	int num_groups;
 	int num_hybrid_groups;
 	int nr_par_bands;
@@ -80,23 +85,22 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	float[][][] ipd_prev = new float[20][2][2];
 	float[][][] opd_prev = new float[20][2][2];
 
-	public PS(SampleRate sr, int numTimeSlotsRate) {
-		int i;
+	public PS(SBR sbr) {
+		this.sbr = sbr;
 		int short_delay_band;
 
-		hyb = new Filterbank(numTimeSlotsRate);
-		this.numTimeSlotsRate = numTimeSlotsRate;
+		hyb = new Filterbank(sbr.numTimeSlotsRate);
 
 		this.ps_data_available = 0;
 
 		/* delay stuff*/
 		this.saved_delay = 0;
 
-		for(i = 0; i<64; i++) {
+		for(int i = 0; i<64; i++) {
 			this.delay_buf_index_delay[i] = 0;
 		}
 
-		for(i = 0; i<NO_ALLPASS_LINKS; i++) {
+		for(int i = 0; i<NO_ALLPASS_LINKS; i++) {
 			this.delay_buf_index_ser[i] = 0;
 			/* THESE ARE CONSTANTS NOW */
 			this.num_sample_delay_ser[i] = delay_length_d[i];
@@ -109,15 +113,15 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		this.alpha_smooth = 0.25f;
 
 		/* THESE ARE CONSTANT NOW IF PS IS INDEPENDANT OF SAMPLERATE */
-		for(i = 0; i<short_delay_band; i++) {
+		for(int i = 0; i<short_delay_band; i++) {
 			this.delay_D[i] = 14;
 		}
-		for(i = short_delay_band; i<64; i++) {
+		for(int i = short_delay_band; i<64; i++) {
 			this.delay_D[i] = 1;
 		}
 
 		/* mixing and phase */
-		for(i = 0; i<50; i++) {
+		for(int i = 0; i<50; i++) {
 			this.h11_prev[i][0] = 1;
 			this.h12_prev[i][1] = 1;
 			this.h11_prev[i][0] = 1;
@@ -126,7 +130,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		this.phase_hist = 0;
 
-		for(i = 0; i<20; i++) {
+		for(int i = 0; i<20; i++) {
 			this.ipd_prev[i][0][0] = 0;
 			this.ipd_prev[i][0][1] = 0;
 			this.ipd_prev[i][1][0] = 0;
@@ -331,7 +335,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	private void delta_decode(boolean enable, int[] index, int[] index_prev,
 		boolean dt_flag, int nr_par, int stride,
 		int min_index, int max_index) {
-		int i;
 
 		if(enable) {
 			if(!dt_flag) {
@@ -339,14 +342,14 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				index[0] = 0+index[0];
 				index[0] = delta_clip(index[0], min_index, max_index);
 
-				for(i = 1; i<nr_par; i++) {
+				for(int i = 1; i<nr_par; i++) {
 					index[i] = index[i-1]+index[i];
 					index[i] = delta_clip(index[i], min_index, max_index);
 				}
 			}
 			else {
 				/* delta coded in time direction */
-				for(i = 0; i<nr_par; i++) {
+				for(int i = 0; i<nr_par; i++) {
                 //int8_t tmp2;
 					//int8_t tmp = index[i];
 
@@ -368,14 +371,14 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 		else {
 			/* set indices to zero */
-			for(i = 0; i<nr_par; i++) {
+			for(int i = 0; i<nr_par; i++) {
 				index[i] = 0;
 			}
 		}
 
 		/* coarse */
 		if(stride==2) {
-			for(i = (nr_par<<1)-1; i>0; i--) {
+			for(int i = (nr_par<<1)-1; i>0; i--) {
 				index[i] = index[i>>1];
 			}
 		}
@@ -386,7 +389,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	private void delta_modulo_decode(boolean enable, int[] index, int[] index_prev,
 		boolean dt_flag, int nr_par, int stride,
 		int and_modulo) {
-		int i;
 
 		if(enable) {
 			if(!dt_flag) {
@@ -394,14 +396,14 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				index[0] = 0+index[0];
 				index[0] &= and_modulo;
 
-				for(i = 1; i<nr_par; i++) {
+				for(int i = 1; i<nr_par; i++) {
 					index[i] = index[i-1]+index[i];
 					index[i] &= and_modulo;
 				}
 			}
 			else {
 				/* delta coded in time direction */
-				for(i = 0; i<nr_par; i++) {
+				for(int i = 0; i<nr_par; i++) {
 					index[i] = index_prev[i*stride]+index[i];
 					index[i] &= and_modulo;
 				}
@@ -409,7 +411,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 		else {
 			/* set indices to zero */
-			for(i = 0; i<nr_par; i++) {
+			for(int i = 0; i<nr_par; i++) {
 				index[i] = 0;
 			}
 		}
@@ -417,7 +419,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		/* coarse */
 		if(stride==2) {
 			index[0] = 0;
-			for(i = (nr_par<<1)-1; i>0; i--) {
+			for(int i = (nr_par<<1)-1; i>0; i--) {
 				index[i] = index[i>>1];
 			}
 		}
@@ -576,14 +578,14 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		if(this.frame_class==0) {
 			this.border_position[0] = 0;
 			for(env = 1; env<this.num_env; env++) {
-				this.border_position[env] = (env*this.numTimeSlotsRate)/this.num_env;
+				this.border_position[env] = (env*sbr.numTimeSlotsRate)/this.num_env;
 			}
-			this.border_position[this.num_env] = this.numTimeSlotsRate;
+			this.border_position[this.num_env] = sbr.numTimeSlotsRate;
 		}
 		else {
 			this.border_position[0] = 0;
 
-			if(this.border_position[this.num_env]<this.numTimeSlotsRate) {
+			if(this.border_position[this.num_env]<sbr.numTimeSlotsRate) {
 				for(bin = 0; bin<34; bin++) {
 					this.iid_index[this.num_env][bin] = this.iid_index[this.num_env-1][bin];
 					this.icc_index[this.num_env][bin] = this.icc_index[this.num_env-1][bin];
@@ -593,11 +595,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					this.opd_index[this.num_env][bin] = this.opd_index[this.num_env-1][bin];
 				}
 				this.num_env++;
-				this.border_position[this.num_env] = this.numTimeSlotsRate;
+				this.border_position[this.num_env] = sbr.numTimeSlotsRate;
 			}
 
 			for(env = 1; env<this.num_env; env++) {
-				int thr = this.numTimeSlotsRate-(this.num_env-env);
+				int thr = sbr.numTimeSlotsRate-(this.num_env-env);
 
 				if(this.border_position[env]>thr) {
 					this.border_position[env] = thr;
@@ -1277,7 +1279,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		 * frequency resolution
 		 */
 		hyb.hybrid_analysis(X_left, X_hybrid_left,
-			this.use34hybrid_bands, this.numTimeSlotsRate);
+			this.use34hybrid_bands, sbr.numTimeSlotsRate);
 
 		/* decorrelate mono signal */
 		ps_decorrelate(X_left, X_right, X_hybrid_left, X_hybrid_right);
@@ -1287,10 +1289,10 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		/* hybrid synthesis, to rebuild the SBR QMF matrices */
 		hyb.hybrid_synthesis(X_left, X_hybrid_left,
-			this.use34hybrid_bands, this.numTimeSlotsRate);
+			this.use34hybrid_bands, sbr.numTimeSlotsRate);
 
 		hyb.hybrid_synthesis(X_right, X_hybrid_right,
-			this.use34hybrid_bands, this.numTimeSlotsRate);
+			this.use34hybrid_bands, sbr.numTimeSlotsRate);
 
 		return 0;
 	}

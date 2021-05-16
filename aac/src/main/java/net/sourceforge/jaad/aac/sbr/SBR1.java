@@ -70,13 +70,13 @@ public class SBR1 extends SBR {
 	protected void sbr_extension(BitStream ld, int bs_extension_id) {
    		if(bs_extension_id==EXTENSION_ID_PS) {
 			if(ps==null) {
-				this.ps = new PS(this.sample_rate, this.numTimeSlotsRate);
+				this.ps = new PS(this);
 				this.qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
 			}
 			if(this.psResetFlag) {
 				this.ps.header_read = false;
 			}
-			int ret = ps.decode(ld);
+			ps.decode(ld);
 
 			/* enable PS if and only if: a header has been decoded */
 			if(!ps_used&&ps.header_read) {

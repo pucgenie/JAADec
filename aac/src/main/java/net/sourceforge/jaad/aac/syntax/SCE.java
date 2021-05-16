@@ -5,6 +5,7 @@ import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.sbr.SBR;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,7 +82,7 @@ class SCE extends ChannelElement {
 		return false;
 	}
 
-	public List<float[]> process(FilterBank filterBank, List<CCE> cces) {
+	public void process(FilterBank filterBank, List<CCE> cces, Consumer<float[]> target) {
 
 		//inverse quantization
 		final float[] iqData = ics.getInvQuantData();
@@ -111,9 +112,7 @@ class SCE extends ChannelElement {
 
 		//gain control
 		ics.processGainControl();
-
-		channelData.clear();
-		channelData.add(dataL);
+		target.accept(dataL);
 
 		//SBR
 		if(isSBRPresent()&&config.isSBREnabled()) {
@@ -122,12 +121,10 @@ class SCE extends ChannelElement {
 
 			float[] dataR = getDataR();
 			getSBR().process(dataL, dataR);
-			channelData.add(dataR);
+			target.accept(dataR);
 		} else if(dataL.length!=config.getFrameLength()) {
 			SBR.upsample(dataL);
 		}
-
-		return channelData;
 	}
 
 }

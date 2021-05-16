@@ -14,7 +14,7 @@ public class FilterBank implements SineWindows, KBDWindows {
 	private final MDCT mdctShort, mdctLong;
 	private final float[] buf;
 
-	public FilterBank(boolean smallFrames, int channels) {
+	public FilterBank(boolean smallFrames) {
 		if(smallFrames) {
 			length = WINDOW_SMALL_LEN_LONG;
 			shortLen = length/8;

@@ -38,7 +38,7 @@ public class SyntacticElements {
 
 	public SyntacticElements(DecoderConfig config) {
 		this.config = config;
-		filterBank = new FilterBank(config.isSmallFrameUsed(), config.getChannelConfiguration().getChannelCount());
+		filterBank = new FilterBank(config.isSmallFrameUsed());
 
 		startNewFrame();
 	}
@@ -233,7 +233,7 @@ public class SyntacticElements {
 		channels.clear();
 
 		for (ChannelElement e : audioElements) {
-			channels.addAll(e.process(filterBank, cces));
+			e.process(filterBank, cces, channels::add);
 		}
 
 		// upgrade to stereo

@@ -4,8 +4,8 @@ import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.sbr.SBR;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by IntelliJ IDEA.
@@ -99,9 +99,7 @@ abstract public class ChannelElement implements Element {
 		return dataR;
     }
 
-    final List<float[]> channelData = new ArrayList<>(2);
-
-	abstract public List<float[]> process(FilterBank filterBank, List<CCE> cces);
+	abstract public void process(FilterBank filterBank, List<CCE> cces, Consumer<float[]> target);
 
 	void processDependentCoupling(List<CCE> cces, int couplingPoint, float[] dataL, float[] dataR) {
 

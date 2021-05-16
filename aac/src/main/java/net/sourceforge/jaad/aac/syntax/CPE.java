@@ -10,6 +10,7 @@ import net.sourceforge.jaad.aac.tools.MSMask;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -140,10 +141,7 @@ public class CPE extends ChannelElement {
 		return commonWindow;
 	}
 
-	public List<float[]> process(FilterBank filterBank, List<CCE> cces) {
-
-		final ICSInfo infoL = icsL.getInfo();
-		final ICSInfo infoR = icsR.getInfo();
+	public void process(FilterBank filterBank, List<CCE> cces, Consumer<float[]> target) {
 
 		final float[] dataL = getDataL();
 		final float[] dataR = getDataR();
@@ -200,10 +198,7 @@ public class CPE extends ChannelElement {
 			SBR.upsample(dataR);
 		}
 
-		channelData.clear();
-		channelData.add(dataL);
-		channelData.add(dataR);
-
-		return channelData;
+		target.accept(dataL);
+		target.accept(dataR);
 	}
 }
