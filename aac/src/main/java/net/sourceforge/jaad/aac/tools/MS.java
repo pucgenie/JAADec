@@ -22,15 +22,13 @@ public final class MS implements HCB {
 		final int maxSFB = info.getMaxSFB();
 		final int[] sfbCBl = ics.getSfbCB();
 		final int[] sfbCBr = cpe.getRightChannel().getSfbCB();
-		int groupOff = 0;
-		int g, i, w, j, idx = 0;
 
-		for(g = 0; g<windowGroups; g++) {
-			for(i = 0; i<maxSFB; i++, idx++) {
+		for(int g = 0, idx = 0, groupOff = 0; g<windowGroups; g++) {
+			for(int i = 0; i<maxSFB; i++, idx++) {
 				if(cpe.isMSUsed(idx)&&sfbCBl[idx]<NOISE_HCB&&sfbCBr[idx]<NOISE_HCB) {
-					for(w = 0; w<info.getWindowGroupLength(g); w++) {
+					for(int w = 0; w<info.getWindowGroupLength(g); w++) {
 						final int off = groupOff+w*128+offsets[i];
-						for(j = 0; j<offsets[i+1]-offsets[i]; j++) {
+						for(int j = 0; j<offsets[i+1]-offsets[i]; j++) {
 							float t = specL[off+j]-specR[off+j];
 							specL[off+j] += specR[off+j];
 							specR[off+j] = t;

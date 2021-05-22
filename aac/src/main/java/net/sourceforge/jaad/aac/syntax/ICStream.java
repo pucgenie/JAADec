@@ -175,12 +175,10 @@ public class ICStream implements HCB, ScaleFactorTable, IQTable {
 		//0: spectrum, 1: noise, 2: intensity
 		final int[] offset = {globalGain, globalGain-90, 0};
 
-		int tmp;
 		boolean noiseFlag = true;
 
-		int sfb, idx = 0;
-		for(int g = 0; g<windowGroups; g++) {
-			for(sfb = 0; sfb<maxSFB;) {
+		for(int g = 0, idx = 0; g<windowGroups; g++) {
+			for(int sfb = 0; sfb<maxSFB;) {
 				int end = sectEnd[idx];
 				switch(sfbCB[idx]) {
 					case ZERO_HCB:
@@ -192,7 +190,7 @@ public class ICStream implements HCB, ScaleFactorTable, IQTable {
 					case INTENSITY_HCB2:
 						for(; sfb<end; sfb++, idx++) {
 							offset[2] += Huffman.decodeScaleFactor(in)-SF_DELTA;
-							tmp = Math.min(Math.max(offset[2], -155), 100);
+							int tmp = Math.min(Math.max(offset[2], -155), 100);
 							scaleFactors[idx] = SCALEFACTOR_TABLE[-tmp+SF_OFFSET];
 						}
 						break;
@@ -204,7 +202,7 @@ public class ICStream implements HCB, ScaleFactorTable, IQTable {
 							}
 							else
 								offset[1] += Huffman.decodeScaleFactor(in)-SF_DELTA;
-							tmp = Math.min(Math.max(offset[1], -100), 155);
+							int tmp = Math.min(Math.max(offset[1], -100), 155);
 							scaleFactors[idx] = -SCALEFACTOR_TABLE[tmp+SF_OFFSET];
 						}
 						break;
@@ -228,45 +226,43 @@ public class ICStream implements HCB, ScaleFactorTable, IQTable {
 		final int[] offsets = info.getSWBOffsets();
 		final int[] buf = new int[4];
 
-		int sfb, j, k, w, hcb, off, width, num;
-		int groupOff = 0, idx = 0;
-		for(int g = 0; g<windowGroups; g++) {
+		for(int g = 0, idx = 0, groupOff = 0; g<windowGroups; g++) {
 			int groupLen = info.getWindowGroupLength(g);
 
-			for(sfb = 0; sfb<maxSFB; sfb++, idx++) {
-				hcb = sfbCB[idx];
-				off = groupOff+offsets[sfb];
-				width = offsets[sfb+1]-offsets[sfb];
+			for(int sfb = 0; sfb<maxSFB; sfb++, idx++) {
+				int hcb = sfbCB[idx];
+				int off = groupOff+offsets[sfb];
+				int width = offsets[sfb+1]-offsets[sfb];
 				if(hcb==ZERO_HCB||hcb==INTENSITY_HCB||hcb==INTENSITY_HCB2) {
-					for(w = 0; w<groupLen; w++, off += 128) {
+					for(int w = 0; w<groupLen; w++, off += 128) {
 						Arrays.fill(iqData, off, off+width, 0);
 					}
 				}
 				else if(hcb==NOISE_HCB) {
 					//apply PNS: fill with random values
-					for(w = 0; w<groupLen; w++, off += 128) {
+					for(int w = 0; w<groupLen; w++, off += 128) {
 						float energy = 0;
 
-						for(k = 0; k<width; k++) {
+						for(int k = 0; k<width; k++) {
 							randomState = 1664525*randomState+1013904223;
 							iqData[off+k] = randomState;
 							energy += iqData[off+k]* iqData[off+k];
 						}
 
 						final float scale = (float) (scaleFactors[idx]/Math.sqrt(energy));
-						for(k = 0; k<width; k++) {
+						for(int k = 0; k<width; k++) {
 							iqData[off+k] *= scale;
 						}
 					}
 				}
 				else {
-					for(w = 0; w<groupLen; w++, off += 128) {
-						num = (hcb>=FIRST_PAIR_HCB) ? 2 : 4;
-						for(k = 0; k<width; k += num) {
+					for(int w = 0; w<groupLen; w++, off += 128) {
+						int num = (hcb>=FIRST_PAIR_HCB) ? 2 : 4;
+						for(int k = 0; k<width; k += num) {
 							Huffman.decodeSpectralData(in, hcb, buf, 0);
 
 							//inverse quantization & scaling
-							for(j = 0; j<num; j++) {
+							for(int j = 0; j<num; j++) {
 								iqData[off+k+j] = (buf[j]>0) ? IQ_TABLE[buf[j]] : -IQ_TABLE[-buf[j]];
 								iqData[off+k+j] *= scaleFactors[idx];
 							}

@@ -188,11 +188,10 @@ class NoiseEnvelope {
 	};
 
 	public static void extract_envelope_data(SBR sbr, Channel ch) {
-		int l, k;
 
-		for(l = 0; l<ch.L_E; l++) {
+		for(int l = 0; l<ch.L_E; l++) {
 			if(ch.bs_df_env[l]==0) {
-				for(k = 1; k<sbr.n[ch.f[l]]; k++) {
+				for(int k = 1; k<sbr.n[ch.f[l]]; k++) {
 					ch.E[k][l] = ch.E[k-1][l]+ch.E[k][l];
 					if(ch.E[k][l]<0)
 						ch.E[k][l] = 0;
@@ -205,7 +204,7 @@ class NoiseEnvelope {
 				int E_prev;
 
 				if(ch.f[l]==g) {
-					for(k = 0; k<sbr.n[ch.f[l]]; k++) {
+					for(int k = 0; k<sbr.n[ch.f[l]]; k++) {
 						if(l==0)
 							E_prev = ch.E_prev[k];
 						else
@@ -216,10 +215,9 @@ class NoiseEnvelope {
 
 				}
 				else if((g==1)&&(ch.f[l]==0)) {
-					int i;
 
-					for(k = 0; k<sbr.n[ch.f[l]]; k++) {
-						for(i = 0; i<sbr.N_high; i++) {
+					for(int k = 0; k<sbr.n[ch.f[l]]; k++) {
+						for(int i = 0; i<sbr.N_high; i++) {
 							if(sbr.f_table_res[FBT.HI_RES][i]==sbr.f_table_res[FBT.LO_RES][k]) {
 								if(l==0)
 									E_prev = ch.E_prev[i];
@@ -233,10 +231,9 @@ class NoiseEnvelope {
 
 				}
 				else if((g==0)&&(ch.f[l]==1)) {
-					int i;
 
-					for(k = 0; k<sbr.n[ch.f[l]]; k++) {
-						for(i = 0; i<sbr.N_low; i++) {
+					for(int k = 0; k<sbr.n[ch.f[l]]; k++) {
+						for(int i = 0; i<sbr.N_low; i++) {
 							if((sbr.f_table_res[FBT.LO_RES][i]<=sbr.f_table_res[FBT.HI_RES][k])
 								&&(sbr.f_table_res[FBT.HI_RES][k]<sbr.f_table_res[FBT.LO_RES][i+1])) {
 								if(l==0)
@@ -254,22 +251,21 @@ class NoiseEnvelope {
 	}
 
 	public static void extract_noise_floor_data(SBR sbr, Channel ch) {
-		int l, k;
 
-		for(l = 0; l<ch.L_Q; l++) {
+		for(int l = 0; l<ch.L_Q; l++) {
 			if(ch.bs_df_noise[l]==0) {
-				for(k = 1; k<sbr.N_Q; k++) {
+				for(int k = 1; k<sbr.N_Q; k++) {
 					ch.Q[k][l] = ch.Q[k][l]+ch.Q[k-1][l];
 				}
 			}
 			else {
 				if(l==0) {
-					for(k = 0; k<sbr.N_Q; k++) {
+					for(int k = 0; k<sbr.N_Q; k++) {
 						ch.Q[k][l] = ch.Q_prev[k]+ch.Q[k][0];
 					}
 				}
 				else {
-					for(k = 0; k<sbr.N_Q; k++) {
+					for(int k = 0; k<sbr.N_Q; k++) {
 						ch.Q[k][l] = ch.Q[k][l-1]+ch.Q[k][l];
 					}
 				}
@@ -345,17 +341,15 @@ class NoiseEnvelope {
 	}
 
 	public static void dequantChannel(SBR sbr, Channel ch) {
-		int exp;
-		int l, k;
 		int amp = (ch.amp_res) ? 0 : 1;
 
-		for(l = 0; l<ch.L_E; l++) {
-			for(k = 0; k<sbr.n[ch.f[l]]; k++) {
+		for(int l = 0; l<ch.L_E; l++) {
+			for(int k = 0; k<sbr.n[ch.f[l]]; k++) {
 				/* +6 for the *64 and -10 for the /32 in the synthesis QMF (fixed)
 				 * since this is a energy value: (x/32)^2 = (x^2)/1024
 				 */
 				/* exp = (ch.E[k][l] >> amp) + 6; */
-				exp = (ch.E[k][l]>>amp);
+				int exp = (ch.E[k][l]>>amp);
 
 				if((exp<0)||(exp>=64)) {
 					ch.E_orig[k][l] = 0;
@@ -371,8 +365,8 @@ class NoiseEnvelope {
 			}
 		}
 
-		for(l = 0; l<ch.L_Q; l++) {
-			for(k = 0; k<sbr.N_Q; k++) {
+		for(int l = 0; l<ch.L_Q; l++) {
+			for(int k = 0; k<sbr.N_Q; k++) {
 				ch.Q_div[k][l] = calc_Q_div(ch, k, l);
 				ch.Q_div2[k][l] = calc_Q_div2(ch, k, l);
 			}

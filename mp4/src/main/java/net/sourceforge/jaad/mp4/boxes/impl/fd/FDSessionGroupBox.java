@@ -38,17 +38,16 @@ public class FDSessionGroupBox extends FullBox {
 		groupIDs = new long[sessionGroups][];
 		hintTrackIDs = new long[sessionGroups][];
 
-		int j, entryCount, channelsInSessionGroup;
 		for(int i = 0; i<sessionGroups; i++) {
-			entryCount = in.readByte();
+			int entryCount = in.readByte();
 			groupIDs[i] = new long[entryCount];
-			for(j = 0; j<entryCount; j++) {
+			for(int j = 0; j<entryCount; j++) {
 				groupIDs[i][j] = in.readBytes(4);
 			}
 
-			channelsInSessionGroup = (int) in.readBytes(2);
+			int channelsInSessionGroup = (int) in.readBytes(2);
 			hintTrackIDs[i] = new long[channelsInSessionGroup];
-			for(j = 0; j<channelsInSessionGroup; j++) {
+			for(int j = 0; j<channelsInSessionGroup; j++) {
 				hintTrackIDs[i][j] = in.readBytes(4);
 			}
 		}

@@ -29,9 +29,8 @@ public class RVLC implements RVLCTables {
 		int noiseEnergy = sf-90-256;
 		boolean intensityUsed = false, noiseUsed = false;
 
-		int sfb;
 		for(int g = 0; g<windowGroupCount; g++) {
-			for(sfb = 0; sfb<maxSFB; sfb++) {
+			for(int sfb = 0; sfb<maxSFB; sfb++) {
 				switch(sfbCB[g][sfb]) {
 					case HCB.ZERO_HCB:
 						scaleFactors[g][sfb] = 0;
@@ -79,13 +78,12 @@ public class RVLC implements RVLCTables {
 
 		boolean noiseUsed = false;
 
-		int sfb, val;
 		for(int g = 0; g<windowGroupCount; g++) {
-			for(sfb = 0; sfb<maxSFB; sfb++) {
+			for(int sfb = 0; sfb<maxSFB; sfb++) {
 				if(sfbCB[g][sfb]==HCB.NOISE_HCB&&!noiseUsed)
 					noiseUsed = true;
 				else if(Math.abs(sfbCB[g][sfb])==ESCAPE_FLAG) {
-					val = decodeHuffmanEscape(in);
+					int val = decodeHuffmanEscape(in);
 					if(sfbCB[g][sfb]==-ESCAPE_FLAG)
 						scaleFactors[g][sfb] -= val;
 					else

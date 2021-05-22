@@ -117,11 +117,10 @@ abstract public class SBR {
 
 	int calc_sbr_tables(Header hdr) {
 		int result = 0;
-		int k2;
 
 		/* calculate the Master Frequency Table */
 		k0 = FBT.qmf_start_channel(hdr.bs_start_freq, this.bs_samplerate_mode, this.sample_rate);
-		k2 = FBT.qmf_stop_channel(hdr.bs_stop_freq, this.sample_rate, k0);
+		int k2 = FBT.qmf_stop_channel(hdr.bs_stop_freq, this.sample_rate, k0);
 
 		/* check k0 and k2 */
 		if(this.sample_rate.getFrequency()>=48000) {
@@ -234,7 +233,7 @@ abstract public class SBR {
 
 	/* table 7 */
 	protected int sbr_grid(BitStream ld, Channel ch) {
-		int i, env, rel, result;
+		int i, result;
 		int bs_abs_bord, bs_abs_bord_1;
 		int bs_num_env = 0;
 		int saved_L_E = ch.L_E;
@@ -250,7 +249,7 @@ abstract public class SBR {
 				bs_num_env = Math.min(1<<i, 5);
 
 				i = ld.readBit();
-				for(env = 0; env<bs_num_env; env++) {
+				for(int env = 0; env<bs_num_env; env++) {
 					ch.f[env] = i;
 				}
 
@@ -264,13 +263,13 @@ abstract public class SBR {
 				bs_abs_bord = ld.readBits(2)+this.numTimeSlots;
 				bs_num_env = ld.readBits(2)+1;
 
-				for(rel = 0; rel<bs_num_env-1; rel++) {
+				for(int rel = 0; rel<bs_num_env-1; rel++) {
 					ch.bs_rel_bord[rel] = 2*ld.readBits(2)+2;
 				}
 				i = sbr_log2(bs_num_env+1);
 				ch.bs_pointer = ld.readBits(i);
 
-				for(env = 0; env<bs_num_env; env++) {
+				for(int env = 0; env<bs_num_env; env++) {
 					ch.f[bs_num_env-env-1] = ld.readBit();
 				}
 
@@ -284,13 +283,13 @@ abstract public class SBR {
 				bs_abs_bord = ld.readBits(2);
 				bs_num_env = ld.readBits(2)+1;
 
-				for(rel = 0; rel<bs_num_env-1; rel++) {
+				for(int rel = 0; rel<bs_num_env-1; rel++) {
 					ch.bs_rel_bord[rel] = 2*ld.readBits(2)+2;
 				}
 				i = sbr_log2(bs_num_env+1);
 				ch.bs_pointer = ld.readBits(i);
 
-				for(env = 0; env<bs_num_env; env++) {
+				for(int env = 0; env<bs_num_env; env++) {
 					ch.f[env] = ld.readBit();
 				}
 
@@ -308,16 +307,16 @@ abstract public class SBR {
 
 				bs_num_env = Math.min(5, ch.bs_num_rel_0+ch.bs_num_rel_1+1);
 
-				for(rel = 0; rel<ch.bs_num_rel_0; rel++) {
+				for(int rel = 0; rel<ch.bs_num_rel_0; rel++) {
 					ch.bs_rel_bord_0[rel] = 2*ld.readBits(2)+2;
 				}
-				for(rel = 0; rel<ch.bs_num_rel_1; rel++) {
+				for(int rel = 0; rel<ch.bs_num_rel_1; rel++) {
 					ch.bs_rel_bord_1[rel] = 2*ld.readBits(2)+2;
 				}
 				i = sbr_log2(ch.bs_num_rel_0+ch.bs_num_rel_1+2);
 				ch.bs_pointer = ld.readBits(i);
 
-				for(env = 0; env<bs_num_env; env++) {
+				for(int env = 0; env<bs_num_env; env++) {
 					ch.f[env] = ld.readBit();
 				}
 
@@ -355,22 +354,19 @@ abstract public class SBR {
 
 	/* table 8 */
 	protected void sbr_dtdf(BitStream ld, Channel ch) {
-		int i;
 
-		for(i = 0; i<ch.L_E; i++) {
+		for(int i = 0; i<ch.L_E; i++) {
 			ch.bs_df_env[i] = ld.readBit();
 		}
 
-		for(i = 0; i<ch.L_Q; i++) {
+		for(int i = 0; i<ch.L_Q; i++) {
 			ch.bs_df_noise[i] = ld.readBit();
 		}
 	}
 
 	/* table 9 */
 	protected void invf_mode(BitStream ld, Channel ch) {
-		int n;
-
-		for(n = 0; n<this.N_Q; n++) {
+		for(int n = 0; n<this.N_Q; n++) {
 			ch.bs_invf_mode[n] = ld.readBits(2);
 		}
 	}
@@ -398,16 +394,14 @@ abstract public class SBR {
 
 	/* table 12 */
 	protected void sinusoidal_coding(BitStream ld, Channel ch) {
-		int n;
 
-		for(n = 0; n<this.N_high; n++) {
+		for(int n = 0; n<this.N_high; n++) {
 			ch.bs_add_harmonic[n] = ld.readBit();
 		}
 	}
 	/* table 10 */
 
 	protected void sbr_envelope(BitStream ld, Channel ch, boolean coupled) {
-		int env, band;
 		int delta = 0;
 		int[][] t_huff, f_huff;
 
@@ -439,7 +433,7 @@ abstract public class SBR {
 			}
 		}
 
-		for(env = 0; env<ch.L_E; env++) {
+		for(int env = 0; env<ch.L_E; env++) {
 			if(ch.bs_df_env[env]==0) {
 				if(coupled) {
 					if(ch.amp_res) {
@@ -458,13 +452,13 @@ abstract public class SBR {
 					}
 				}
 
-				for(band = 1; band<this.n[ch.f[env]]; band++) {
+				for(int band = 1; band<this.n[ch.f[env]]; band++) {
 					ch.E[band][env] = (decodeHuffman(ld, f_huff)<<delta);
 				}
 
 			}
 			else {
-				for(band = 0; band<this.n[ch.f[env]]; band++) {
+				for(int band = 0; band<this.n[ch.f[env]]; band++) {
 					ch.E[band][env] = (decodeHuffman(ld, t_huff)<<delta);
 				}
 			}
@@ -475,7 +469,6 @@ abstract public class SBR {
 
 	/* table 11 */
 	protected void sbr_noise(BitStream ld, Channel ch, boolean coupled) {
-		int noise, band;
 		int delta = 0;
 		int[][] t_huff, f_huff;
 
@@ -490,7 +483,7 @@ abstract public class SBR {
 			f_huff = F_HUFFMAN_ENV_3_0DB;
 		}
 
-		for(noise = 0; noise<ch.L_Q; noise++) {
+		for(int noise = 0; noise<ch.L_Q; noise++) {
 			if(ch.bs_df_noise[noise]==0) {
 				if(coupled) {
 					ch.Q[0][noise] = ld.readBits(5)<<delta;
@@ -498,12 +491,12 @@ abstract public class SBR {
 				else {
 					ch.Q[0][noise] = ld.readBits(5)<<delta;
 				}
-				for(band = 1; band<this.N_Q; band++) {
+				for(int band = 1; band<this.N_Q; band++) {
 					ch.Q[band][noise] = (decodeHuffman(ld, f_huff)<<delta);
 				}
 			}
 			else {
-				for(band = 0; band<this.N_Q; band++) {
+				for(int band = 0; band<this.N_Q; band++) {
 					ch.Q[band][noise] = (decodeHuffman(ld, t_huff)<<delta);
 				}
 			}

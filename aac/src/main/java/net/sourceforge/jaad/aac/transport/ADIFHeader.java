@@ -30,11 +30,10 @@ public final class ADIFHeader {
 	}
 
 	private void decode(BitStream in) {
-		int i;
 		id = in.readBits(32); //'ADIF'
 		copyrightIDPresent = in.readBool();
 		if(copyrightIDPresent) {
-			for(i = 0; i<9; i++) {
+			for(int i = 0; i<9; i++) {
 				copyrightID[i] = (byte) in.readBits(8);
 			}
 		}
@@ -45,7 +44,7 @@ public final class ADIFHeader {
 		pceCount = in.readBits(4)+1;
 		pces = new PCE[pceCount];
 		adifBufferFullness = new int[pceCount];
-		for(i = 0; i<pceCount; i++) {
+		for(int i = 0; i<pceCount; i++) {
 			if(bitstreamType)
 				adifBufferFullness[i] = -1;
 			else

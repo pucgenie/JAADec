@@ -94,8 +94,7 @@ public class ICSInfo implements ScaleFactorBands {
 		windowGroupLength[0] = 1;
 		if(windowSequence.equals(WindowSequence.EIGHT_SHORT_SEQUENCE)) {
 			maxSFB = in.readBits(4);
-			int i;
-			for(i = 0; i<7; i++) {
+			for(int i = 0; i<7; i++) {
 				if(in.readBool())
 					windowGroupLength[windowGroupCount-1]++;
 				else {

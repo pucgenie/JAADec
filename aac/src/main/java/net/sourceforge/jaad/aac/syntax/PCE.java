@@ -163,16 +163,15 @@ public class PCE implements Element, AudioDecoderInfo {
 
 		readTaggedElementArray(backElements, in, backChannelElementsCount);
 
-		int i;
-		for(i = 0; i<lfeChannelElementsCount; ++i) {
+		for(int i = 0; i<lfeChannelElementsCount; ++i) {
 			lfeElementTags[i] = in.readBits(4);
 		}
 
-		for(i = 0; i<assocDataElementsCount; ++i) {
+		for(int i = 0; i<assocDataElementsCount; ++i) {
 			assocDataElementTags[i] = in.readBits(4);
 		}
 
-		for(i = 0; i<validCCElementsCount; ++i) {
+		for(int i = 0; i<validCCElementsCount; ++i) {
 			ccElements[i] = new CCE(in.readBool(), in.readBits(4));
 		}
 
@@ -180,7 +179,7 @@ public class PCE implements Element, AudioDecoderInfo {
 
 		final int commentFieldBytes = in.readBits(8);
 		commentFieldData = new byte[commentFieldBytes];
-		for(i = 0; i<commentFieldBytes; i++) {
+		for(int i = 0; i<commentFieldBytes; i++) {
 			commentFieldData[i] = (byte) in.readBits(8);
 		}
 	}

@@ -32,21 +32,18 @@ class HFGeneration {
 		/* actual HF generation */
 		for(int i = 0; i<sbr.noPatches; i++) {
 			for(int x = 0; x<sbr.patchNoSubbands[i]; x++) {
-				float a0_r, a0_i, a1_r, a1_i;
-				float bw, bw2;
-				int q, p, k, g;
 
 				/* find the low and high band for patching */
-				k = sbr.kx+x;
-				for(q = 0; q<i; q++) {
+				int k = sbr.kx+x;
+				for(int q = 0; q<i; q++) {
 					k += sbr.patchNoSubbands[q];
 				}
-				p = sbr.patchStartSubband[i]+x;
+				int p = sbr.patchStartSubband[i]+x;
 
-				g = sbr.table_map_k_to_g[k];
+				int g = sbr.table_map_k_to_g[k];
 
-				bw = ch.bwArray[g];
-				bw2 = bw*bw;
+				float bw = ch.bwArray[g];
+				float bw2 = bw*bw;
 
 				/* do the patching */
 				/* with or without filtering */
@@ -55,10 +52,10 @@ class HFGeneration {
 					float temp1_i, temp2_i, temp3_i;
 					calc_prediction_coef(sbr, Xlow, alpha_0, alpha_1, p);
 
-					a0_r = (alpha_0[p][0]*bw);
-					a1_r = (alpha_1[p][0]*bw2);
-					a0_i = (alpha_0[p][1]*bw);
-					a1_i = (alpha_1[p][1]*bw2);
+					float a0_r = (alpha_0[p][0]*bw);
+					float a1_r = (alpha_1[p][0]*bw2);
+					float a0_i = (alpha_0[p][1]*bw);
+					float a1_i = (alpha_1[p][1]*bw2);
 
 					temp2_r = (Xlow[first-2+offset][p][0]);
 					temp3_r = (Xlow[first-1+offset][p][0]);
@@ -105,7 +102,6 @@ class HFGeneration {
 		float r01r = 0, r01i = 0, r02r = 0, r02i = 0, r11r = 0;
 		float temp1_r, temp1_i, temp2_r, temp2_i, temp3_r, temp3_i, temp4_r, temp4_i, temp5_r, temp5_i;
 		float rel = 1.0f/(1+1e-6f);
-		int j;
 		int offset = sbr.tHFAdj;
 
 		temp2_r = buffer[offset-2][bd][0];
@@ -118,7 +114,7 @@ class HFGeneration {
 		temp5_r = temp3_r;
 		temp5_i = temp3_i;
 
-		for(j = offset; j<len+offset; j++) {
+		for(int j = offset; j<len+offset; j++) {
 			temp1_r = temp2_r; // temp1_r = QMF_RE(buffer[j-2][bd];
 			temp1_i = temp2_i; // temp1_i = QMF_IM(buffer[j-2][bd];
 			temp2_r = temp3_r; // temp2_r = QMF_RE(buffer[j-1][bd];
@@ -228,9 +224,8 @@ class HFGeneration {
 
 	/* FIXED POINT: bwArray = COEF */
 	private static void calc_chirp_factors(SBR sbr, Channel ch) {
-		int i;
 
-		for(i = 0; i<sbr.N_Q; i++) {
+		for(int i = 0; i<sbr.N_Q; i++) {
 			ch.bwArray[i] = mapNewBw(ch.bs_invf_mode[i], ch.bs_invf_mode_prev[i]);
 
 			if(ch.bwArray[i]<ch.bwArray_prev[i])

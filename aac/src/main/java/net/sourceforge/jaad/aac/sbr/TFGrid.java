@@ -6,7 +6,6 @@ class TFGrid  {
 	/* function constructs new time border vector */
 	/* first build into temp vector to be able to use previous vector on error */
 	public static int envelope_time_border_vector(SBR sbr, Channel ch) {
-		int l, border, temp;
 		int[] t_E_temp = new int[6];
 
 		t_E_temp[0] = sbr.rate*ch.abs_bord_lead;
@@ -16,7 +15,7 @@ class TFGrid  {
 			case FIXFIX:
 				switch(ch.L_E) {
 					case 4:
-						temp = (sbr.numTimeSlots/4);
+						int temp = (sbr.numTimeSlots/4);
 						t_E_temp[3] = sbr.rate*3*temp;
 						t_E_temp[2] = sbr.rate*2*temp;
 						t_E_temp[1] = sbr.rate*temp;
@@ -32,9 +31,9 @@ class TFGrid  {
 			case FIXVAR:
 				if(ch.L_E>1) {
 					int i = ch.L_E;
-					border = ch.abs_bord_trail;
+					int border = ch.abs_bord_trail;
 
-					for(l = 0; l<(ch.L_E-1); l++) {
+					for(int l = 0; l<(ch.L_E-1); l++) {
 						if(border<ch.bs_rel_bord[l])
 							return 1;
 
@@ -47,9 +46,9 @@ class TFGrid  {
 			case VARFIX:
 				if(ch.L_E>1) {
 					int i = 1;
-					border = ch.abs_bord_lead;
+					int border = ch.abs_bord_lead;
 
-					for(l = 0; l<(ch.L_E-1); l++) {
+					for(int l = 0; l<(ch.L_E-1); l++) {
 						border += ch.bs_rel_bord[l];
 
 						if(sbr.rate*border+sbr.tHFAdj>sbr.numTimeSlotsRate+sbr.tHFGen)
@@ -63,9 +62,9 @@ class TFGrid  {
 			case VARVAR:
 				if(ch.bs_num_rel_0!=0) {
 					int i = 1;
-					border = ch.abs_bord_lead;
+					int border = ch.abs_bord_lead;
 
-					for(l = 0; l<ch.bs_num_rel_0; l++) {
+					for(int l = 0; l<ch.bs_num_rel_0; l++) {
 						border += ch.bs_rel_bord_0[l];
 
 						if(sbr.rate*border+sbr.tHFAdj>sbr.numTimeSlotsRate+sbr.tHFGen)
@@ -77,9 +76,9 @@ class TFGrid  {
 
 				if(ch.bs_num_rel_1!=0) {
 					int i = ch.L_E;
-					border = ch.abs_bord_trail;
+					int border = ch.abs_bord_trail;
 
-					for(l = 0; l<ch.bs_num_rel_1; l++) {
+					for(int l = 0; l<ch.bs_num_rel_1; l++) {
 						if(border<ch.bs_rel_bord_1[l])
 							return 1;
 
@@ -91,7 +90,7 @@ class TFGrid  {
 		}
 
 		/* no error occured, we can safely use this t_E vector */
-		for(l = 0; l<6; l++) {
+		for(int l = 0; l<6; l++) {
 			ch.t_E[l] = t_E_temp[l];
 		}
 

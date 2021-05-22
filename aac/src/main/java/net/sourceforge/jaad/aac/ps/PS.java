@@ -143,7 +143,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	public int decode(BitStream ld) {
-		int tmp, n;
 		long bits = ld.getPosition();
 
 		/* check for new PS header */
@@ -191,18 +190,18 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		this.frame_class = ld.readBit();
-		tmp = ld.readBits(2);
+		int tmp = ld.readBits(2);
 
 		this.num_env = num_env_tab[this.frame_class][tmp];
 
 		if(this.frame_class!=0) {
-			for(n = 1; n<this.num_env+1; n++) {
+			for(int n = 1; n<this.num_env+1; n++) {
 				this.border_position[n] = ld.readBits(5)+1;
 			}
 		}
 
 		if(this.enable_iid) {
-			for(n = 0; n<this.num_env; n++) {
+			for(int n = 0; n<this.num_env; n++) {
 				this.iid_dt[n] = ld.readBool();
 
 				/* iid_data */
@@ -218,7 +217,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		if(this.enable_icc) {
-			for(n = 0; n<this.num_env; n++) {
+			for(int n = 0; n<this.num_env; n++) {
 				this.icc_dt[n] = ld.readBool();
 
 				/* icc_data */
@@ -255,14 +254,13 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	private int ps_extension(BitStream ld,
 		int ps_extension_id,
 		int num_bits_left) {
-		int n;
 		long bits = ld.getPosition();
 
 		if(ps_extension_id==0) {
 			this.enable_ipdopd = ld.readBool();
 
 			if(this.enable_ipdopd) {
-				for(n = 0; n<this.num_env; n++) {
+				for(int n = 0; n<this.num_env; n++) {
 					this.ipd_dt[n] = ld.readBool();
 
 					/* ipd_data */
@@ -288,11 +286,10 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	/* read huffman data coded in either the frequency or the time direction */
 	private void huff_data(BitStream ld, boolean dt, int nr_par,
 		int[][] t_huff, int[][] f_huff, int[] par) {
-		int n;
 
 		if(dt) {
 			/* coded in time direction */
-			for(n = 0; n<nr_par; n++) {
+			for(int n = 0; n<nr_par; n++) {
 				par[n] = ps_huff_dec(ld, t_huff);
 			}
 		}
@@ -300,7 +297,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			/* coded in frequency direction */
 			par[0] = ps_huff_dec(ld, f_huff);
 
-			for(n = 1; n<nr_par; n++) {
+			for(int n = 1; n<nr_par; n++) {
 				par[n] = ps_huff_dec(ld, f_huff);
 			}
 		}
@@ -467,14 +464,13 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	/* parse the bitstream data decoded in ps_data() */
 	private void ps_data_decode() {
-		int env, bin;
 
 		/* ps data not available, use data from previous frame */
 		if(this.ps_data_available==0) {
 			this.num_env = 0;
 		}
 
-		for(env = 0; env<this.num_env; env++) {
+		for(int env = 0; env<this.num_env; env++) {
 			int[] iid_index_prev;
 			int[] icc_index_prev;
 			int[] ipd_index_prev;
@@ -526,35 +522,35 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			this.num_env = 1;
 
 			if(this.enable_iid) {
-				for(bin = 0; bin<34; bin++) {
+				for(int bin = 0; bin<34; bin++) {
 					this.iid_index[0][bin] = this.iid_index_prev[bin];
 				}
 			}
 			else {
-				for(bin = 0; bin<34; bin++) {
+				for(int bin = 0; bin<34; bin++) {
 					this.iid_index[0][bin] = 0;
 				}
 			}
 
 			if(this.enable_icc) {
-				for(bin = 0; bin<34; bin++) {
+				for(int bin = 0; bin<34; bin++) {
 					this.icc_index[0][bin] = this.icc_index_prev[bin];
 				}
 			}
 			else {
-				for(bin = 0; bin<34; bin++) {
+				for(int bin = 0; bin<34; bin++) {
 					this.icc_index[0][bin] = 0;
 				}
 			}
 
 			if(this.enable_ipdopd) {
-				for(bin = 0; bin<17; bin++) {
+				for(int bin = 0; bin<17; bin++) {
 					this.ipd_index[0][bin] = this.ipd_index_prev[bin];
 					this.opd_index[0][bin] = this.opd_index_prev[bin];
 				}
 			}
 			else {
-				for(bin = 0; bin<17; bin++) {
+				for(int bin = 0; bin<17; bin++) {
 					this.ipd_index[0][bin] = 0;
 					this.opd_index[0][bin] = 0;
 				}
@@ -562,13 +558,13 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* update previous indices */
-		for(bin = 0; bin<34; bin++) {
+		for(int bin = 0; bin<34; bin++) {
 			this.iid_index_prev[bin] = this.iid_index[this.num_env-1][bin];
 		}
-		for(bin = 0; bin<34; bin++) {
+		for(int bin = 0; bin<34; bin++) {
 			this.icc_index_prev[bin] = this.icc_index[this.num_env-1][bin];
 		}
-		for(bin = 0; bin<17; bin++) {
+		for(int bin = 0; bin<17; bin++) {
 			this.ipd_index_prev[bin] = this.ipd_index[this.num_env-1][bin];
 			this.opd_index_prev[bin] = this.opd_index[this.num_env-1][bin];
 		}
@@ -577,7 +573,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		if(this.frame_class==0) {
 			this.border_position[0] = 0;
-			for(env = 1; env<this.num_env; env++) {
+			for(int env = 1; env<this.num_env; env++) {
 				this.border_position[env] = (env*sbr.numTimeSlotsRate)/this.num_env;
 			}
 			this.border_position[this.num_env] = sbr.numTimeSlotsRate;
@@ -586,11 +582,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			this.border_position[0] = 0;
 
 			if(this.border_position[this.num_env]<sbr.numTimeSlotsRate) {
-				for(bin = 0; bin<34; bin++) {
+				for(int bin = 0; bin<34; bin++) {
 					this.iid_index[this.num_env][bin] = this.iid_index[this.num_env-1][bin];
 					this.icc_index[this.num_env][bin] = this.icc_index[this.num_env-1][bin];
 				}
-				for(bin = 0; bin<17; bin++) {
+				for(int bin = 0; bin<17; bin++) {
 					this.ipd_index[this.num_env][bin] = this.ipd_index[this.num_env-1][bin];
 					this.opd_index[this.num_env][bin] = this.opd_index[this.num_env-1][bin];
 				}
@@ -598,7 +594,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				this.border_position[this.num_env] = sbr.numTimeSlotsRate;
 			}
 
-			for(env = 1; env<this.num_env; env++) {
+			for(int env = 1; env<this.num_env; env++) {
 				int thr = sbr.numTimeSlotsRate-(this.num_env-env);
 
 				if(this.border_position[env]>thr) {
@@ -617,7 +613,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		 * to the same hybrid synthesis filterbank
 		 */
 		if(this.use34hybrid_bands) {
-			for(env = 0; env<this.num_env; env++) {
+			for(int env = 0; env<this.num_env; env++) {
 				if(this.iid_mode!=2&&this.iid_mode!=5)
 					map20indexto34(this.iid_index[env], 34);
 				if(this.icc_mode!=2&&this.icc_mode!=5)
@@ -633,9 +629,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	/* decorrelate the mono signal using an allpass filter */
 	private void ps_decorrelate(float[][][] X_left, float[][][] X_right,
 		float[][][] X_hybrid_left, float[][][] X_hybrid_right) {
-		int gr, n, m, bk;
 		int temp_delay = 0;
-		int sb, maxsb;
 		int[] temp_delay_ser = new int[NO_ALLPASS_LINKS];
 		float P_SmoothPeakDecayDiffNrg, nrg;
 		float[][] P = new float[32][34];
@@ -653,22 +647,22 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* clear the energy values */
-		for(n = 0; n<32; n++) {
-			for(bk = 0; bk<34; bk++) {
+		for(int n = 0; n<32; n++) {
+			for(int bk = 0; bk<34; bk++) {
 				P[n][bk] = 0;
 			}
 		}
 
 		/* calculate the energy in each parameter band b(k) */
-		for(gr = 0; gr<this.num_groups; gr++) {
+		for(int gr = 0; gr<this.num_groups; gr++) {
 			/* select the parameter index b(k) to which this group belongs */
-			bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
+			int bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
 
 			/* select the upper subband border for this group */
-			maxsb = (gr<this.num_hybrid_groups) ? this.group_border[gr]+1 : this.group_border[gr+1];
+			int maxsb = (gr<this.num_hybrid_groups) ? this.group_border[gr]+1 : this.group_border[gr+1];
 
-			for(sb = this.group_border[gr]; sb<maxsb; sb++) {
-				for(n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
+			for(int sb = this.group_border[gr]; sb<maxsb; sb++) {
+				for(int n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
 
 					/* input from hybrid subbands or QMF subbands */
 					if(gr<this.num_hybrid_groups) {
@@ -687,8 +681,8 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* calculate transient reduction ratio for each parameter band b(k) */
-		for(bk = 0; bk<this.nr_par_bands; bk++) {
-			for(n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
+		for(int bk = 0; bk<this.nr_par_bands; bk++) {
+			for(int n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
 				float gamma = 1.5f;
 
 				this.P_PeakDecayNrg[bk] = (this.P_PeakDecayNrg[bk]*this.alpha_decay);
@@ -716,14 +710,15 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* apply stereo decorrelation filter to the signal */
-		for(gr = 0; gr<this.num_groups; gr++) {
+		for(int gr = 0; gr<this.num_groups; gr++) {
+			int maxsb;
 			if(gr<this.num_hybrid_groups)
 				maxsb = this.group_border[gr]+1;
 			else
 				maxsb = this.group_border[gr+1];
 
 			/* QMF channel */
-			for(sb = this.group_border[gr]; sb<maxsb; sb++) {
+			for(int sb = this.group_border[gr]; sb<maxsb; sb++) {
 				float g_DecaySlope;
 				float[] g_DecaySlope_filt = new float[NO_ALLPASS_LINKS];
 
@@ -743,18 +738,18 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				}
 
 				/* calculate g_DecaySlope_filt for every m multiplied by filter_a[m] */
-				for(m = 0; m<NO_ALLPASS_LINKS; m++) {
+				for(int m = 0; m<NO_ALLPASS_LINKS; m++) {
 					g_DecaySlope_filt[m] = g_DecaySlope*filter_a[m];
 				}
 
 
 				/* set delay indices */
 				temp_delay = this.saved_delay;
-				for(n = 0; n<NO_ALLPASS_LINKS; n++) {
+				for(int n = 0; n<NO_ALLPASS_LINKS; n++) {
 					temp_delay_ser[n] = this.delay_buf_index_ser[n];
 				}
 
-				for(n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
+				for(int n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
 					float[] tmp = new float[2], tmp0 = new float[2], R0 = new float[2];
 
 					if(gr<this.num_hybrid_groups) {
@@ -814,7 +809,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 						R0[0] = tmp[0];
 						R0[1] = tmp[1];
-						for(m = 0; m<NO_ALLPASS_LINKS; m++) {
+						for(int m = 0; m<NO_ALLPASS_LINKS; m++) {
 							float[] Q_Fract_allpass = new float[2], tmp2 = new float[2];
 
 							/* fetch parameters */
@@ -871,7 +866,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					}
 
 					/* select b(k) for reading the transient ratio */
-					bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
+					final int bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
 
 					/* duck if a past transient is found */
 					R0[0] = (G_TransientRatio[n][bk]*R0[0]);
@@ -901,7 +896,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 						}
 					}
 
-					for(m = 0; m<NO_ALLPASS_LINKS; m++) {
+					for(int m = 0; m<NO_ALLPASS_LINKS; m++) {
 						if(++temp_delay_ser[m]>=this.num_sample_delay_ser[m]) {
 							temp_delay_ser[m] = 0;
 						}
@@ -912,7 +907,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		/* update delay indices */
 		this.saved_delay = temp_delay;
-		for(m = 0; m<NO_ALLPASS_LINKS; m++) {
+		for(int m = 0; m<NO_ALLPASS_LINKS; m++) {
 			this.delay_buf_index_ser[m] = temp_delay_ser[m];
 		}
 	}
@@ -923,12 +918,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	private void ps_mix_phase(float[][][] X_left, float[][][] X_right,
 		float[][][] X_hybrid_left, float[][][] X_hybrid_right) {
-		int n;
-		int gr;
-		int bk = 0;
-		int sb, maxsb;
-		int env;
-		int nr_ipdopd_par;
+
 		float[] h11 = new float[2], h12 = new float[2], h21 = new float[2], h22 = new float[2];
 		float[] H11 = new float[2], H12 = new float[2], H21 = new float[2], H22 = new float[2];
 		float[] deltaH11 = new float[2], deltaH12 = new float[2], deltaH21 = new float[2], deltaH22 = new float[2];
@@ -936,7 +926,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		float[] tempRight = new float[2];
 		float[] phaseLeft = new float[2];
 		float[] phaseRight = new float[2];
-		float L;
 		float[] sf_iid;
 		int no_iid_steps;
 
@@ -949,21 +938,21 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			sf_iid = sf_iid_normal;
 		}
 
+		int nr_ipdopd_par; // local version
 		if(this.ipd_mode==0||this.ipd_mode==3) {
 			nr_ipdopd_par = 11; /* resolution */
-
 		}
 		else {
 			nr_ipdopd_par = this.nr_ipdopd_par;
 		}
 
-		for(gr = 0; gr<this.num_groups; gr++) {
-			bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
+		for(int gr = 0; gr<this.num_groups; gr++) {
+			final int bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
 
 			/* use one channel per group in the subqmf domain */
-			maxsb = (gr<this.num_hybrid_groups) ? this.group_border[gr]+1 : this.group_border[gr+1];
+			final int maxsb = (gr<this.num_hybrid_groups) ? this.group_border[gr]+1 : this.group_border[gr+1];
 
-			for(env = 0; env<this.num_env; env++) {
+			for(int env = 0; env<this.num_env; env++) {
 				if(this.icc_mode<3) {
 					/* type 'A' mixing as described in 8.6.4.6.2.1 */
 					float c_1, c_2;
@@ -1053,7 +1042,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				 IPD and OPD are enabled
 				 */
 				if((this.enable_ipdopd)&&(bk<nr_ipdopd_par)) {
-					float xy, pq, xypq;
 
 					/* ringbuffer index */
 					int i = this.phase_hist;
@@ -1088,8 +1076,8 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					tempRight[0] += (this.opd_prev[bk][i][0]*0.5f);
 					tempRight[1] += (this.opd_prev[bk][i][1]*0.5f);
 
-					xy = magnitude_c(tempRight);
-					pq = magnitude_c(tempLeft);
+					float xy = magnitude_c(tempRight);
+					float pq = magnitude_c(tempLeft);
 
 					if(xy!=0) {
 						phaseLeft[0] = (tempRight[0]/xy);
@@ -1100,7 +1088,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 						phaseLeft[1] = 0;
 					}
 
-					xypq = (xy*pq);
+					float xypq = (xy*pq);
 
 					if(xypq!=0) {
 						float tmp1 = (tempRight[0]*tempLeft[0])+(tempRight[1]*tempLeft[1]);
@@ -1128,7 +1116,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 				/* length of the envelope n_e+1 - n_e (in time samples) */
 				/* 0 < L <= 32: integer */
-				L = (float) (this.border_position[env+1]-this.border_position[env]);
+				final float L = (float) (this.border_position[env+1]-this.border_position[env]);
 
 				/* obtain final H_xy by means of linear interpolation */
 				deltaH11[0] = (h11[0]-this.h11_prev[gr][0])/L;
@@ -1178,7 +1166,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				}
 
 				/* apply H_xy to the current envelope band of the decorrelated subband */
-				for(n = this.border_position[env]; n<this.border_position[env+1]; n++) {
+				for(int n = this.border_position[env]; n<this.border_position[env+1]; n++) {
 					/* addition finalises the interpolation over every n */
 					H11[0] += deltaH11[0];
 					H12[0] += deltaH12[0];
@@ -1192,7 +1180,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					}
 
 					/* channel is an alias to the subband */
-					for(sb = this.group_border[gr]; sb<maxsb; sb++) {
+					for(int sb = this.group_border[gr]; sb<maxsb; sb++) {
 						float[] inLeft = new float[2], inRight = new float[2];
 
 						/* load decorrelated samples */

@@ -33,12 +33,10 @@ class Filterbank implements PSTables {
 	}
 
 	void hybrid_analysis(float[][][] X, float[][][] X_hybrid, boolean use34, int numTimeSlotsRate) {
-		int k, n, band;
-		int offset = 0;
 		int qmf_bands = (use34) ? 5 : 3;
 		int[] resolution = (use34) ? this.resolution34 : this.resolution20;
 
-		for(band = 0; band<qmf_bands; band++) {
+		for(int band = 0, offset = 0; band<qmf_bands; band++) {
 			/* build working buffer */
 			//memcpy(this.work, this.buffer[band], 12*sizeof(qmf_t));
 			for(int i = 0; i<12; i++) {
@@ -47,7 +45,7 @@ class Filterbank implements PSTables {
 			}
 
 			/* add new samples */
-			for(n = 0; n<this.frame_len; n++) {
+			for(int n = 0; n<this.frame_len; n++) {
 				this.work[12+n][0] = X[n+6 /*delay*/][band][0];
 				this.work[12+n][1] = X[n+6 /*delay*/][band][1];
 			}
@@ -79,8 +77,8 @@ class Filterbank implements PSTables {
 					break;
 			}
 
-			for(n = 0; n<this.frame_len; n++) {
-				for(k = 0; k<resolution[band]; k++) {
+			for(int n = 0; n<this.frame_len; n++) {
+				for(int k = 0; k<resolution[band]; k++) {
 					X_hybrid[n][offset+k][0] = this.temp[n][k][0];
 					X_hybrid[n][offset+k][1] = this.temp[n][k][1];
 				}
@@ -90,7 +88,7 @@ class Filterbank implements PSTables {
 
 		/* group hybrid channels */
 		if(!use34) {
-			for(n = 0; n<numTimeSlotsRate; n++) {
+			for(int n = 0; n<numTimeSlotsRate; n++) {
 				X_hybrid[n][3][0] += X_hybrid[n][4][0];
 				X_hybrid[n][3][1] += X_hybrid[n][4][1];
 				X_hybrid[n][4][0] = 0;
@@ -107,9 +105,8 @@ class Filterbank implements PSTables {
 	/* real filter, size 2 */
 	static void channel_filter2(int frame_len, float[] filter,
 		float[][] buffer, float[][][] X_hybrid) {
-		int i;
 
-		for(i = 0; i<frame_len; i++) {
+		for(int i = 0; i<frame_len; i++) {
 			float r0 = (filter[0]*(buffer[0+i][0]+buffer[12+i][0]));
 			float r1 = (filter[1]*(buffer[1+i][0]+buffer[11+i][0]));
 			float r2 = (filter[2]*(buffer[2+i][0]+buffer[10+i][0]));
@@ -138,11 +135,10 @@ class Filterbank implements PSTables {
 	/* complex filter, size 4 */
 	static void channel_filter4(int frame_len, float[] filter,
 		float[][] buffer, float[][][] X_hybrid) {
-		int i;
 		float[] input_re1 = new float[2], input_re2 = new float[2];
 		float[] input_im1 = new float[2], input_im2 = new float[2];
 
-		for(i = 0; i<frame_len; i++) {
+		for(int i = 0; i<frame_len; i++) {
 			input_re1[0] = -(filter[2]*(buffer[i+2][0]+buffer[i+10][0]))
 				+(filter[6]*buffer[i+6][0]);
 			input_re1[1] = (-0.70710678118655f
@@ -210,12 +206,11 @@ class Filterbank implements PSTables {
 	/* complex filter, size 8 */
 	void channel_filter8(int frame_len, float[] filter,
 		float[][] buffer, float[][][] X_hybrid) {
-		int i, n;
 		float[] input_re1 = new float[4], input_re2 = new float[4];
 		float[] input_im1 = new float[4], input_im2 = new float[4];
 		float[] x = new float[4];
 
-		for(i = 0; i<frame_len; i++) {
+		for(int i = 0; i<frame_len; i++) {
 			input_re1[0] = (filter[6]*buffer[6+i][0]);
 			input_re1[1] = (filter[5]*(buffer[5+i][0]+buffer[7+i][0]));
 			input_re1[2] = -(filter[0]*(buffer[0+i][0]+buffer[12+i][0]))+(filter[4]*(buffer[4+i][0]+buffer[8+i][0]));
@@ -226,7 +221,7 @@ class Filterbank implements PSTables {
 			input_im1[2] = (filter[1]*(buffer[11+i][1]-buffer[1+i][1]))+(filter[3]*(buffer[9+i][1]-buffer[3+i][1]));
 			input_im1[3] = (filter[2]*(buffer[10+i][1]-buffer[2+i][1]));
 
-			for(n = 0; n<4; n++) {
+			for(int n = 0; n<4; n++) {
 				x[n] = input_re1[n]-input_im1[3-n];
 			}
 			DCT3_4_unscaled(x, x);
@@ -235,7 +230,7 @@ class Filterbank implements PSTables {
 			X_hybrid[i][3][0] = x[3];
 			X_hybrid[i][1][0] = x[1];
 
-			for(n = 0; n<4; n++) {
+			for(int n = 0; n<4; n++) {
 				x[n] = input_re1[n]+input_im1[3-n];
 			}
 			DCT3_4_unscaled(x, x);
@@ -254,7 +249,7 @@ class Filterbank implements PSTables {
 			input_re2[2] = (filter[1]*(buffer[11+i][0]-buffer[1+i][0]))+(filter[3]*(buffer[9+i][0]-buffer[3+i][0]));
 			input_re2[3] = (filter[2]*(buffer[10+i][0]-buffer[2+i][0]));
 
-			for(n = 0; n<4; n++) {
+			for(int n = 0; n<4; n++) {
 				x[n] = input_im2[n]+input_re2[3-n];
 			}
 			DCT3_4_unscaled(x, x);
@@ -263,7 +258,7 @@ class Filterbank implements PSTables {
 			X_hybrid[i][3][1] = x[3];
 			X_hybrid[i][1][1] = x[1];
 
-			for(n = 0; n<4; n++) {
+			for(int n = 0; n<4; n++) {
 				x[n] = input_im2[n]-input_re2[3-n];
 			}
 			DCT3_4_unscaled(x, x);
@@ -296,14 +291,13 @@ class Filterbank implements PSTables {
 	/* complex filter, size 12 */
 	void channel_filter12(int frame_len, float[] filter,
 		float[][] buffer, float[][][] X_hybrid) {
-		int i, n;
 		float[] input_re1 = new float[6], input_re2 = new float[6];
 		float[] input_im1 = new float[6], input_im2 = new float[6];
 		float[] out_re1 = new float[6], out_re2 = new float[6];
 		float[] out_im1 = new float[6], out_im2 = new float[6];
 
-		for(i = 0; i<frame_len; i++) {
-			for(n = 0; n<6; n++) {
+		for(int i = 0; i<frame_len; i++) {
+			for(int n = 0; n<6; n++) {
 				if(n==0) {
 					input_re1[0] = (buffer[6+i][0]*filter[6]);
 					input_re2[0] = (buffer[6+i][1]*filter[6]);
@@ -322,7 +316,7 @@ class Filterbank implements PSTables {
 			DCT3_6_unscaled(out_im1, input_im1);
 			DCT3_6_unscaled(out_im2, input_im2);
 
-			for(n = 0; n<6; n += 2) {
+			for(int n = 0; n<6; n += 2) {
 				X_hybrid[i][n][0] = out_re1[n]-out_im1[n];
 				X_hybrid[i][n][1] = out_re2[n]+out_im2[n];
 				X_hybrid[i][n+1][0] = out_re1[n+1]+out_im1[n+1];
@@ -338,17 +332,15 @@ class Filterbank implements PSTables {
 
 	void hybrid_synthesis(float[][][] X, float[][][] X_hybrid,
 		boolean use34, int numTimeSlotsRate) {
-		int k, n, band;
-		int offset = 0;
 		int qmf_bands = (use34) ? 5 : 3;
 		int[] resolution = (use34) ? this.resolution34 : this.resolution20;
 
-		for(band = 0; band<qmf_bands; band++) {
-			for(n = 0; n<this.frame_len; n++) {
+		for(int band = 0, offset = 0; band<qmf_bands; band++) {
+			for(int n = 0; n<this.frame_len; n++) {
 				X[n][band][0] = 0;
 				X[n][band][1] = 0;
 
-				for(k = 0; k<resolution[band]; k++) {
+				for(int k = 0; k<resolution[band]; k++) {
 					X[n][band][0] += X_hybrid[n][offset+k][0];
 					X[n][band][1] += X_hybrid[n][offset+k][1];
 				}

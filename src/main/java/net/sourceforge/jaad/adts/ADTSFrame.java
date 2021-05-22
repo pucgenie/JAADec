@@ -1,9 +1,12 @@
 package net.sourceforge.jaad.adts;
 
+import net.sourceforge.jaad.aac.AudioDecoderInfo;
+import net.sourceforge.jaad.aac.ChannelConfiguration;
+import net.sourceforge.jaad.aac.Profile;
+import net.sourceforge.jaad.aac.SampleFrequency;
+
 import java.io.DataInputStream;
 import java.io.IOException;
-
-import net.sourceforge.jaad.aac.*;
 
 class ADTSFrame implements AudioDecoderInfo {
 
@@ -29,17 +32,16 @@ class ADTSFrame implements AudioDecoderInfo {
 			//raw_data_block();
 		}
 		else {
-			int i;
 			//header error check
 			if(!protectionAbsent) {
 				rawDataBlockPosition = new int[rawDataBlockCount];
-				for(i = 0; i<rawDataBlockCount; i++) {
+				for(int i = 0; i<rawDataBlockCount; i++) {
 					rawDataBlockPosition[i] = in.readUnsignedShort();
 				}
 				crcCheck = in.readUnsignedShort();
 			}
 			//raw data blocks
-			for(i = 0; i<rawDataBlockCount; i++) {
+			for(int i = 0; i<rawDataBlockCount; i++) {
 				//raw_data_block();
 				if(!protectionAbsent)
 					crcCheck = in.readUnsignedShort();

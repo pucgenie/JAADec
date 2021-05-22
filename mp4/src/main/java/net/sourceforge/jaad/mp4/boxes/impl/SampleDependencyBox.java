@@ -29,10 +29,9 @@ public class SampleDependencyBox extends FullBox {
 
 		final int sampleCount = ((SampleSizeBox) parent.getChild(BoxTypes.SAMPLE_SIZE_BOX)).getSampleCount();
 
-		int j;
 		for(int i = 0; i<sampleCount; i++) {
 			dependencyCount[i] = (int) in.readBytes(2);
-			for(j = 0; j<dependencyCount[i]; j++) {
+			for(int j = 0; j<dependencyCount[i]; j++) {
 				relativeSampleNumber[i][j] = (int) in.readBytes(2);
 			}
 		}

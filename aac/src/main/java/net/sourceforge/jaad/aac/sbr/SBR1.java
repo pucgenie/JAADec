@@ -124,7 +124,6 @@ public class SBR1 extends SBR {
 	}
 
 	public int processPS(float[] left_channel, float[] right_channel) {
-		int l, k;
 		int ret = 0;
 		float[][][] X_left = new float[38][64][2];
 		float[][][] X_right = new float[38][64][2];
@@ -132,8 +131,8 @@ public class SBR1 extends SBR {
 		sbr_process_channel(left_channel, X_left, ch0, this.reset);
 
 		/* copy some extra data for PS */
-		for(l = this.numTimeSlotsRate; l<this.numTimeSlotsRate+6; l++) {
-			for(k = 0; k<5; k++) {
+		for(int l = this.numTimeSlotsRate; l<this.numTimeSlotsRate+6; l++) {
+			for(int k = 0; k<5; k++) {
 				X_left[l][k][0] = ch0.Xsbr[this.tHFAdj+l][k][0];
 				X_left[l][k][1] = ch0.Xsbr[this.tHFAdj+l][k][1];
 			}

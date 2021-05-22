@@ -33,7 +33,7 @@ public class SBR2 extends SBR {
 
     /* table 6 */
     protected int sbr_data(BitStream ld) {
-   		int n, result;
+   		int result;
 
    		if(ld.readBool()) {
    			//reserved
@@ -53,11 +53,11 @@ public class SBR2 extends SBR {
    			ch1.L_Q = ch0.L_Q;
    			ch1.bs_pointer = ch0.bs_pointer;
 
-   			for(n = 0; n<=ch0.L_E; n++) {
+   			for(int n = 0; n<=ch0.L_E; n++) {
    				ch1.t_E[n] = ch0.t_E[n];
    				ch1.f[n] = ch0.f[n];
    			}
-   			for(n = 0; n<=ch0.L_Q; n++) {
+   			for(int n = 0; n<=ch0.L_Q; n++) {
    				ch1.t_Q[n] = ch0.t_Q[n];
    			}
 
@@ -66,7 +66,7 @@ public class SBR2 extends SBR {
    			invf_mode(ld, ch0);
 
    			/* more copying */
-   			for(n = 0; n<this.N_Q; n++) {
+   			for(int n = 0; n<this.N_Q; n++) {
    				ch1.bs_invf_mode[n] = ch0.bs_invf_mode[n];
    			}
 
@@ -92,10 +92,10 @@ public class SBR2 extends SBR {
    			int saved_L_Q = ch0.L_Q;
    			FrameClass saved_frame_class = ch0.bs_frame_class;
 
-   			for(n = 0; n<saved_L_E; n++) {
+   			for(int n = 0; n<saved_L_E; n++) {
    				saved_t_E[n] = ch0.t_E[n];
    			}
-   			for(n = 0; n<saved_L_Q; n++) {
+   			for(int n = 0; n<saved_L_Q; n++) {
    				saved_t_Q[n] = ch0.t_Q[n];
    			}
 
@@ -106,10 +106,10 @@ public class SBR2 extends SBR {
    				ch0.bs_frame_class = saved_frame_class;
    				ch0.L_E = saved_L_E;
    				ch0.L_Q = saved_L_Q;
-   				for(n = 0; n<6; n++) {
+   				for(int n = 0; n<6; n++) {
    					ch0.t_E[n] = saved_t_E[n];
    				}
-   				for(n = 0; n<3; n++) {
+   				for(int n = 0; n<3; n++) {
    					ch0.t_Q[n] = saved_t_Q[n];
    				}
 

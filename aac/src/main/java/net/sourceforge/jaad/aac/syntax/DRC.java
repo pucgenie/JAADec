@@ -69,11 +69,10 @@ public class DRC {
    	}
    
    	private int decodeExcludedChannels(BitStream in) {
-   		int i;
    		int exclChs = 0;
    
    		do {
-   			for(i = 0; i<7; i++) {
+   			for(int i = 0; i<7; i++) {
    				excludeMask[exclChs] = in.readBool();
    				exclChs++;
    			}
