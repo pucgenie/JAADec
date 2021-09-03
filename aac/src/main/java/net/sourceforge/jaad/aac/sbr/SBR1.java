@@ -23,8 +23,6 @@ public class SBR1 extends SBR {
    	SynthesisFilterbank qmfs1;
 
 	PS ps;
-	boolean ps_used;
-	boolean psResetFlag;
 
     public SBR1(DecoderConfig config) {
         super(config);
@@ -68,31 +66,21 @@ public class SBR1 extends SBR {
    	}
 
 	protected void sbr_extension(BitStream ld, int bs_extension_id) {
-   		if(bs_extension_id==EXTENSION_ID_PS) {
+   		if(bs_extension_id==EXTENSION_ID_PS  && config.isPSEnabled()) {
 			if(ps==null) {
 				this.ps = new PS(this);
 				this.qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+				config.setPsPresent();
 			}
-			if(this.psResetFlag) {
-				this.ps.header_read = false;
-			}
+
 			ps.decode(ld);
-
-			/* enable PS if and only if: a header has been decoded */
-			if(!ps_used&&ps.header_read) {
-				this.ps_used = true;
-			}
-
-			if(ps.header_read) {
-				this.psResetFlag = false;
-			}
 
 		} else
 			super.sbr_extension(ld, bs_extension_id);
 	}
 
 	public void process(float[] left_chan, float[] right_chan) {
-		if(ps_used) {
+		if(isPSUsed()) {
 			processPS(left_chan, right_chan);
 		} else {
 			process(left_chan);
@@ -101,7 +89,7 @@ public class SBR1 extends SBR {
 	}
 
 
-	public void process(float[] channel) {
+	private void process(float[] channel) {
 		float[][][] X = new float[MAX_NTSR][64][2];
 
 		sbr_process_channel(channel, X, ch0, this.reset);
@@ -123,7 +111,7 @@ public class SBR1 extends SBR {
 		this.frame++;
 	}
 
-	public int processPS(float[] left_channel, float[] right_channel) {
+	private int processPS(float[] left_channel, float[] right_channel) {
 		int ret = 0;
 		float[][][] X_left = new float[38][64][2];
 		float[][][] X_right = new float[38][64][2];
@@ -163,7 +151,7 @@ public class SBR1 extends SBR {
 	}
 
 	public boolean isPSUsed() {
-		return ps_used;
+		return ps!=null && ps.isDataAvailable();
 	}
 
 }

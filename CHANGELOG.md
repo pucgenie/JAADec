@@ -194,3 +194,9 @@ removed unused justSeek flag from SBR
 
 An SBR.Header class was separated.
 Upgrade to Gradle 7.0.1
+
+**2021-08-03**
+
+The whole code was transferred from C code which has no OOP.
+Thus processing of mono or stereo was managed by external if/else.
+This is now moved to the decoding/processing methods.

@@ -1,6 +1,7 @@
 package net.sourceforge.jaad.aac.syntax;
 
 import net.sourceforge.jaad.aac.DecoderConfig;
+import net.sourceforge.jaad.aac.sbr.SBR;
 
 import java.util.List;
 
@@ -43,6 +44,10 @@ class LFE extends SCE {
 
 	LFE(DecoderConfig config, Tag tag) {
 		super(config, tag);
+	}
+
+	protected SBR openSBR() {
+		return null;
 	}
 
 	@Override

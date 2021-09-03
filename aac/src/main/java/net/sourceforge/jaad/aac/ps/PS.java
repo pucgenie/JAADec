@@ -43,9 +43,9 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	int[] ipd_index_2 = new int[17];
 	int[] opd_index_2 = new int[17];
 	/* ps data was correctly read */
-	int ps_data_available;
+	boolean ps_data_available;
 	/* a header has been read */
-	public boolean header_read;
+	boolean header_read;
 	/* hybrid filterbank parameters */
 	Filterbank hyb;
 	boolean use34hybrid_bands;
@@ -91,7 +91,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		hyb = new Filterbank(sbr.numTimeSlotsRate);
 
-		this.ps_data_available = 0;
+		this.ps_data_available = false;
 
 		/* delay stuff*/
 		this.saved_delay = 0;
@@ -142,8 +142,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 	}
 
-	public int decode(BitStream ld) {
-		long bits = ld.getPosition();
+	public boolean isDataAvailable() {
+		return ps_data_available;
+	}
+
+	public void decode(BitStream ld) {
 
 		/* check for new PS header */
 		if(ld.readBool()) {
@@ -181,12 +184,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 			/* PS extension layer enabled */
 			this.enable_ext = ld.readBool();
-		}
-
-		/* we are here, but no header has been read yet */
-		if(this.header_read==false) {
-			this.ps_data_available = 0;
-			return 1;
 		}
 
 		this.frame_class = ld.readBit();
@@ -244,11 +241,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			ld.skipBits(num_bits_left);
 		}
 
-		int bits2 = (int) (ld.getPosition()-bits);
-
-		this.ps_data_available = 1;
-
-		return bits2;
+		this.ps_data_available = true;
 	}
 
 	private int ps_extension(BitStream ld,
@@ -466,7 +459,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	private void ps_data_decode() {
 
 		/* ps data not available, use data from previous frame */
-		if(this.ps_data_available==0) {
+		if(!this.ps_data_available) {
 			this.num_env = 0;
 		}
 
@@ -569,7 +562,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			this.opd_index_prev[bin] = this.opd_index[this.num_env-1][bin];
 		}
 
-		this.ps_data_available = 0;
+		this.ps_data_available = false;
 
 		if(this.frame_class==0) {
 			this.border_position[0] = 0;

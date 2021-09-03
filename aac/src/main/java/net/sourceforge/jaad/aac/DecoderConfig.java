@@ -30,6 +30,7 @@ public class DecoderConfig {
 	// in case of SBR this may be twice the SampleFrequency.
 	private SampleRate outputFrequency;
 
+	private boolean psEnabled = true;
 	private boolean psPresent = false;
 
 	//extension: error resilience
@@ -140,6 +141,10 @@ public class DecoderConfig {
 		psPresent = true;
 	}
 
+	public boolean isPSEnabled() {
+		return psEnabled;
+	}
+	
 	//=========== ER =============
 	public boolean isScalefactorResilienceUsed() {
 		return scalefactorResilience;

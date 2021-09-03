@@ -4,6 +4,7 @@ import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.sbr.SBR;
+import net.sourceforge.jaad.aac.sbr.SBR2;
 import net.sourceforge.jaad.aac.tools.IS;
 import net.sourceforge.jaad.aac.tools.MS;
 import net.sourceforge.jaad.aac.tools.MSMask;
@@ -75,6 +76,10 @@ public class CPE extends ChannelElement {
 
 	public boolean isStereo() {
  		return true;
+	}
+
+	protected SBR openSBR() {
+		return new SBR2(config);
 	}
 
 	public void decode(BitStream in) {

@@ -58,6 +58,8 @@ abstract public class ChannelElement implements Element {
 			sbr.invalidate();
 	}
 
+	abstract protected SBR openSBR();
+
 	void decodeSBR(BitStream in, boolean crc) {
 
     	if(!config.isSBREnabled()) {
@@ -65,11 +67,10 @@ abstract public class ChannelElement implements Element {
 		}
 
    		if(sbr==null)
-   			sbr = SBR.open(config, isChannelPair());
+   			sbr = openSBR();
 
-   		sbr.decode(in, crc);
-   		if(sbr.isPSUsed())
-   			config.setPsPresent();
+	    if(sbr!=null)
+		   	sbr.decode(in, crc);
    	}
 
    	boolean isSBRPresent() {

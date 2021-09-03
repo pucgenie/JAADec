@@ -3,6 +3,7 @@ package net.sourceforge.jaad.aac.syntax;
 import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
 import net.sourceforge.jaad.aac.sbr.SBR;
+import net.sourceforge.jaad.aac.sbr.SBR1;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -56,6 +57,10 @@ class SCE extends ChannelElement {
 	SCE(DecoderConfig config, Tag tag) {
 		super(config, tag);
 		ics = new ICStream(config);
+	}
+
+	protected SBR openSBR() {
+		return new SBR1(config);
 	}
 
 	public void decode(BitStream in) {

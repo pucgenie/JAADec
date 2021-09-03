@@ -26,6 +26,8 @@ abstract public class SBR {
 	static final int T_HFGEN = 8;
 	static final int T_HFADJ = 2;
 
+	protected final DecoderConfig config;
+
 	protected final boolean downSampledSBR;
 	final SampleFrequency sample_rate;
 
@@ -86,12 +88,9 @@ abstract public class SBR {
 	
 	int bs_samplerate_mode;
 
-	public static SBR open(DecoderConfig config, boolean stereo) {
-		config.setSBRPresent();
-		return stereo ? new SBR2(config) : new SBR1(config) ;
-	}
-
 	public SBR(DecoderConfig config) {
+		this.config = config;
+
 		this.downSampledSBR = config.isSBRDownSampled();
 		this.sample_rate = config.getOutputFrequency().getNominal();
 
@@ -211,10 +210,6 @@ abstract public class SBR {
 			return hdr.differs(hdr_saved);
 		} else
 			return false;
-	}
-
-	public boolean isPSUsed() {
-		return false;
 	}
 
 	abstract protected int sbr_data(BitStream ld);
