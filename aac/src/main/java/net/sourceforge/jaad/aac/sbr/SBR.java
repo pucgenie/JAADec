@@ -216,9 +216,11 @@ abstract public class SBR {
 
 	public abstract void process(float[] left_chan, float[] right_chan);
 
+	private static final int log2tab[] = {0, 0, 1, 2, 2, 3, 3, 3, 3, 4};
+
 	/* integer log[2](x): input range [0,10) */
-	private int sbr_log2(int val) {
-		int log2tab[] = {0, 0, 1, 2, 2, 3, 3, 3, 3, 4};
+	private static int sbr_log2(int val) {
+
 		if(val<10&&val>=0)
 			return log2tab[val];
 		else

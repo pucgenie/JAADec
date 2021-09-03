@@ -277,7 +277,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	/* read huffman data coded in either the frequency or the time direction */
-	private void huff_data(BitStream ld, boolean dt, int nr_par,
+	private static void huff_data(BitStream ld, boolean dt, int nr_par,
 		int[][] t_huff, int[][] f_huff, int[] par) {
 
 		if(dt) {
@@ -297,7 +297,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	/* binary search huffman decoding */
-	private int ps_huff_dec(BitStream ld, int[][] t_huff) {
+	private static int ps_huff_dec(BitStream ld, int[][] t_huff) {
 		int bit;
 		int index = 0;
 
@@ -310,7 +310,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	/* limits the value i to the range [min,max] */
-	private int delta_clip(int i, int min, int max) {
+	private static int delta_clip(int i, int min, int max) {
 		if(i<min)
 			return min;
 		else
@@ -322,7 +322,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 
 	/* delta decode array */
-	private void delta_decode(boolean enable, int[] index, int[] index_prev,
+	private static void delta_decode(boolean enable, int[] index, int[] index_prev,
 		boolean dt_flag, int nr_par, int stride,
 		int min_index, int max_index) {
 
@@ -376,7 +376,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	/* delta modulo decode array */
 	/* in: log2 value of the modulo value to allow using AND instead of MOD */
-	private void delta_modulo_decode(boolean enable, int[] index, int[] index_prev,
+	private static void delta_modulo_decode(boolean enable, int[] index, int[] index_prev,
 		boolean dt_flag, int nr_par, int stride,
 		int and_modulo) {
 
@@ -415,7 +415,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 	}
 
-	private void map20indexto34(int[] index, int bins) {
+	private static void map20indexto34(int[] index, int bins) {
 		//index[0] = index[0];
 		index[1] = (index[0]+index[1])/2;
 		index[2] = index[1];
@@ -905,7 +905,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 	}
 
-	private float magnitude_c(float[] c) {
+	private static float magnitude_c(float[] c) {
 		return (float) Math.sqrt(c[0]*c[0]+c[1]*c[1]);
 	}
 
@@ -1231,7 +1231,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	/* main Parametric Stereo decoding function */
-	public int process(float[][][] X_left, float[][][] X_right) {
+	public void process(float[][][] X_left, float[][][] X_right) {
 		float[][][] X_hybrid_left = new float[32][32][2];
 		float[][][] X_hybrid_right = new float[32][32][2];
 
@@ -1274,8 +1274,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		hyb.hybrid_synthesis(X_right, X_hybrid_right,
 			this.use34hybrid_bands, sbr.numTimeSlotsRate);
-
-		return 0;
 	}
 
 }
