@@ -11,6 +11,8 @@ class HFAdjustment implements NoiseTable {
 	private static final int[] phi_im = {0, 1, 0, -1};
 	private static final float[] limGain = {0.5f, 1.0f, 2.0f, 1e10f};
 	private static final float EPS = 1e-12f;
+
+
 	private float[][] G_lim_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 	private float[][] Q_M_lim_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
 	private float[][] S_M_boost = new float[SBR.MAX_L_E][SBR.MAX_M];
@@ -34,11 +36,11 @@ class HFAdjustment implements NoiseTable {
 				ch.l_A = ch.L_E+1-ch.bs_pointer;
 		}
 
-		estimate_current_envelope(sbr, adj, Xsbr, ch);
+		adj.estimate_current_envelope(sbr, Xsbr, ch);
 
-		calculate_gain(sbr, adj, ch);
+		adj.calculate_gain(sbr, ch);
 
-		hf_assembly(sbr, adj, Xsbr, ch);
+		adj.hf_assembly(sbr, Xsbr, ch);
 	}
 
 	private static int get_S_mapped(SBR sbr, Channel ch, int l, int current_band) {
@@ -77,7 +79,7 @@ class HFAdjustment implements NoiseTable {
 		return 0;
 	}
 
-	private static void estimate_current_envelope(SBR sbr, HFAdjustment adj,
+	private void estimate_current_envelope(SBR sbr,
 		float[][][] Xsbr, Channel ch) {
 		float nrg, div;
 
@@ -135,7 +137,7 @@ class HFAdjustment implements NoiseTable {
 		}
 	}
 
-	private static void hf_assembly(SBR sbr, HFAdjustment adj,
+	private void hf_assembly(SBR sbr,
 		float[][][] Xsbr, Channel ch) {
 
 		int fIndexNoise = 0;
@@ -163,8 +165,8 @@ class HFAdjustment implements NoiseTable {
 
 			if(assembly_reset) {
 				for(int n = 0; n<4; n++) {
-					System.arraycopy(adj.G_lim_boost[l], 0, ch.G_temp_prev[n], 0, sbr.M);
-					System.arraycopy(adj.Q_M_lim_boost[l], 0, ch.Q_temp_prev[n], 0, sbr.M);
+					System.arraycopy(this.G_lim_boost[l], 0, ch.G_temp_prev[n], 0, sbr.M);
+					System.arraycopy(this.Q_M_lim_boost[l], 0, ch.Q_temp_prev[n], 0, sbr.M);
 				}
 				/* reset ringbuffer index */
 				ch.GQ_ringbuf_index = 4;
@@ -173,8 +175,8 @@ class HFAdjustment implements NoiseTable {
 
 			for(int i = ch.t_E[l]; i<ch.t_E[l+1]; i++) {
 				/* load new values into ringbuffer */
-				System.arraycopy(adj.G_lim_boost[l], 0, ch.G_temp_prev[ch.GQ_ringbuf_index], 0, sbr.M);
-				System.arraycopy(adj.Q_M_lim_boost[l], 0, ch.Q_temp_prev[ch.GQ_ringbuf_index], 0, sbr.M);
+				System.arraycopy(this.G_lim_boost[l], 0, ch.G_temp_prev[ch.GQ_ringbuf_index], 0, sbr.M);
+				System.arraycopy(this.Q_M_lim_boost[l], 0, ch.Q_temp_prev[ch.GQ_ringbuf_index], 0, sbr.M);
 
 				for(int m = 0; m<sbr.M; m++) {
 					float[] psi = new float[2];
@@ -198,7 +200,7 @@ class HFAdjustment implements NoiseTable {
 						Q_filt = ch.Q_temp_prev[ch.GQ_ringbuf_index][m];
 					}
 
-					Q_filt = (adj.S_M_boost[l][m]!=0||no_noise) ? 0 : Q_filt;
+					Q_filt = (this.S_M_boost[l][m]!=0||no_noise) ? 0 : Q_filt;
 
 					/* add noise to the output */
 					fIndexNoise = (fIndexNoise+1)&511;
@@ -214,10 +216,10 @@ class HFAdjustment implements NoiseTable {
 
 					{
 						int rev = (((m+sbr.kx)&1)!=0 ? -1 : 1);
-						psi[0] = adj.S_M_boost[l][m]*phi_re[fIndexSine];
+						psi[0] = this.S_M_boost[l][m]*phi_re[fIndexSine];
 						Xsbr[i+sbr.tHFAdj][m+sbr.kx][0] += psi[0];
 
-						psi[1] = rev*adj.S_M_boost[l][m]*phi_im[fIndexSine];
+						psi[1] = rev*this.S_M_boost[l][m]*phi_im[fIndexSine];
 						Xsbr[i+sbr.tHFAdj][m+sbr.kx][1] += psi[1];
 					}
 				}
@@ -235,7 +237,7 @@ class HFAdjustment implements NoiseTable {
 		ch.psi_is_prev = fIndexSine;
 	}
 
-	private static void calculate_gain(SBR sbr, HFAdjustment adj, Channel ch) {
+	private void calculate_gain(SBR sbr, Channel ch) {
 
 		int current_t_noise_band = 0;
 		int S_mapped;
@@ -398,14 +400,14 @@ class HFAdjustment implements NoiseTable {
 
 				for(int m = ml1; m<ml2; m++) {
 					/* apply compensation to gain, noise floor sf's and sinusoid levels */
-					adj.G_lim_boost[l][m] = (float) Math.sqrt(G_lim[m]*G_boost);
-					adj.Q_M_lim_boost[l][m] = (float) Math.sqrt(Q_M_lim[m]*G_boost);
+					this.G_lim_boost[l][m] = (float) Math.sqrt(G_lim[m]*G_boost);
+					this.Q_M_lim_boost[l][m] = (float) Math.sqrt(Q_M_lim[m]*G_boost);
 
 					if(S_M[m]!=0) {
-						adj.S_M_boost[l][m] = (float) Math.sqrt(S_M[m]*G_boost);
+						this.S_M_boost[l][m] = (float) Math.sqrt(S_M[m]*G_boost);
 					}
 					else {
-						adj.S_M_boost[l][m] = 0;
+						this.S_M_boost[l][m] = 0;
 					}
 				}
 			}

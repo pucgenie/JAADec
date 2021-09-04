@@ -137,7 +137,7 @@ public class SBR2 extends SBR {
 	public void process(float[] left_chan, float[] right_chan) {
 		float[][][] X = new float[MAX_NTSR][64][2];
 
-		sbr_process_channel(left_chan, X, ch0, this.reset);
+		ch0.process_channel(left_chan, X, this.reset);
 		/* subband synthesis */
 		if(downSampledSBR) {
 			qmfs0.sbr_qmf_synthesis_32(this, X, left_chan);
@@ -146,7 +146,7 @@ public class SBR2 extends SBR {
 			qmfs0.sbr_qmf_synthesis_64(this, X, left_chan);
 		}
 
-		sbr_process_channel(right_chan, X, ch1, false);
+		ch1.process_channel(right_chan, X, false);
 		/* subband synthesis */
 		if(downSampledSBR) {
 			qmfs1.sbr_qmf_synthesis_32(this, X, right_chan);

@@ -581,4 +581,70 @@ class Channel {
 
         return (retval>0) ? retval : 0;
     }
+    
+    
+    void process_channel(float[] channel_buf, float[][][] X, boolean reset) {
+   
+   		sbr.bsco = 0;
+   
+   		boolean dont_process = sbr.hdr==null;
+   
+   		/* subband analysis */
+   		if(dont_process)
+   			qmfa.sbr_qmf_analysis_32(sbr, channel_buf, Xsbr, sbr.tHFGen, 32);
+   		else
+   			qmfa.sbr_qmf_analysis_32(sbr, channel_buf, Xsbr, sbr.tHFGen, sbr.kx);
+   
+   		if(!dont_process) {
+   			/* insert high frequencies here */
+   			/* hf generation using patching */
+   			HFGeneration.hf_generation(Xsbr, Xsbr, this, reset);
+   
+   
+   			/* hf adjustment */
+   			HFAdjustment.hf_adjustment(sbr, Xsbr, this);
+   		}
+   
+   		if(dont_process) {
+   			for(int l = 0; l<sbr.numTimeSlotsRate; l++) {
+   				for(int k = 0; k<32; k++) {
+   					X[l][k][0] = Xsbr[l+sbr.tHFAdj][k][0];
+   					X[l][k][1] = Xsbr[l+sbr.tHFAdj][k][1];
+   				}
+   				for(int k = 32; k<64; k++) {
+   					X[l][k][0] = 0;
+   					X[l][k][1] = 0;
+   				}
+   			}
+   		}
+   		else {
+   			for(int l = 0; l<sbr.numTimeSlotsRate; l++) {
+   				int kx_band, M_band, bsco_band;
+   
+   				if(l<t_E[0]) {
+   					kx_band = sbr.kx_prev;
+   					M_band = sbr.M_prev;
+   					bsco_band = sbr.bsco_prev;
+   				}
+   				else {
+   					kx_band = sbr.kx;
+   					M_band = sbr.M;
+   					bsco_band = sbr.bsco;
+   				}
+   
+   				for(int k = 0; k<kx_band+bsco_band; k++) {
+   					X[l][k][0] = Xsbr[l+sbr.tHFAdj][k][0];
+   					X[l][k][1] = Xsbr[l+sbr.tHFAdj][k][1];
+   				}
+   				for(int k = kx_band+bsco_band; k<kx_band+M_band; k++) {
+   					X[l][k][0] = Xsbr[l+sbr.tHFAdj][k][0];
+   					X[l][k][1] = Xsbr[l+sbr.tHFAdj][k][1];
+   				}
+   				for(int k = Math.max(kx_band+bsco_band, kx_band+M_band); k<64; k++) {
+   					X[l][k][0] = 0;
+   					X[l][k][1] = 0;
+   				}
+   			}
+   		}
+   	}
 }

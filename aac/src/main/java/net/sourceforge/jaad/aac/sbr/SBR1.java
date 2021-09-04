@@ -92,7 +92,7 @@ public class SBR1 extends SBR {
 	private void process(float[] channel) {
 		float[][][] X = new float[MAX_NTSR][64][2];
 
-		sbr_process_channel(channel, X, ch0, this.reset);
+		ch0.process_channel(channel, X, this.reset);
 
 		/* subband synthesis */
 		if(downSampledSBR) {
@@ -116,7 +116,7 @@ public class SBR1 extends SBR {
 		float[][][] X_left = new float[38][64][2];
 		float[][][] X_right = new float[38][64][2];
 
-		sbr_process_channel(left_channel, X_left, ch0, this.reset);
+		ch0.process_channel(left_channel, X_left, this.reset);
 
 		/* copy some extra data for PS */
 		for(int l = this.numTimeSlotsRate; l<this.numTimeSlotsRate+6; l++) {
