@@ -49,7 +49,7 @@ class Filterbank implements PSTables {
 			/* add new samples */
 			for(n = 0; n<this.frame_len; n++) {
 				this.work[12+n][0] = X[n+6 /*delay*/][band][0];
-				this.work[12+n][0] = X[n+6 /*delay*/][band][0];
+				this.work[12+n][1] = X[n+6 /*delay*/][band][1];
 			}
 
 			/* store samples */
