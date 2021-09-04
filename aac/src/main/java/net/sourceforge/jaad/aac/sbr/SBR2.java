@@ -24,10 +24,10 @@ public class SBR2 extends SBR {
     public SBR2(DecoderConfig config) {
         super(config);
 
-        ch0 = new Channel();
+        ch0 = new Channel(this);
         qmfs0 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
 
-        ch1 = new Channel();
+        ch1 = new Channel(this);
         qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
     }
 
@@ -44,36 +44,21 @@ public class SBR2 extends SBR {
    		this.bs_coupling = ld.readBool();
 
    		if(this.bs_coupling) {
-   			if((result = sbr_grid(ld, ch0))>0)
+   			if((result = ch0.sbr_grid(ld))>0)
    				return result;
 
-   			/* need to copy some data from left to right */
-   			ch1.bs_frame_class = ch0.bs_frame_class;
-   			ch1.L_E = ch0.L_E;
-   			ch1.L_Q = ch0.L_Q;
-   			ch1.bs_pointer = ch0.bs_pointer;
+   			ch0.sbr_dtdf(ld);
+   			ch1.sbr_dtdf(ld);
+			ch0.invf_mode(ld);
 
-   			for(int n = 0; n<=ch0.L_E; n++) {
-   				ch1.t_E[n] = ch0.t_E[n];
-   				ch1.f[n] = ch0.f[n];
-   			}
-   			for(int n = 0; n<=ch0.L_Q; n++) {
-   				ch1.t_Q[n] = ch0.t_Q[n];
-   			}
+			/* need to copy some data from left to right */
+			ch1.couple(ch0, N_Q);
 
-   			sbr_dtdf(ld, ch0);
-   			sbr_dtdf(ld, ch1);
-   			invf_mode(ld, ch0);
+   			ch0.sbr_envelope(ld,false);
+   			ch0.sbr_noise(ld,false);
 
-   			/* more copying */
-   			for(int n = 0; n<this.N_Q; n++) {
-   				ch1.bs_invf_mode[n] = ch0.bs_invf_mode[n];
-   			}
-
-   			sbr_envelope(ld, ch0, false);
-   			sbr_noise(ld, ch0, false);
-   			sbr_envelope(ld, ch1, this.bs_coupling);
-   			sbr_noise(ld, ch1, this.bs_coupling);
+   			ch1.sbr_envelope(ld, this.bs_coupling);
+   			ch1.sbr_noise(ld, this.bs_coupling);
 
    			Arrays.fill(ch0.bs_add_harmonic, 0, 64, 0);
    			Arrays.fill(ch1.bs_add_harmonic, 0, 64, 0);
@@ -99,9 +84,10 @@ public class SBR2 extends SBR {
    				saved_t_Q[n] = ch0.t_Q[n];
    			}
 
-   			if((result = sbr_grid(ld, ch0))>0)
+   			if((result = ch0.sbr_grid(ld))>0)
    				return result;
-   			if((result = sbr_grid(ld, ch1))>0) {
+
+		   if((result = ch1.sbr_grid(ld))>0) {
    				/* restore first channel data as well */
    				ch0.bs_frame_class = saved_frame_class;
    				ch0.L_E = saved_L_E;
@@ -115,14 +101,14 @@ public class SBR2 extends SBR {
 
    				return result;
    			}
-   			sbr_dtdf(ld, ch0);
-   			sbr_dtdf(ld, ch1);
-   			invf_mode(ld, ch0);
-   			invf_mode(ld, ch1);
-   			sbr_envelope(ld, ch0, false);
-   			sbr_envelope(ld, ch1, false);
-   			sbr_noise(ld, ch0, this.bs_coupling);
-   			sbr_noise(ld, ch1, this.bs_coupling);
+			ch0.sbr_dtdf(ld);
+			ch1.sbr_dtdf(ld);
+			ch0.invf_mode(ld);
+			ch1.invf_mode(ld);
+   			ch0.sbr_envelope(ld, false);
+   			ch1.sbr_envelope(ld, false);
+   			ch0.sbr_noise(ld, this.bs_coupling);
+   			ch1.sbr_noise(ld, this.bs_coupling);
 
    			Arrays.fill(ch0.bs_add_harmonic, 0, 64, 0);
    			Arrays.fill(ch1.bs_add_harmonic, 0, 64, 0);

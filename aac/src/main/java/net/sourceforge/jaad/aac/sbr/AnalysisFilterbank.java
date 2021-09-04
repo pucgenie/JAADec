@@ -27,10 +27,6 @@ class AnalysisFilterbank implements FilterbankTable {
 		/* qmf subsample l */
 		for(int l = 0, in=0; l<sbr.numTimeSlotsRate; l++) {
 
-			/* shift input buffer x */
-			/* input buffer is not shifted anymore, x is implemented as double ringbuffer */
-			//memmove(qmfa.x + 32, qmfa.x, (320-32)*sizeof(real_t));
-
 			/* add new samples to input buffer x */
 			for(int n = 32-1; n>=0; n--) {
 				this.x[this.x_index+n] = this.x[this.x_index+n+320] = input[in++];

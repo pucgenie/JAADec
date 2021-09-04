@@ -27,10 +27,10 @@ public class SBR1 extends SBR {
     public SBR1(DecoderConfig config) {
         super(config);
 
-        ch0 = new Channel();
+        ch0 = new Channel(this);
         qmfs0 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
 
-        ch1 = new Channel();
+        ch1 = new Channel(this);
         qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
     }
 
@@ -43,13 +43,13 @@ public class SBR1 extends SBR {
    			ld.readBits(4); //reserved
    		}
 
-   		if((result = sbr_grid(ld, ch0))>0)
+   		if((result = ch0.sbr_grid(ld))>0)
    			return result;
 
-   		sbr_dtdf(ld, ch0);
-   		invf_mode(ld, ch0);
-   		sbr_envelope(ld, ch0, false);
-   		sbr_noise(ld, ch0, false);
+		ch0.sbr_dtdf(ld);
+   		ch0.invf_mode(ld);
+		ch0.sbr_envelope(ld,false);
+		ch0.sbr_noise(ld,false);
 
    		NoiseEnvelope.dequantChannel(this, ch0);
 
