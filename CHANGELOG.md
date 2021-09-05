@@ -206,3 +206,7 @@ Some functions may be static.
 **2021-09-03**
 
 Turned many static methods into members of Channel class.
+
+**2021-09-05**
+
+Some parameter arrays made static.

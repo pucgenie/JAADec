@@ -2,39 +2,24 @@ package net.sourceforge.jaad.aac.ps;
 
 class Filterbank implements PSTables {
 
-	private int frame_len;
-	private int[] resolution20 = new int[3];
-	private int[] resolution34 = new int[5];
+	private final int frame_len;
+	private static final int[] resolution20 = {8, 2, 2};
+	private static final int[] resolution34 = {12, 8, 4, 4, 4};
 
-	private float[][] work;
-	private float[][][] buffer;
-	private float[][][] temp;
+	private final float[][] work;
+	private final float[][][] buffer;
+	private final float[][][] temp;
 
 	Filterbank(int numTimeSlotsRate) {
-		int i;
-
-		this.resolution34[0] = 12;
-		this.resolution34[1] = 8;
-		this.resolution34[2] = 4;
-		this.resolution34[3] = 4;
-		this.resolution34[4] = 4;
-
-		this.resolution20[0] = 8;
-		this.resolution20[1] = 2;
-		this.resolution20[2] = 2;
-
-		this.frame_len = numTimeSlotsRate;
-
-		this.work = new float[(this.frame_len+12)][2];
-
-		this.buffer = new float[5][frame_len][2];
-
+		frame_len = numTimeSlotsRate;
+		work = new float[(this.frame_len+12)][2];
+		buffer = new float[5][frame_len][2];
 		temp = new float[frame_len][12][2];
 	}
 
 	void hybrid_analysis(float[][][] X, float[][][] X_hybrid, boolean use34, int numTimeSlotsRate) {
 		int qmf_bands = (use34) ? 5 : 3;
-		int[] resolution = (use34) ? this.resolution34 : this.resolution20;
+		int[] resolution = (use34) ? resolution34 : resolution20;
 
 		for(int band = 0, offset = 0; band<qmf_bands; band++) {
 			/* build working buffer */
