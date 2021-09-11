@@ -214,3 +214,7 @@ Some parameter arrays made static.
 **2021-09-10**
 
 Generate predefined Filter functionals for different QMF bands.
+
+**2021-09-11**
+
+Use BitStream.readSubStream() instead of counting each bit read.

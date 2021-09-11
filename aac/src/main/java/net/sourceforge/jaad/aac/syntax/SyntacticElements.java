@@ -50,7 +50,6 @@ public class SyntacticElements {
 	}
 
 	public void decode(BitStream in) {
-		final int start = in.getPosition(); //should be 0
 
 		if(!config.getProfile().isErrorResilientProfile()) {
 

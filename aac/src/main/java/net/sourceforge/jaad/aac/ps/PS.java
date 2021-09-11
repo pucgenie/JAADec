@@ -87,7 +87,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	public PS(SBR sbr) {
 		this.sbr = sbr;
-		int short_delay_band;
 
 		hyb = new Filterbank(sbr.numTimeSlotsRate);
 
@@ -107,7 +106,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* THESE ARE CONSTANTS NOW */
-		short_delay_band = 35;
+		int short_delay_band = 35;
 		this.nr_allpass_bands = 22;
 		this.alpha_decay = 0.76592833836465f;
 		this.alpha_smooth = 0.25f;
@@ -224,30 +223,24 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		if(this.enable_ext) {
-			int num_bits_left;
 			int cnt = ld.readBits(4);
 			if(cnt==15) {
 				cnt += ld.readBits(8);
 			}
 
-			num_bits_left = 8*cnt;
-			while(num_bits_left>7) {
-				int ps_extension_id = ld.readBits(2);
+			// open a new sub stream
+			ld = ld.readSubStream(8*cnt);
 
-				num_bits_left -= 2;
-				num_bits_left -= ps_extension(ld, ps_extension_id, num_bits_left);
+			while(ld.getBitsLeft()>7) {
+				ps_extension(ld);
 			}
-
-			ld.skipBits(num_bits_left);
 		}
 
 		this.ps_data_available = true;
 	}
 
-	private int ps_extension(BitStream ld,
-		int ps_extension_id,
-		int num_bits_left) {
-		long bits = ld.getPosition();
+	private void ps_extension(BitStream ld) {
+		int ps_extension_id = ld.readBits(2);
 
 		if(ps_extension_id==0) {
 			this.enable_ipdopd = ld.readBool();
@@ -269,11 +262,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			}
 			ld.readBit(); //reserved
 		}
-
-		/* return number of bits read */
-		int bits2 = (int) (ld.getPosition()-bits);
-
-		return bits2;
 	}
 
 	/* read huffman data coded in either the frequency or the time direction */
