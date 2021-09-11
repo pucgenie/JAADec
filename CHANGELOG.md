@@ -210,3 +210,7 @@ Turned many static methods into members of Channel class.
 **2021-09-05**
 
 Some parameter arrays made static.
+
+**2021-09-10**
+
+Generate predefined Filter functionals for different QMF bands.
