@@ -158,10 +158,10 @@ public class LTPrediction {
 		lag = ltp.lag;
 		lastBand = ltp.lastBand;
 		lagUpdate = ltp.lagUpdate;
-		shortUsed = Arrays.copyOf(ltp.shortUsed);
-		shortLagPresent = Arrays.copyOf(ltp.shortLagPresent);
-		shortLag = Arrays.copyOf(ltp.shortLag);
-		longUsed = Arrays.copyOf(ltp.longUsed);
+		shortUsed = Utils.copyOf(ltp.shortUsed);
+		shortLagPresent = Utils.copyOf(ltp.shortLagPresent);
+		shortLag = Utils.copyOf(ltp.shortLag);
+		longUsed = Utils.copyOf(ltp.longUsed);
 	}
 
 }

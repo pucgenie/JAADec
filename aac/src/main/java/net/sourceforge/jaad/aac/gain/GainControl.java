@@ -2,7 +2,7 @@ package net.sourceforge.jaad.aac.gain;
 
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.ICSInfo.WindowSequence;
-import net.sourceforge.jaad.aac.tools.Arrays;
+import net.sourceforge.jaad.aac.tools.Utils;
 
 public class GainControl implements GCConstants {
 
@@ -113,8 +113,8 @@ public class GainControl implements GCConstants {
 
 					overlap[band][a] = in[b];
 				}
-				locationPrev[band][0] = Arrays.copyOf(location[band][k]);
-				levelPrev[band][0] = Arrays.copyOf(level[band][k]);
+				locationPrev[band][0] = Utils.copyOf(location[band][k]);
+				levelPrev[band][0] = Utils.copyOf(level[band][k]);
 			}
 			System.arraycopy(overlap[band], 0, out[band], 0, lbLong);
 			System.arraycopy(overlap[band], lbLong, overlap[band], 0, lbLong);
@@ -135,8 +135,8 @@ public class GainControl implements GCConstants {
 				overlap[band][j] = in[band*lbLong*2+lbLong+j];
 			}
 			final int lastBlock = winSeq.equals(WindowSequence.ONLY_LONG_SEQUENCE) ? 1 : 0;
-			locationPrev[band][0] = Arrays.copyOf(location[band][lastBlock]);
-			levelPrev[band][0] = Arrays.copyOf(level[band][lastBlock]);
+			locationPrev[band][0] = Utils.copyOf(location[band][lastBlock]);
+			levelPrev[band][0] = Utils.copyOf(level[band][lastBlock]);
 		}
 	}
 

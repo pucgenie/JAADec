@@ -4,7 +4,7 @@ import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.DecoderConfig;
 import net.sourceforge.jaad.aac.Profile;
 import net.sourceforge.jaad.aac.SampleFrequency;
-import net.sourceforge.jaad.aac.tools.Arrays;
+import net.sourceforge.jaad.aac.tools.Utils;
 import net.sourceforge.jaad.aac.tools.ICPrediction;
 import net.sourceforge.jaad.aac.tools.LTPrediction;
 
@@ -202,9 +202,9 @@ public class ICSInfo implements ScaleFactorBands {
 
 		windowCount = info.windowCount;
 		windowGroupCount = info.windowGroupCount;
-		windowGroupLength = Arrays.copyOf(info.windowGroupLength);
+		windowGroupLength = Utils.copyOf(info.windowGroupLength);
 		swbCount = info.swbCount;
-		swbOffsets = Arrays.copyOf(info.swbOffsets);
+		swbOffsets = Utils.copyOf(info.swbOffsets);
 
 		if(predictionDataPresent && ltPredict!=null)
 			ltPredict.decode(in, this, config.getProfile());

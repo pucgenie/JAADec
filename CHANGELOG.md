@@ -218,3 +218,7 @@ Generate predefined Filter functionals for different QMF bands.
 **2021-09-11**
 
 Use BitStream.readSubStream() instead of counting each bit read.
+
+**2021-09-12**
+
+Renamed Arrays into Utils and introduced copyRange.
