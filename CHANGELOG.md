@@ -222,3 +222,8 @@ Use BitStream.readSubStream() instead of counting each bit read.
 **2021-09-12**
 
 Renamed Arrays into Utils and introduced copyRange.
+
+Introduced FilterBankType FBType with two immutable sets of constants and tables 
+to process 20/34 hybrid banks. This makes most if/else use34hybrid_bands obsolete.
+
+Many loops from PS.ps_mix_phase() and PS.ps_decorrelate() might go to FBType.

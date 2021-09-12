@@ -3,6 +3,7 @@ package net.sourceforge.jaad.aac.ps;
 import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class PS implements PSConstants, PSTables, HuffmanTables {
@@ -38,28 +39,23 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	int[][] ipd_index = new int[MAX_PS_ENVELOPES][17];
 	int[][] opd_index = new int[MAX_PS_ENVELOPES][17];
 
-	int[] ipd_index_1 = new int[17];
-	int[] opd_index_1 = new int[17];
-	int[] ipd_index_2 = new int[17];
-	int[] opd_index_2 = new int[17];
 	/* ps data was correctly read */
 	boolean ps_data_available;
 	/* a header has been read */
 	boolean header_read;
+
 	/* hybrid filterbank parameters */
 	Filterbank hyb;
-	boolean use34hybrid_bands;
-	int num_groups;
-	int num_hybrid_groups;
-	int nr_par_bands;
-	int nr_allpass_bands;
-	int decay_cutoff;
-	int[] group_border;
-	int[] map_group2bk;
+	FBType fbt = FBType.T20;
+
+	static final int nr_allpass_bands = 22;
+
 	/* filter delay handling */
 	int saved_delay;
 	int[] delay_buf_index_ser = new int[NO_ALLPASS_LINKS];
 	int[] num_sample_delay_ser = new int[NO_ALLPASS_LINKS];
+	static final int short_delay_band = 35;
+
 	int[] delay_D = new int[64];
 	int[] delay_buf_index_delay = new int[64];
 	float[][][] delay_Qmf = new float[14][64][2]; /* 14 samples delay max, 64 QMF channels */
@@ -71,8 +67,8 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	float[][][][] delay_SubQmf_ser = new float[NO_ALLPASS_LINKS][5][32][2]; /* 5 samples delay max (table 8.34) */
 	/* transients */
 
-	float alpha_decay;
-	float alpha_smooth;
+	static final float alpha_decay = 0.76592833836465f;;
+	static final float alpha_smooth = 0.25f;
 	float[] P_PeakDecayNrg = new float[34];
 	float[] P_prev = new float[34];
 	float[] P_SmoothPeakDecayDiffNrg_prev = new float[34];
@@ -105,19 +101,9 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			this.num_sample_delay_ser[i] = delay_length_d[i];
 		}
 
-		/* THESE ARE CONSTANTS NOW */
-		int short_delay_band = 35;
-		this.nr_allpass_bands = 22;
-		this.alpha_decay = 0.76592833836465f;
-		this.alpha_smooth = 0.25f;
-
 		/* THESE ARE CONSTANT NOW IF PS IS INDEPENDANT OF SAMPLERATE */
-		for(int i = 0; i<short_delay_band; i++) {
-			this.delay_D[i] = 14;
-		}
-		for(int i = short_delay_band; i<64; i++) {
-			this.delay_D[i] = 1;
-		}
+		Arrays.fill(delay_D, 0, short_delay_band, 14);
+		Arrays.fill(delay_D, short_delay_band, delay_D.length, 1);
 
 		/* mixing and phase */
 		for(int i = 0; i<50; i++) {
@@ -151,7 +137,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		if(ld.readBool()) {
 			this.header_read = true;
 
-			this.use34hybrid_bands = false;
+			fbt = FBType.T20;
 
 			/* Inter-channel Intensity Difference (IID) parameters enabled */
 			this.enable_iid = ld.readBool();
@@ -163,7 +149,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				this.nr_ipdopd_par = nr_ipdopd_par_tab[this.iid_mode];
 
 				if(this.iid_mode==2||this.iid_mode==5)
-					this.use34hybrid_bands = true;
+					fbt = FBType.T34;
 
 				/* IPD freq res equal to IID freq res */
 				this.ipd_mode = this.iid_mode;
@@ -178,7 +164,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				this.nr_icc_par = nr_icc_par_tab[this.icc_mode];
 
 				if(this.icc_mode==2||this.icc_mode==5)
-					this.use34hybrid_bands = true;
+					fbt = FBType.T34;
 			}
 
 			/* PS extension layer enabled */
@@ -286,11 +272,10 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	/* binary search huffman decoding */
 	private static int ps_huff_dec(BitStream ld, int[][] t_huff) {
-		int bit;
 		int index = 0;
 
 		while(index>=0) {
-			bit = ld.readBit();
+			int bit = ld.readBit();
 			index = t_huff[index][bit];
 		}
 
@@ -593,7 +578,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		/* make sure that the indices of all parameters can be mapped
 		 * to the same hybrid synthesis filterbank
 		 */
-		if(this.use34hybrid_bands) {
+		if(this.fbt==FBType.T34) {
 			for(int env = 0; env<this.num_env; env++) {
 				if(this.iid_mode!=2&&this.iid_mode!=5)
 					map20indexto34(this.iid_index[env], 34);
@@ -617,16 +602,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		float[][] G_TransientRatio = new float[32][34];
 		float[] inputLeft = new float[2];
 
-
-		/* chose hybrid filterbank: 20 or 34 band case */
-		float[][] Phi_Fract_SubQmf;
-		if(this.use34hybrid_bands) {
-			Phi_Fract_SubQmf = Phi_Fract_SubQmf34;
-		}
-		else {
-			Phi_Fract_SubQmf = Phi_Fract_SubQmf20;
-		}
-
 		/* clear the energy values */
 		for(int n = 0; n<32; n++) {
 			for(int bk = 0; bk<34; bk++) {
@@ -635,18 +610,18 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* calculate the energy in each parameter band b(k) */
-		for(int gr = 0; gr<this.num_groups; gr++) {
+		for(int gr = 0; gr<fbt.num_groups; gr++) {
 			/* select the parameter index b(k) to which this group belongs */
-			int bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
+			int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
 
 			/* select the upper subband border for this group */
-			int maxsb = (gr<this.num_hybrid_groups) ? this.group_border[gr]+1 : this.group_border[gr+1];
+			int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
 
-			for(int sb = this.group_border[gr]; sb<maxsb; sb++) {
+			for(int sb = fbt.group_border[gr]; sb<maxsb; sb++) {
 				for(int n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
 
 					/* input from hybrid subbands or QMF subbands */
-					if(gr<this.num_hybrid_groups) {
+					if(gr<fbt.num_hybrid_groups) {
 						inputLeft[0] = X_hybrid_left[n][sb][0];
 						inputLeft[1] = X_hybrid_left[n][sb][1];
 					}
@@ -662,11 +637,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* calculate transient reduction ratio for each parameter band b(k) */
-		for(int bk = 0; bk<this.nr_par_bands; bk++) {
+		for(int bk = 0; bk<fbt.nr_par_bands; bk++) {
 			for(int n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
 				float gamma = 1.5f;
 
-				this.P_PeakDecayNrg[bk] = (this.P_PeakDecayNrg[bk]*this.alpha_decay);
+				this.P_PeakDecayNrg[bk] = (this.P_PeakDecayNrg[bk]*alpha_decay);
 				if(this.P_PeakDecayNrg[bk]<P[n][bk])
 					this.P_PeakDecayNrg[bk] = P[n][bk];
 
@@ -677,7 +652,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 				/* apply smoothing filter to energy */
 				nrg = this.P_prev[bk];
-				nrg += ((P[n][bk]-this.P_prev[bk])*this.alpha_smooth);
+				nrg += ((P[n][bk]-this.P_prev[bk])*alpha_smooth);
 				this.P_prev[bk] = nrg;
 
 				/* calculate transient ratio */
@@ -691,24 +666,24 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 
 		/* apply stereo decorrelation filter to the signal */
-		for(int gr = 0; gr<this.num_groups; gr++) {
+		for(int gr = 0; gr<fbt.num_groups; gr++) {
 			int maxsb;
-			if(gr<this.num_hybrid_groups)
-				maxsb = this.group_border[gr]+1;
+			if(gr<fbt.num_hybrid_groups)
+				maxsb = fbt.group_border[gr]+1;
 			else
-				maxsb = this.group_border[gr+1];
+				maxsb = fbt.group_border[gr+1];
 
 			/* QMF channel */
-			for(int sb = this.group_border[gr]; sb<maxsb; sb++) {
+			for(int sb = fbt.group_border[gr]; sb<maxsb; sb++) {
 				float g_DecaySlope;
 				float[] g_DecaySlope_filt = new float[NO_ALLPASS_LINKS];
 
 				/* g_DecaySlope: [0..1] */
-				if(gr<this.num_hybrid_groups||sb<=this.decay_cutoff) {
+				if(gr<fbt.num_hybrid_groups||sb<=fbt.decay_cutoff) {
 					g_DecaySlope = 1.0f;
 				}
 				else {
-					int decay = this.decay_cutoff-sb;
+					int decay = fbt.decay_cutoff-sb;
 					if(decay<=-20 /* -1/DECAY_SLOPE */) {
 						g_DecaySlope = 0;
 					}
@@ -733,7 +708,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 				for(int n = this.border_position[0]; n<this.border_position[this.num_env]; n++) {
 					float[] tmp = new float[2], tmp0 = new float[2], R0 = new float[2];
 
-					if(gr<this.num_hybrid_groups) {
+					if(gr<fbt.num_hybrid_groups) {
 						/* hybrid filterbank input */
 						inputLeft[0] = X_hybrid_left[n][sb][0];
 						inputLeft[1] = X_hybrid_left[n][sb][1];
@@ -744,7 +719,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 						inputLeft[1] = X_left[n][sb][1];
 					}
 
-					if(sb>this.nr_allpass_bands&&gr>=this.num_hybrid_groups) {
+					if(sb>this.nr_allpass_bands&&gr>=fbt.num_hybrid_groups) {
 						/* delay */
 
 						/* never hybrid subbands here, always QMF subbands */
@@ -761,7 +736,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 						float[] Phi_Fract = new float[2];
 
 						/* fetch parameters */
-						if(gr<this.num_hybrid_groups) {
+						if(gr<fbt.num_hybrid_groups) {
 							/* select data from the hybrid subbands */
 							tmp0[0] = this.delay_SubQmf[temp_delay][sb][0];
 							tmp0[1] = this.delay_SubQmf[temp_delay][sb][1];
@@ -769,8 +744,8 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 							this.delay_SubQmf[temp_delay][sb][0] = inputLeft[0];
 							this.delay_SubQmf[temp_delay][sb][1] = inputLeft[1];
 
-							Phi_Fract[0] = Phi_Fract_SubQmf[sb][0];
-							Phi_Fract[1] = Phi_Fract_SubQmf[sb][1];
+							Phi_Fract[0] = fbt.phiFract[sb][0];
+							Phi_Fract[1] = fbt.phiFract[sb][1];
 						}
 						else {
 							/* select data from the QMF subbands */
@@ -794,19 +769,13 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 							float[] Q_Fract_allpass = new float[2], tmp2 = new float[2];
 
 							/* fetch parameters */
-							if(gr<this.num_hybrid_groups) {
+							if(gr<fbt.num_hybrid_groups) {
 								/* select data from the hybrid subbands */
 								tmp0[0] = this.delay_SubQmf_ser[m][temp_delay_ser[m]][sb][0];
 								tmp0[1] = this.delay_SubQmf_ser[m][temp_delay_ser[m]][sb][1];
 
-								if(this.use34hybrid_bands) {
-									Q_Fract_allpass[0] = Q_Fract_allpass_SubQmf34[sb][m][0];
-									Q_Fract_allpass[1] = Q_Fract_allpass_SubQmf34[sb][m][1];
-								}
-								else {
-									Q_Fract_allpass[0] = Q_Fract_allpass_SubQmf20[sb][m][0];
-									Q_Fract_allpass[1] = Q_Fract_allpass_SubQmf20[sb][m][1];
-								}
+								Q_Fract_allpass[0] = fbt.qFractAllpassSubQmf[sb][m][0];
+								Q_Fract_allpass[1] = fbt.qFractAllpassSubQmf[sb][m][1];
 							}
 							else {
 								/* select data from the QMF subbands */
@@ -831,7 +800,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 							tmp2[1] = R0[1]+(g_DecaySlope_filt[m]*tmp[1]);
 
 							/* store sample */
-							if(gr<this.num_hybrid_groups) {
+							if(gr<fbt.num_hybrid_groups) {
 								this.delay_SubQmf_ser[m][temp_delay_ser[m]][sb][0] = tmp2[0];
 								this.delay_SubQmf_ser[m][temp_delay_ser[m]][sb][1] = tmp2[1];
 							}
@@ -847,13 +816,13 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					}
 
 					/* select b(k) for reading the transient ratio */
-					final int bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
+					final int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
 
 					/* duck if a past transient is found */
 					R0[0] = (G_TransientRatio[n][bk]*R0[0]);
 					R0[1] = (G_TransientRatio[n][bk]*R0[1]);
 
-					if(gr<this.num_hybrid_groups) {
+					if(gr<fbt.num_hybrid_groups) {
 						/* hybrid */
 						X_hybrid_right[n][sb][0] = R0[0];
 						X_hybrid_right[n][sb][1] = R0[1];
@@ -870,7 +839,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					}
 
 					/* update delay indices */
-					if(sb>this.nr_allpass_bands&&gr>=this.num_hybrid_groups) {
+					if(sb>nr_allpass_bands&&gr>=fbt.num_hybrid_groups) {
 						/* delay_D depends on the samplerate, it can hold the values 14 and 1 */
 						if(++this.delay_buf_index_delay[sb]>=this.delay_D[sb]) {
 							this.delay_buf_index_delay[sb] = 0;
@@ -888,9 +857,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 		/* update delay indices */
 		this.saved_delay = temp_delay;
-		for(int m = 0; m<NO_ALLPASS_LINKS; m++) {
-			this.delay_buf_index_ser[m] = temp_delay_ser[m];
-		}
+		System.arraycopy(temp_delay_ser, 0, this.delay_buf_index_ser, 0, NO_ALLPASS_LINKS);
 	}
 
 	private static float magnitude_c(float[] c) {
@@ -927,11 +894,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			nr_ipdopd_par = this.nr_ipdopd_par;
 		}
 
-		for(int gr = 0; gr<this.num_groups; gr++) {
-			final int bk = (~NEGATE_IPD_MASK)&this.map_group2bk[gr];
+		for(int gr = 0; gr<fbt.num_groups; gr++) {
+			final int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
 
 			/* use one channel per group in the subqmf domain */
-			final int maxsb = (gr<this.num_hybrid_groups) ? this.group_border[gr]+1 : this.group_border[gr+1];
+			final int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
 
 			for(int env = 0; env<this.num_env; env++) {
 				if(this.icc_mode<3) {
@@ -1128,7 +1095,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					H21[1] = this.h21_prev[gr][1];
 					H22[1] = this.h22_prev[gr][1];
 
-					if((NEGATE_IPD_MASK&this.map_group2bk[gr])!=0) {
+					if((NEGATE_IPD_MASK&fbt.map_group2bk[gr])!=0) {
 						deltaH11[1] = -deltaH11[1];
 						deltaH12[1] = -deltaH12[1];
 						deltaH21[1] = -deltaH21[1];
@@ -1161,11 +1128,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 					}
 
 					/* channel is an alias to the subband */
-					for(int sb = this.group_border[gr]; sb<maxsb; sb++) {
+					for(int sb = fbt.group_border[gr]; sb<maxsb; sb++) {
 						float[] inLeft = new float[2], inRight = new float[2];
 
 						/* load decorrelated samples */
-						if(gr<this.num_hybrid_groups) {
+						if(gr<fbt.num_hybrid_groups) {
 							inLeft[0] = X_hybrid_left[n][sb][0];
 							inLeft[1] = X_hybrid_left[n][sb][1];
 							inRight[0] = X_hybrid_right[n][sb][0];
@@ -1194,7 +1161,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 						}
 
 						/* store final samples */
-						if(gr<this.num_hybrid_groups) {
+						if(gr<fbt.num_hybrid_groups) {
 							X_hybrid_left[n][sb][0] = tempLeft[0];
 							X_hybrid_left[n][sb][1] = tempLeft[1];
 							X_hybrid_right[n][sb][0] = tempRight[0];
@@ -1226,29 +1193,10 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		/* delta decoding of the bitstream data */
 		ps_data_decode();
 
-		/* set up some parameters depending on filterbank type */
-		if(this.use34hybrid_bands) {
-			this.group_border = group_border34;
-			this.map_group2bk = map_group2bk34;
-			this.num_groups = 32+18;
-			this.num_hybrid_groups = 32;
-			this.nr_par_bands = 34;
-			this.decay_cutoff = 5;
-		}
-		else {
-			this.group_border = group_border20;
-			this.map_group2bk = map_group2bk20;
-			this.num_groups = 10+12;
-			this.num_hybrid_groups = 10;
-			this.nr_par_bands = 20;
-			this.decay_cutoff = 3;
-		}
-
 		/* Perform further analysis on the lowest subbands to get a higher
 		 * frequency resolution
 		 */
-		hyb.hybrid_analysis(X_left, X_hybrid_left,
-			this.use34hybrid_bands, sbr.numTimeSlotsRate);
+		hyb.hybrid_analysis(X_left, X_hybrid_left, fbt);
 
 		/* decorrelate mono signal */
 		ps_decorrelate(X_left, X_right, X_hybrid_left, X_hybrid_right);
@@ -1257,11 +1205,9 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		ps_mix_phase(X_left, X_right, X_hybrid_left, X_hybrid_right);
 
 		/* hybrid synthesis, to rebuild the SBR QMF matrices */
-		hyb.hybrid_synthesis(X_left, X_hybrid_left,
-			this.use34hybrid_bands, sbr.numTimeSlotsRate);
+		hyb.hybrid_synthesis(X_left, X_hybrid_left, fbt);
 
-		hyb.hybrid_synthesis(X_right, X_hybrid_right,
-			this.use34hybrid_bands, sbr.numTimeSlotsRate);
+		hyb.hybrid_synthesis(X_right, X_hybrid_right, fbt);
 	}
 
 }

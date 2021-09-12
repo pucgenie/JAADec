@@ -4,9 +4,6 @@ class Filterbank implements PSTables {
 
 	private final int frame_len;
 
-	private static final Filter[] filter20 = {Filter8.f20, Filter2.f, Filter2.f};
-	private static final Filter[] filter34 = {Filter12.f, Filter8.f34, Filter4.f, Filter4.f, Filter4.f};
-
 	private final float[][] work;
 	private final float[][][] buffer;
 	private final float[][][] temp;
@@ -18,11 +15,9 @@ class Filterbank implements PSTables {
 		temp = new float[frame_len][12][2];
 	}
 
-	void hybrid_analysis(float[][][] X, float[][][] X_hybrid, boolean use34, int numTimeSlotsRate) {
-		int qmf_bands = (use34) ? 5 : 3;
-		Filter[] filter = (use34) ? filter34 : filter20;
+	void hybrid_analysis(float[][][] X, float[][][] X_hybrid, FBType fbt) {
 
-		for(int band = 0, offset = 0; band<qmf_bands; band++) {
+		for(int band = 0, offset = 0; band<fbt.decay_cutoff; band++) {
 			/* build working buffer */
 			//memcpy(this.work, this.buffer[band], 12*sizeof(qmf_t));
 			for(int i = 0; i<12; i++) {
@@ -43,7 +38,7 @@ class Filterbank implements PSTables {
 				buffer[band][i][1] = work[frame_len+i][1];
 			}
 
-			Filter f = filter[band];
+			Filter f = fbt.filters[band];
 
 			int resolution = f.filter(frame_len, work, temp);
 
@@ -57,8 +52,8 @@ class Filterbank implements PSTables {
 		}
 
 		/* group hybrid channels */
-		if(!use34) {
-			for(int n = 0; n<numTimeSlotsRate; n++) {
+		if(fbt!=FBType.T34) {
+			for(int n = 0; n<frame_len; n++) {
 				X_hybrid[n][3][0] += X_hybrid[n][4][0];
 				X_hybrid[n][3][1] += X_hybrid[n][4][1];
 				X_hybrid[n][4][0] = 0;
@@ -72,13 +67,10 @@ class Filterbank implements PSTables {
 		}
 	}
 
-	void hybrid_synthesis(float[][][] X, float[][][] X_hybrid,
-		boolean use34, int numTimeSlotsRate) {
-		int qmf_bands = (use34) ? 5 : 3;
-		Filter[] filter = (use34) ? filter34 : filter20;
+	void hybrid_synthesis(float[][][] X, float[][][] X_hybrid, FBType fbt) {
 
-		for(int band = 0, offset = 0; band<qmf_bands; band++) {
-			int resolution = filter[band].resolution();
+		for(int band = 0, offset = 0; band<fbt.decay_cutoff; band++) {
+			int resolution = fbt.filters[band].resolution();
 
 			for(int n = 0; n<this.frame_len; n++) {
 				X[n][band][0] = 0;
