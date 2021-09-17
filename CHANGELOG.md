@@ -227,3 +227,9 @@ Introduced FilterBankType FBType with two immutable sets of constants and tables
 to process 20/34 hybrid banks. This makes most if/else use34hybrid_bands obsolete.
 
 Many loops from PS.ps_mix_phase() and PS.ps_decorrelate() might go to FBType.
+
+**2021-09-17**
+
+Refactoring arrays of PS.ps_decorrelate().
+Repeated multi index access like x[n][sbr][0] can be shortened.
+This also avoids most temporary float[2] arrays.
