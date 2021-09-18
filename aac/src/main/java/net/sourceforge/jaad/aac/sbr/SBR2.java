@@ -25,10 +25,10 @@ public class SBR2 extends SBR {
         super(config);
 
         ch0 = new Channel(this);
-        qmfs0 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+        qmfs0 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
 
         ch1 = new Channel(this);
-        qmfs1 = new SynthesisFilterbank((downSampledSBR) ? 32 : 64);
+        qmfs1 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
     }
 
     /* table 6 */
@@ -139,7 +139,7 @@ public class SBR2 extends SBR {
 
 		ch0.process_channel(left_chan, X, this.reset);
 		/* subband synthesis */
-		if(downSampledSBR) {
+		if(config.isSBRDownSampled()) {
 			qmfs0.sbr_qmf_synthesis_32(this, X, left_chan);
 		}
 		else {
@@ -148,7 +148,7 @@ public class SBR2 extends SBR {
 
 		ch1.process_channel(right_chan, X, false);
 		/* subband synthesis */
-		if(downSampledSBR) {
+		if(config.isSBRDownSampled()) {
 			qmfs1.sbr_qmf_synthesis_32(this, X, right_chan);
 		}
 		else {

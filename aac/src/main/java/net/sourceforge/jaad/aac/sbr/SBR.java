@@ -26,7 +26,6 @@ abstract public class SBR {
 
 	protected final DecoderConfig config;
 
-	protected final boolean downSampledSBR;
 	final SampleFrequency sample_rate;
 
 	boolean valid = false;
@@ -88,10 +87,11 @@ abstract public class SBR {
 
 	public SBR(DecoderConfig config) {
 		this.config = config;
+		config.setSBRPresent();
 
-		this.downSampledSBR = config.isSBRDownSampled();
 		this.sample_rate = config.getOutputFrequency().getNominal();
 
+		// todo: what is this?
 		this.bs_samplerate_mode = 1;
 		this.rate = (this.bs_samplerate_mode!=0) ? 2 : 1;
 
