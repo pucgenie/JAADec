@@ -172,3 +172,10 @@ Cleanup SyntacticElements.
 Moved several methods (processSingle/Pair/Coupling) into SCE and CPE.
 Introduced a Receiver interface to send a list of float[] channels to.
 Encoding of float[] into byte[] (sendToOutput) is implemented by Buffer itself now.
+
+**2021-09-20**
+
+Presence of PS tool is not known before it occurs the first time.
+Thus config.getChannelCount() returns 2 for ChannelConfiguration.MONO.
+If however, no Parametric-Stereo occurs the generated single channel
+must be duplicated to emulate the promised stereo output.

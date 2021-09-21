@@ -179,6 +179,10 @@ public class SyntacticElements implements Constants {
 			channels.addAll(e.process(filterBank, cces));
 		}
 
+		// upgrade to stereo
+		if(channels.size()==1 && config.getChannelCount()>1)
+			channels.add(channels.get(0));
+
 		return channels;
 	}
 }
