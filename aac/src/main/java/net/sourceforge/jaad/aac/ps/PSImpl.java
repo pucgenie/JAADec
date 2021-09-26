@@ -1,43 +1,29 @@
 package net.sourceforge.jaad.aac.ps;
 
+import net.sourceforge.jaad.aac.sbr.PS;
 import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
 import java.util.Arrays;
-import java.util.logging.Logger;
 
-public class PS implements PSConstants, PSTables, HuffmanTables {
+import static net.sourceforge.jaad.aac.ps.PSConstants.MAX_PS_ENVELOPES;
+import static net.sourceforge.jaad.aac.ps.PSConstants.NO_ALLPASS_LINKS;
+import static net.sourceforge.jaad.aac.ps.PSTables.*;
 
-	static final Logger LOGGER = Logger.getLogger("jaad.aac.Ps");
+public class PSImpl implements PS {
 
 	final SBR sbr;
 
+	final IIDData iid = new IIDData();
+	final ICCData icc = new ICCData();
+	Extension ext = new Extension(iid);
+
+	FBType fbt = FBType.T20;
+
 	/* bitstream parameters */
-	boolean enable_iid, enable_icc, enable_ext;
-	int iid_mode;
-	int icc_mode;
-	int nr_iid_par;
-	int nr_ipdopd_par;
-	int nr_icc_par;
 	int frame_class;
 	int num_env;
 	int[] border_position = new int[MAX_PS_ENVELOPES+1];
-	boolean[] iid_dt = new boolean[MAX_PS_ENVELOPES];
-	boolean[] icc_dt = new boolean[MAX_PS_ENVELOPES];
-	boolean enable_ipdopd;
-	int ipd_mode;
-	boolean[] ipd_dt = new boolean[MAX_PS_ENVELOPES];
-	boolean[] opd_dt = new boolean[MAX_PS_ENVELOPES];
-
-	/* indices */
-	int[] iid_index_prev = new int[34];
-	int[] icc_index_prev = new int[34];
-	int[] ipd_index_prev = new int[17];
-	int[] opd_index_prev = new int[17];
-	int[][] iid_index = new int[MAX_PS_ENVELOPES][34];
-	int[][] icc_index = new int[MAX_PS_ENVELOPES][34];
-	int[][] ipd_index = new int[MAX_PS_ENVELOPES][17];
-	int[][] opd_index = new int[MAX_PS_ENVELOPES][17];
 
 	/* ps data was correctly read */
 	boolean ps_data_available;
@@ -46,7 +32,6 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 
 	/* hybrid filterbank parameters */
 	Filterbank hyb;
-	FBType fbt = FBType.T20;
 
 	static final int NR_ALLPASS_BANDS = 22;
 
@@ -79,7 +64,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	float[][][] ipd_prev = new float[20][2][2];
 	float[][][] opd_prev = new float[20][2][2];
 
-	public PS(SBR sbr) {
+	public PSImpl(SBR sbr) {
 		this.sbr = sbr;
 
 		hyb = new Filterbank(sbr.numTimeSlotsRate);
@@ -125,48 +110,25 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 		}
 	}
 
+	@Override
 	public boolean isDataAvailable() {
 		return ps_data_available;
 	}
 
+	@Override
 	public void decode(BitStream ld) {
 
 		/* check for new PS header */
 		if(ld.readBool()) {
 			header_read = true;
 
-			fbt = FBType.T20;
+			iid.readMode(ld);
+			icc.readMode(ld);
+			ext.readMode(ld);
 
-			/* Inter-channel Intensity Difference (IID) parameters enabled */
-			enable_iid = ld.readBool();
-
-			if(enable_iid) {
-				iid_mode = ld.readBits(3);
-
-				nr_iid_par = nr_iid_par_tab[iid_mode];
-				nr_ipdopd_par = nr_ipdopd_par_tab[iid_mode];
-
-				if(iid_mode==2||iid_mode==5)
-					fbt = FBType.T34;
-
-				/* IPD freq res equal to IID freq res */
-				ipd_mode = iid_mode;
-			}
-
-			/* Inter-channel Coherence (ICC) parameters enabled */
-			enable_icc = ld.readBool();
-
-			if(enable_icc) {
-				icc_mode = ld.readBits(3);
-
-				nr_icc_par = nr_icc_par_tab[icc_mode];
-
-				if(icc_mode==2||icc_mode==5)
-					fbt = FBType.T34;
-			}
-
-			/* PS extension layer enabled */
-			enable_ext = ld.readBool();
+			fbt = FBType.T20
+					.max(iid.fbType())
+					.max(icc.fbType());
 		}
 
 		frame_class = ld.readBit();
@@ -180,169 +142,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			}
 		}
 
-		if(enable_iid) {
-			for(int n = 0; n<num_env; n++) {
-				iid_dt[n] = ld.readBool();
-
-				/* iid_data */
-				if(iid_mode<3) {
-					huff_data(ld, iid_dt[n], nr_iid_par, t_huff_iid_def,
-						f_huff_iid_def, iid_index[n]);
-				}
-				else {
-					huff_data(ld, iid_dt[n], nr_iid_par, t_huff_iid_fine,
-						f_huff_iid_fine, iid_index[n]);
-				}
-			}
-		}
-
-		if(enable_icc) {
-			for(int n = 0; n<num_env; n++) {
-				icc_dt[n] = ld.readBool();
-
-				/* icc_data */
-				huff_data(ld, icc_dt[n], nr_icc_par, t_huff_icc,
-					f_huff_icc, icc_index[n]);
-			}
-		}
-
-		if(enable_ext) {
-			int cnt = ld.readBits(4);
-			if(cnt==15) {
-				cnt += ld.readBits(8);
-			}
-
-			// open a new sub stream
-			ld = ld.readSubStream(8*cnt);
-
-			while(ld.getBitsLeft()>7) {
-				ps_extension(ld);
-			}
-		}
+		iid.readData(ld, num_env);
+		icc.readData(ld, num_env);
+		ext.readData(ld, num_env);
 
 		ps_data_available = true;
-	}
-
-	private void ps_extension(BitStream ld) {
-		int ps_extension_id = ld.readBits(2);
-
-		if(ps_extension_id==0) {
-			enable_ipdopd = ld.readBool();
-
-			if(enable_ipdopd) {
-				for(int n = 0; n<num_env; n++) {
-					ipd_dt[n] = ld.readBool();
-
-					/* ipd_data */
-					huff_data(ld, ipd_dt[n], nr_ipdopd_par, t_huff_ipd,
-						f_huff_ipd, ipd_index[n]);
-
-					opd_dt[n] = ld.readBool();
-
-					/* opd_data */
-					huff_data(ld, opd_dt[n], nr_ipdopd_par, t_huff_opd,
-						f_huff_opd, opd_index[n]);
-				}
-			}
-			ld.readBit(); //reserved
-		}
-	}
-
-	/* read huffman data coded in either the frequency or the time direction */
-	private static void huff_data(BitStream ld, boolean dt, int nr_par,
-		int[][] t_huff, int[][] f_huff, int[] par) {
-
-		if(dt) {
-			/* coded in time direction */
-			for(int n = 0; n<nr_par; n++) {
-				par[n] = ps_huff_dec(ld, t_huff);
-			}
-		}
-		else {
-			/* coded in frequency direction */
-			par[0] = ps_huff_dec(ld, f_huff);
-
-			for(int n = 1; n<nr_par; n++) {
-				par[n] = ps_huff_dec(ld, f_huff);
-			}
-		}
-	}
-
-	/* binary search huffman decoding */
-	private static int ps_huff_dec(BitStream ld, int[][] t_huff) {
-		int index = 0;
-
-		while(index>=0) {
-			int bit = ld.readBit();
-			index = t_huff[index][bit];
-		}
-
-		return index+31;
-	}
-
-	/* limits the value i to the range [min,max] */
-	private static int delta_clip(int i, int min, int max) {
-		if(i<min)
-			return min;
-		else
-			if(i>max)
-				return max;
-		else
-			return i;
-	}
-
-
-	/* delta decode array */
-	private static void delta_decode(boolean enable, int[] index, int[] index_prev,
-		boolean dt_flag, int nr_par, int stride,
-		int min_index, int max_index) {
-
-		if(enable) {
-			if(!dt_flag) {
-				/* delta coded in frequency direction */
-				index[0] = 0+index[0];
-				index[0] = delta_clip(index[0], min_index, max_index);
-
-				for(int i = 1; i<nr_par; i++) {
-					index[i] = index[i-1]+index[i];
-					index[i] = delta_clip(index[i], min_index, max_index);
-				}
-			}
-			else {
-				/* delta coded in time direction */
-				for(int i = 0; i<nr_par; i++) {
-                //int8_t tmp2;
-					//int8_t tmp = index[i];
-
-					//printf("%d %d\n", index_prev[i*stride], index[i]);
-					//printf("%d\n", index[i]);
-					index[i] = index_prev[i*stride]+index[i];
-					//tmp2 = index[i];
-					index[i] = delta_clip(index[i], min_index, max_index);
-
-					//if (iid)
-					//{
-					//    if (index[i] == 7)
-					//    {
-					//        printf("%d %d %d\n", index_prev[i*stride], tmp, tmp2);
-					//    }
-					//}
-				}
-			}
-		}
-		else {
-			/* set indices to zero */
-			for(int i = 0; i<nr_par; i++) {
-				index[i] = 0;
-			}
-		}
-
-		/* coarse */
-		if(stride==2) {
-			for(int i = (nr_par<<1)-1; i>0; i--) {
-				index[i] = index[i>>1];
-			}
-		}
 	}
 
 	/* delta modulo decode array */
@@ -434,89 +238,21 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			num_env = 0;
 		}
 
-		for(int env = 0; env<num_env; env++) {
-
-			int num_iid_steps = (iid_mode<3) ? 7 : 15 /*fine quant*/;
-
-//        iid = 1;
-        /* delta decode iid parameters */
-			delta_decode(enable_iid, iid_index[env],
-					env==0 ? iid_index_prev : iid_index[env-1],
-					iid_dt[env], nr_iid_par,
-					(iid_mode==0||iid_mode==3) ? 2 : 1,
-					-num_iid_steps, num_iid_steps);
-//        iid = 0;
-
-			/* delta decode icc parameters */
-			delta_decode(enable_icc, icc_index[env],
-					env==0 ? icc_index_prev : icc_index[env-1],
-					icc_dt[env], nr_icc_par,
-					(icc_mode==0||icc_mode==3) ? 2 : 1,
-					0, 7);
-
-			/* delta modulo decode ipd parameters */
-			delta_modulo_decode(enable_ipdopd, ipd_index[env],
-					env==0 ? ipd_index_prev : ipd_index[env-1],
-					ipd_dt[env], nr_ipdopd_par, 1, 7);
-
-			/* delta modulo decode opd parameters */
-			delta_modulo_decode(enable_ipdopd, opd_index[env],
-					env==0 ? opd_index_prev : opd_index[env-1],
-					opd_dt[env], nr_ipdopd_par, 1, 7);
-		}
+		iid.decode(num_env);
+		icc.decode(num_env);
+		ext.decode(num_env);
 
 		/* handle error case */
 		if(num_env==0) {
 			/* force to 1 */
 			num_env = 1;
-
-			if(enable_iid) {
-				for(int bin = 0; bin<34; bin++) {
-					iid_index[0][bin] = iid_index_prev[bin];
-				}
-			}
-			else {
-				for(int bin = 0; bin<34; bin++) {
-					iid_index[0][bin] = 0;
-				}
-			}
-
-			if(enable_icc) {
-				for(int bin = 0; bin<34; bin++) {
-					icc_index[0][bin] = icc_index_prev[bin];
-				}
-			}
-			else {
-				for(int bin = 0; bin<34; bin++) {
-					icc_index[0][bin] = 0;
-				}
-			}
-
-			if(enable_ipdopd) {
-				for(int bin = 0; bin<17; bin++) {
-					ipd_index[0][bin] = ipd_index_prev[bin];
-					opd_index[0][bin] = opd_index_prev[bin];
-				}
-			}
-			else {
-				for(int bin = 0; bin<17; bin++) {
-					ipd_index[0][bin] = 0;
-					opd_index[0][bin] = 0;
-				}
-			}
 		}
 
 		/* update previous indices */
-		for(int bin = 0; bin<34; bin++) {
-			iid_index_prev[bin] = iid_index[num_env-1][bin];
-		}
-		for(int bin = 0; bin<34; bin++) {
-			icc_index_prev[bin] = icc_index[num_env-1][bin];
-		}
-		for(int bin = 0; bin<17; bin++) {
-			ipd_index_prev[bin] = ipd_index[num_env-1][bin];
-			opd_index_prev[bin] = opd_index[num_env-1][bin];
-		}
+
+		iid.update(num_env);
+		icc.update(num_env);
+		ext.update(num_env);
 
 		ps_data_available = false;
 
@@ -531,15 +267,11 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			border_position[0] = 0;
 
 			if(border_position[num_env]<sbr.numTimeSlotsRate) {
-				for(int bin = 0; bin<34; bin++) {
-					iid_index[num_env][bin] = iid_index[num_env-1][bin];
-					icc_index[num_env][bin] = icc_index[num_env-1][bin];
-				}
-				for(int bin = 0; bin<17; bin++) {
-					ipd_index[num_env][bin] = ipd_index[num_env-1][bin];
-					opd_index[num_env][bin] = opd_index[num_env-1][bin];
-				}
-				num_env++;
+				iid.restore(num_env);
+				icc.restore(num_env);
+				ext.restore(num_env);
+
+				++num_env;
 				border_position[num_env] = sbr.numTimeSlotsRate;
 			}
 
@@ -806,12 +538,12 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 			sf_iid = sf_iid_normal;
 		}
 
-		int nr_ipdopd_par; // local version
 		if(ipd_mode==0||ipd_mode==3) {
 			nr_ipdopd_par = 11; /* resolution */
+
 		}
 		else {
-			nr_ipdopd_par = this.nr_ipdopd_par;
+			nr_ipdopd_par = nr_ipdopd_par;
 		}
 
 		for(int gr = 0; gr<fbt.num_groups; gr++) {
@@ -1106,6 +838,7 @@ public class PS implements PSConstants, PSTables, HuffmanTables {
 	}
 
 	/* main Parametric Stereo decoding function */
+	@Override
 	public void process(float[][][] X_left, float[][][] X_right) {
 		float[][][] X_hybrid_left = new float[32][32][2];
 		float[][][] X_hybrid_right = new float[32][32][2];

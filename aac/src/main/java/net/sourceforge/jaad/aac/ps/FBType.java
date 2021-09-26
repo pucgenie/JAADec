@@ -1,5 +1,7 @@
 package net.sourceforge.jaad.aac.ps;
 
+import java.util.Comparator;
+
 /**
  * Created by IntelliJ IDEA.
  * User: stueken
@@ -7,6 +9,15 @@ package net.sourceforge.jaad.aac.ps;
  * Time: 13:34
  */
 public class FBType {
+
+    public static final Comparator<FBType> CMP = Comparator.nullsFirst(Comparator.comparingInt(t->t.nr_par_bands));
+
+    public static FBType max(FBType a, FBType b) {
+        return CMP.compare(a,b)<0 ? a : b;
+    }
+    public FBType max(FBType other) {
+        return max(this, other);
+    }
 
     public static final FBType T34 = new FBType(PSTables.group_border34, PSTables.map_group2bk34,
             32+18, 32, 34, 5,

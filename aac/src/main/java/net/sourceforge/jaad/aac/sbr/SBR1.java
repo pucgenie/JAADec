@@ -1,7 +1,6 @@
 package net.sourceforge.jaad.aac.sbr;
 
 import net.sourceforge.jaad.aac.DecoderConfig;
-import net.sourceforge.jaad.aac.ps.PS;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
 import java.util.Arrays;
@@ -68,7 +67,7 @@ public class SBR1 extends SBR {
 	protected void sbr_extension(BitStream ld, int bs_extension_id) {
    		if(bs_extension_id==EXTENSION_ID_PS  && config.isPSEnabled()) {
 			if(ps==null) {
-				this.ps = new PS(this);
+				this.ps = config.openPS(this);
 				this.qmfs1 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
 				config.setPsPresent();
 			}

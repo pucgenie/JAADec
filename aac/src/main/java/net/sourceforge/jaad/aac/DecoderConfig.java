@@ -1,6 +1,9 @@
 package net.sourceforge.jaad.aac;
 
 import net.sourceforge.jaad.aac.filterbank.FilterBank;
+import net.sourceforge.jaad.aac.ps.PSOrig;
+import net.sourceforge.jaad.aac.sbr.PS;
+import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 import net.sourceforge.jaad.aac.syntax.PCE;
 
@@ -32,6 +35,10 @@ public class DecoderConfig {
 
 	private boolean psEnabled = true;
 	private boolean psPresent = false;
+
+	public PS openPS(SBR sbr) {
+		return new PSOrig(sbr);
+	}
 
 	//extension: error resilience
 	private boolean sectionDataResilience=false, scalefactorResilience=false, spectralDataResilience=false;
