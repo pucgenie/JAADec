@@ -73,24 +73,36 @@ class Envelope {
         }
     }
 
+    /**
+     * Map indexes.
+     * Multiple indices are placed on higher bytes.
+     * Index 0 can only be used at first place.
+     *
+     * Table 8.45 of Subpart 8
+     */
     private static final int[] MAP20TO34 = {
             0,0|1<<8,1,2,2|3<<8,3,4,4,5,5,6,7,8,8,9,9,10,
             11,12,13,14,14,15,15,16,16,17,17,18,18,18,19,19,19};
     
     void map20To34(int nr_par) {
 
+        // don't exceed array length
+        nr_par = Math.min(nr_par, index.length);
+
+        // l==0 does not matter
         for(int l=nr_par-1; l>0; --l) {
             int m = MAP20TO34[l];
-            int k = m&0xff;
-            m -= k;
-            int i = index[k];
+            int i = index[m&0xff];
+            m >>= 8;
 
-            if(m!=0) {
+            // find further indexes to add
+            int n=1;
+            while(m!=0) {
+                i += index[m&0xff];
                 m >>= 8;
-                k = m&0xff;
-                i += index[k];
-                i /= 2;
+                ++n;
             }
+            i /= n;
 
             index[l] = i;
         }
