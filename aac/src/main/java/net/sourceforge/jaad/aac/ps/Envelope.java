@@ -84,13 +84,10 @@ class Envelope {
             0,0|1<<8,1,2,2|3<<8,3,4,4,5,5,6,7,8,8,9,9,10,
             11,12,13,14,14,15,15,16,16,17,17,18,18,18,19,19,19};
     
-    void map20To34(int nr_par) {
-
-        // don't exceed array length
-        nr_par = Math.min(nr_par, index.length);
+    void map20To34() {
 
         // l==0 does not matter
-        for(int l=nr_par-1; l>0; --l) {
+        for(int l=index.length-1; l>0; --l) {
             int m = MAP20TO34[l];
             int i = index[m&0xff];
             m >>= 8;

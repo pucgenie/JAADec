@@ -17,6 +17,6 @@ public abstract class ICMode extends EnvMode {
         }
 
     int stride() {
-        return (id %3)==0 ? 2 : 0;
+        return (id%3)==0 ? 2 : 0;
     }
 }

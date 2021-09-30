@@ -72,4 +72,16 @@ public class Extension {
         if(enabled && data!=null)
             data.restore(num_env);
     }
+
+    public void mapTo34(int num_env) {
+        if(enabled && data!=null)
+            data.mapTo34(num_env);
+    }
+
+    int nr_par() {
+        if(enabled && data!=null)
+            return data.nr_par();
+        else
+            return 0;
+    }
 }

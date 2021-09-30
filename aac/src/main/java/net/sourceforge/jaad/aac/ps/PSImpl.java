@@ -1,7 +1,6 @@
 package net.sourceforge.jaad.aac.ps;
 
 import net.sourceforge.jaad.aac.sbr.PS;
-import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
 import java.util.Arrays;
@@ -11,8 +10,6 @@ import static net.sourceforge.jaad.aac.ps.PSConstants.NO_ALLPASS_LINKS;
 import static net.sourceforge.jaad.aac.ps.PSTables.*;
 
 public class PSImpl implements PS {
-
-	final SBR sbr;
 
 	final IIDData iid = new IIDData();
 	final ICCData icc = new ICCData();
@@ -31,7 +28,7 @@ public class PSImpl implements PS {
 	boolean header_read;
 
 	/* hybrid filterbank parameters */
-	Filterbank hyb;
+	final Filterbank fb;
 
 	static final int NR_ALLPASS_BANDS = 22;
 
@@ -61,13 +58,10 @@ public class PSImpl implements PS {
 	float[][] h21_prev = new float[50][2];
 	float[][] h22_prev = new float[50][2];
 	int phase_hist;
-	float[][][] ipd_prev = new float[20][2][2];
-	float[][][] opd_prev = new float[20][2][2];
 
-	public PSImpl(SBR sbr) {
-		this.sbr = sbr;
+	public PSImpl(int frameLen) {
 
-		hyb = new Filterbank(sbr.numTimeSlotsRate);
+		fb = new Filterbank(frameLen);
 
 		ps_data_available = false;
 
@@ -97,17 +91,6 @@ public class PSImpl implements PS {
 		}
 
 		phase_hist = 0;
-
-		for(int i = 0; i<20; i++) {
-			ipd_prev[i][0][0] = 0;
-			ipd_prev[i][0][1] = 0;
-			ipd_prev[i][1][0] = 0;
-			ipd_prev[i][1][1] = 0;
-			opd_prev[i][0][0] = 0;
-			opd_prev[i][0][1] = 0;
-			opd_prev[i][1][0] = 0;
-			opd_prev[i][1][1] = 0;
-		}
 	}
 
 	@Override
@@ -149,87 +132,6 @@ public class PSImpl implements PS {
 		ps_data_available = true;
 	}
 
-	/* delta modulo decode array */
-	/* in: log2 value of the modulo value to allow using AND instead of MOD */
-	private static void delta_modulo_decode(boolean enable, int[] index, int[] index_prev,
-		boolean dt_flag, int nr_par, int stride,
-		int and_modulo) {
-
-		if(enable) {
-			if(!dt_flag) {
-				/* delta coded in frequency direction */
-				index[0] = 0+index[0];
-				index[0] &= and_modulo;
-
-				for(int i = 1; i<nr_par; i++) {
-					index[i] = index[i-1]+index[i];
-					index[i] &= and_modulo;
-				}
-			}
-			else {
-				/* delta coded in time direction */
-				for(int i = 0; i<nr_par; i++) {
-					index[i] = index_prev[i*stride]+index[i];
-					index[i] &= and_modulo;
-				}
-			}
-		}
-		else {
-			/* set indices to zero */
-			for(int i = 0; i<nr_par; i++) {
-				index[i] = 0;
-			}
-		}
-
-		/* coarse */
-		if(stride==2) {
-			index[0] = 0;
-			for(int i = (nr_par<<1)-1; i>0; i--) {
-				index[i] = index[i>>1];
-			}
-		}
-	}
-
-	private static void map20indexto34(int[] index, int bins) {
-		//index[0] = index[0];
-		index[1] = (index[0]+index[1])/2;
-		index[2] = index[1];
-		index[3] = index[2];
-		index[4] = (index[2]+index[3])/2;
-		index[5] = index[3];
-		index[6] = index[4];
-		index[7] = index[4];
-		index[8] = index[5];
-		index[9] = index[5];
-		index[10] = index[6];
-		index[11] = index[7];
-		index[12] = index[8];
-		index[13] = index[8];
-		index[14] = index[9];
-		index[15] = index[9];
-		index[16] = index[10];
-
-		if(bins==34) {
-			index[17] = index[11];
-			index[18] = index[12];
-			index[19] = index[13];
-			index[20] = index[14];
-			index[21] = index[14];
-			index[22] = index[15];
-			index[23] = index[15];
-			index[24] = index[16];
-			index[25] = index[16];
-			index[26] = index[17];
-			index[27] = index[17];
-			index[28] = index[18];
-			index[29] = index[18];
-			index[30] = index[18];
-			index[31] = index[18];
-			index[32] = index[19];
-			index[33] = index[19];
-		}
-	}
-
 	/* parse the bitstream data decoded in ps_data() */
 	private void ps_data_decode() {
 
@@ -259,24 +161,24 @@ public class PSImpl implements PS {
 		if(frame_class==0) {
 			border_position[0] = 0;
 			for(int env = 1; env<num_env; env++) {
-				border_position[env] = (env*sbr.numTimeSlotsRate)/num_env;
+				border_position[env] = (env*fb.len)/num_env;
 			}
-			border_position[num_env] = sbr.numTimeSlotsRate;
+			border_position[num_env] = fb.len;
 		}
 		else {
 			border_position[0] = 0;
 
-			if(border_position[num_env]<sbr.numTimeSlotsRate) {
+			if(border_position[num_env]<fb.len) {
 				iid.restore(num_env);
 				icc.restore(num_env);
 				ext.restore(num_env);
 
 				++num_env;
-				border_position[num_env] = sbr.numTimeSlotsRate;
+				border_position[num_env] = fb.len;
 			}
 
 			for(int env = 1; env<num_env; env++) {
-				int thr = sbr.numTimeSlotsRate-(num_env-env);
+				int thr = fb.len-(num_env-env);
 
 				if(border_position[env]>thr) {
 					border_position[env] = thr;
@@ -294,16 +196,9 @@ public class PSImpl implements PS {
 		 * to the same hybrid synthesis filterbank
 		 */
 		if(fbt==FBType.T34) {
-			for(int env = 0; env<num_env; env++) {
-				if(iid_mode!=2&&iid_mode!=5)
-					map20indexto34(iid_index[env], 34);
-				if(icc_mode!=2&&icc_mode!=5)
-					map20indexto34(icc_index[env], 34);
-				if(ipd_mode!=2&&ipd_mode!=5) {
-					map20indexto34(ipd_index[env], 17);
-					map20indexto34(opd_index[env], 17);
-				}
-			}
+			iid.mapTo34(num_env);
+			icc.mapTo34(num_env);
+			ext.mapTo34(num_env);
 		}
 	}
 
@@ -323,7 +218,7 @@ public class PSImpl implements PS {
 		/* calculate the energy in each parameter band b(k) */
 		for(int gr = 0; gr<fbt.num_groups; gr++) {
 			/* select the parameter index b(k) to which this group belongs */
-			int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
+			int bk = fbt.bk(gr);
 
 			/* select the upper subband border for this group */
 			int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
@@ -479,7 +374,7 @@ public class PSImpl implements PS {
 					}
 
 					/* select b(k) for reading the transient ratio */
-					final int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
+					final int bk = fbt.bk(gr);
 
 					/* duck if a past transient is found */
 					Xr[n][sb][0]  = (G_TransientRatio[n][bk]*r0Re);
@@ -526,40 +421,25 @@ public class PSImpl implements PS {
 		float[] tempRight = new float[2];
 		float[] phaseLeft = new float[2];
 		float[] phaseRight = new float[2];
-		float[] sf_iid;
-		int no_iid_steps;
 
-		if(iid_mode>=3) {
-			no_iid_steps = 15;
-			sf_iid = sf_iid_fine;
-		}
-		else {
-			no_iid_steps = 7;
-			sf_iid = sf_iid_normal;
-		}
-
-		if(ipd_mode==0||ipd_mode==3) {
-			nr_ipdopd_par = 11; /* resolution */
-
-		}
-		else {
-			nr_ipdopd_par = nr_ipdopd_par;
-		}
+		IIDTables tables = iid.mode().tables();
 
 		for(int gr = 0; gr<fbt.num_groups; gr++) {
-			final int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
+			final int bk = fbt.bk(gr);
 
 			/* use one channel per group in the subqmf domain */
 			final int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
 
 			for(int env = 0; env<num_env; env++) {
-				if(icc_mode<3) {
+
+				int iid_index = iid.envs[env].index[bk];
+				int iid_sign = iid_index<0 ? -1 : 1;
+				iid_index = Math.abs(iid_index);
+
+				int icc_index = icc.envs[env].index[bk];
+
+				if(icc.mode().id<3) {
 					/* type 'A' mixing as described in 8.6.4.6.2.1 */
-					float c_1, c_2;
-					float cosa, sina;
-					float cosb, sinb;
-					float ab1, ab2;
-					float ab3, ab4;
 
 					/*
 					 c_1 = sqrt(2.0 / (1.0 + pow(10.0, quant_iid[no_iid_steps + iid_index] / 10.0)));
@@ -570,38 +450,22 @@ public class PSImpl implements PS {
 					//printf("%d\n", ps.iid_index[env][bk]);
 
 					/* calculate the scalefactors c_1 and c_2 from the intensity differences */
-					c_1 = sf_iid[no_iid_steps+iid_index[env][bk]];
-					c_2 = sf_iid[no_iid_steps-iid_index[env][bk]];
+					float[] sf_iid = tables.sf;
+					int num_steps = tables.num_steps;
+					float c_1 = sf_iid[num_steps+iid_index];
+					float c_2 = sf_iid[num_steps-iid_index];
 
 					/* calculate alpha and beta using the ICC parameters */
-					cosa = cos_alphas[icc_index[env][bk]];
-					sina = sin_alphas[icc_index[env][bk]];
+					float cosa = cos_alphas[icc_index];
+					float sina = sin_alphas[icc_index];
 
-					if(iid_mode>=3) {
-						if(iid_index[env][bk]<0) {
-							cosb = cos_betas_fine[-iid_index[env][bk]][icc_index[env][bk]];
-							sinb = -sin_betas_fine[-iid_index[env][bk]][icc_index[env][bk]];
-						}
-						else {
-							cosb = cos_betas_fine[iid_index[env][bk]][icc_index[env][bk]];
-							sinb = sin_betas_fine[iid_index[env][bk]][icc_index[env][bk]];
-						}
-					}
-					else {
-						if(iid_index[env][bk]<0) {
-							cosb = cos_betas_normal[-iid_index[env][bk]][icc_index[env][bk]];
-							sinb = -sin_betas_normal[-iid_index[env][bk]][icc_index[env][bk]];
-						}
-						else {
-							cosb = cos_betas_normal[iid_index[env][bk]][icc_index[env][bk]];
-							sinb = sin_betas_normal[iid_index[env][bk]][icc_index[env][bk]];
-						}
-					}
+					float cosb = tables.cos_betas[iid_index][icc_index];
+					float sinb = tables.sin_betas[iid_index][icc_index] * iid_sign;
 
-					ab1 = (cosb*cosa);
-					ab2 = (sinb*sina);
-					ab3 = (sinb*cosa);
-					ab4 = (cosb*sina);
+					float ab1 = (cosb*cosa);
+					float ab2 = (sinb*sina);
+					float ab3 = (sinb*cosa);
+					float ab4 = (cosb*sina);
 
 					/* h_xy: COEF */
 					h11[0] = (c_2*(ab1-ab2));
@@ -611,25 +475,13 @@ public class PSImpl implements PS {
 				}
 				else {
 					/* type 'B' mixing as described in 8.6.4.6.2.2 */
-					float sina, cosa;
-					float cosg, sing;
 
-					if(iid_mode>=3) {
-						int abs_iid = Math.abs(iid_index[env][bk]);
-
-						cosa = sincos_alphas_B_fine[no_iid_steps+iid_index[env][bk]][icc_index[env][bk]];
-						sina = sincos_alphas_B_fine[30-(no_iid_steps+iid_index[env][bk])][icc_index[env][bk]];
-						cosg = cos_gammas_fine[abs_iid][icc_index[env][bk]];
-						sing = sin_gammas_fine[abs_iid][icc_index[env][bk]];
-					}
-					else {
-						int abs_iid = Math.abs(iid_index[env][bk]);
-
-						cosa = sincos_alphas_B_normal[no_iid_steps+iid_index[env][bk]][icc_index[env][bk]];
-						sina = sincos_alphas_B_normal[14-(no_iid_steps+iid_index[env][bk])][icc_index[env][bk]];
-						cosg = cos_gammas_normal[abs_iid][icc_index[env][bk]];
-						sing = sin_gammas_normal[abs_iid][icc_index[env][bk]];
-					}
+					int num_steps = tables.num_steps;
+					
+					float cosa = tables.sincos_alphas_b[num_steps+iid_index][icc_index];
+					float sina = tables.sincos_alphas_b[2*num_steps-(num_steps+iid_index)][icc_index];
+					float cosg = tables.cos_gammas[iid_index][icc_index];
+					float sing = tables.sin_gammas[iid_index][icc_index];
 
 					h11[0] = (COEF_SQRT2*(cosa*cosg));
 					h12[0] = (COEF_SQRT2*(sina*cosg));
@@ -641,40 +493,45 @@ public class PSImpl implements PS {
 				/* note that the imaginary part of these parameters are only calculated when
 				 IPD and OPD are enabled
 				 */
-				if((enable_ipdopd)&&(bk<nr_ipdopd_par)) {
+				int nr_ipdopd_par = ext.nr_par();
 
-					/* ringbuffer index */
-					int i = phase_hist;
+				if(bk<nr_ipdopd_par) {
+
+					var ipd_prev =  ext.data.ipd.prev[bk][phase_hist];
+					var opd_prev =  ext.data.opd.prev[bk][phase_hist];
 
 					/* previous value */
-					tempLeft[0] = (ipd_prev[bk][i][0]*0.25f);
-					tempLeft[1] = (ipd_prev[bk][i][1]*0.25f);
-					tempRight[0] = (opd_prev[bk][i][0]*0.25f);
-					tempRight[1] = (opd_prev[bk][i][1]*0.25f);
+					tempLeft[0] = (ipd_prev[0]*0.25f);
+					tempLeft[1] = (ipd_prev[1]*0.25f);
+					tempRight[0] = (opd_prev[0]*0.25f);
+					tempRight[1] = (opd_prev[1]*0.25f);
 
 					/* save current value */
-					ipd_prev[bk][i][0] = ipdopd_cos_tab[Math.abs(ipd_index[env][bk])];
-					ipd_prev[bk][i][1] = ipdopd_sin_tab[Math.abs(ipd_index[env][bk])];
-					opd_prev[bk][i][0] = ipdopd_cos_tab[Math.abs(opd_index[env][bk])];
-					opd_prev[bk][i][1] = ipdopd_sin_tab[Math.abs(opd_index[env][bk])];
+					int ipd_index = Math.abs(ext.data.ipd.envs[env].index[bk]);
+					int opd_index = Math.abs(ext.data.ipd.envs[env].index[bk]);
+
+					ipd_prev[0] = ipdopd_cos_tab[ipd_index];
+					ipd_prev[1] = ipdopd_sin_tab[ipd_index];
+					opd_prev[0] = ipdopd_cos_tab[opd_index];
+					opd_prev[1] = ipdopd_sin_tab[opd_index];
 
 					/* add current value */
-					tempLeft[0] += ipd_prev[bk][i][0];
-					tempLeft[1] += ipd_prev[bk][i][1];
-					tempRight[0] += opd_prev[bk][i][0];
-					tempRight[1] += opd_prev[bk][i][1];
+					tempLeft[0] += ipd_prev[0];
+					tempLeft[1] += ipd_prev[1];
+					tempRight[0] += opd_prev[0];
+					tempRight[1] += opd_prev[1];
 
-					/* ringbuffer index */
-					if(i==0) {
-						i = 2;
-					}
-					i--;
+					++phase_hist;
+					phase_hist %= 2;
+
+					ipd_prev =  ext.data.opd.prev[bk][phase_hist];
+					opd_prev =  ext.data.opd.prev[bk][phase_hist];
 
 					/* get value before previous */
-					tempLeft[0] += (ipd_prev[bk][i][0]*0.5f);
-					tempLeft[1] += (ipd_prev[bk][i][1]*0.5f);
-					tempRight[0] += (opd_prev[bk][i][0]*0.5f);
-					tempRight[1] += (opd_prev[bk][i][1]*0.5f);
+					tempLeft[0] += (ipd_prev[0]*0.5f);
+					tempLeft[1] += (ipd_prev[1]*0.5f);
+					tempRight[0] += (opd_prev[0]*0.5f);
+					tempRight[1] += (opd_prev[1]*0.5f);
 
 					float xy = magnitude_c(tempRight);
 					float pq = magnitude_c(tempLeft);
@@ -735,7 +592,7 @@ public class PSImpl implements PS {
 				h22_prev[gr][0] = h22[0];
 
 				/* only calculate imaginary part when needed */
-				if((enable_ipdopd)&&(bk<nr_ipdopd_par)) {
+				if(bk<nr_ipdopd_par) {
 					/* obtain final H_xy by means of linear interpolation */
 					deltaH11[1] = (h11[1]-h11_prev[gr][1])/L;
 					deltaH12[1] = (h12[1]-h12_prev[gr][1])/L;
@@ -747,7 +604,7 @@ public class PSImpl implements PS {
 					H21[1] = h21_prev[gr][1];
 					H22[1] = h22_prev[gr][1];
 
-					if((NEGATE_IPD_MASK&fbt.map_group2bk[gr])!=0) {
+					if(fbt.bkm(gr)) {
 						deltaH11[1] = -deltaH11[1];
 						deltaH12[1] = -deltaH12[1];
 						deltaH21[1] = -deltaH21[1];
@@ -772,7 +629,7 @@ public class PSImpl implements PS {
 					H12[0] += deltaH12[0];
 					H21[0] += deltaH21[0];
 					H22[0] += deltaH22[0];
-					if((enable_ipdopd)&&(bk<nr_ipdopd_par)) {
+					if(bk<nr_ipdopd_par) {
 						H11[1] += deltaH11[1];
 						H12[1] += deltaH12[1];
 						H21[1] += deltaH21[1];
@@ -804,7 +661,7 @@ public class PSImpl implements PS {
 						tempRight[1] = (H12[0]*inLeft[1])+(H22[0]*inRight[1]);
 
 						/* only perform imaginary operations when needed */
-						if((enable_ipdopd)&&(bk<nr_ipdopd_par)) {
+						if(bk<nr_ipdopd_par) {
 							/* apply rotation */
 							tempLeft[0] -= (H11[1]*inLeft[1])+(H21[1]*inRight[1]);
 							tempLeft[1] += (H11[1]*inLeft[0])+(H21[1]*inRight[0]);
@@ -827,12 +684,6 @@ public class PSImpl implements PS {
 						}
 					}
 				}
-
-				/* shift phase smoother's circular buffer index */
-				phase_hist++;
-				if(phase_hist==2) {
-					phase_hist = 0;
-				}
 			}
 		}
 	}
@@ -849,7 +700,7 @@ public class PSImpl implements PS {
 		/* Perform further analysis on the lowest subbands to get a higher
 		 * frequency resolution
 		 */
-		hyb.hybrid_analysis(X_left, X_hybrid_left, fbt);
+		fb.hybrid_analysis(X_left, X_hybrid_left, fbt);
 
 		/* decorrelate mono signal */
 		ps_decorrelate(X_left, X_right, X_hybrid_left, X_hybrid_right);
@@ -858,9 +709,9 @@ public class PSImpl implements PS {
 		ps_mix_phase(X_left, X_right, X_hybrid_left, X_hybrid_right);
 
 		/* hybrid synthesis, to rebuild the SBR QMF matrices */
-		hyb.hybrid_synthesis(X_left, X_hybrid_left, fbt);
+		fb.hybrid_synthesis(X_left, X_hybrid_left, fbt);
 
-		hyb.hybrid_synthesis(X_right, X_hybrid_right, fbt);
+		fb.hybrid_synthesis(X_right, X_hybrid_right, fbt);
 	}
 
 }

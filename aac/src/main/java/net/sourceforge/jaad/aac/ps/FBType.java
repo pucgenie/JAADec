@@ -2,6 +2,8 @@ package net.sourceforge.jaad.aac.ps;
 
 import java.util.Comparator;
 
+import static net.sourceforge.jaad.aac.ps.PSConstants.NEGATE_IPD_MASK;
+
 /**
  * Created by IntelliJ IDEA.
  * User: stueken
@@ -10,7 +12,7 @@ import java.util.Comparator;
  */
 public class FBType {
 
-    public static final Comparator<FBType> CMP = Comparator.nullsFirst(Comparator.comparingInt(t->t.nr_par_bands));
+    public static final Comparator<FBType> CMP = Comparator.nullsLast(Comparator.comparingInt(t->t.nr_par_bands));
 
     public static FBType max(FBType a, FBType b) {
         return CMP.compare(a,b)<0 ? a : b;
@@ -29,6 +31,7 @@ public class FBType {
             PSTables.Phi_Fract_SubQmf20, PSTables.Q_Fract_allpass_SubQmf20,
             new Filter[]{Filter8.f20, Filter2.f, Filter2.f});
 
+    final String name;
     final int num_groups;
    	final int num_hybrid_groups;
    	final int nr_par_bands;
@@ -45,6 +48,7 @@ public class FBType {
                   float[][] phiFract, float[][][] qFractAllpassSubQmf,
                   Filter[] filters) {
 
+        this.name = "FBType" + nr_par_bands;
         this.num_groups = num_groups;
         this.num_hybrid_groups = num_hybrid_groups;
         this.nr_par_bands = nr_par_bands;
@@ -54,5 +58,17 @@ public class FBType {
         this.phiFract = phiFract;
         this.qFractAllpassSubQmf = qFractAllpassSubQmf;
         this.filters = filters;
+    }
+
+    int bk(int gr) {
+        return map_group2bk[gr] & ~NEGATE_IPD_MASK;
+    }
+
+    boolean bkm(int gr) {
+        return (map_group2bk[gr] &~NEGATE_IPD_MASK)!=0;
+    }
+
+    public String toString() {
+        return name;
     }
 }

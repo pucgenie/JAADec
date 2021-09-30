@@ -12,13 +12,15 @@ import static net.sourceforge.jaad.aac.ps.PSTables.*;
 public class IIDMode extends ICMode {
 
     private static final IIDTables DEFAULT_TABLES = new IIDTables(
-            f_huff_iid_def, t_huff_iid_def, 7,
+            f_huff_iid_def, t_huff_iid_def,
+            7, sf_iid_normal,
             cos_betas_normal, sin_betas_normal,
             sin_gammas_normal, cos_gammas_normal,
             sincos_alphas_B_normal);
 
     private static final IIDTables FINE_TABLES = new IIDTables(
-            f_huff_iid_fine, t_huff_iid_fine, 15,
+            f_huff_iid_fine, t_huff_iid_fine,
+            15, sf_iid_fine,
             cos_betas_fine, sin_betas_fine,
             sin_gammas_fine, cos_gammas_fine,
             sincos_alphas_B_fine);

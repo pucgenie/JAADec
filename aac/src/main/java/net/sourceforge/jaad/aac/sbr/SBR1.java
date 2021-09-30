@@ -16,7 +16,6 @@ public class SBR1 extends SBR {
 	static final int EXTENSION_ID_PS = 2;
 
     final Channel ch0;
-   	final Channel ch1;
 
    	final SynthesisFilterbank qmfs0;
    	SynthesisFilterbank qmfs1;
@@ -28,9 +27,6 @@ public class SBR1 extends SBR {
 
         ch0 = new Channel(this);
         qmfs0 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
-
-        ch1 = new Channel(this);
-        qmfs1 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
     }
 
 
@@ -53,7 +49,6 @@ public class SBR1 extends SBR {
    		NoiseEnvelope.dequantChannel(this, ch0);
 
    		Arrays.fill(ch0.bs_add_harmonic, 0, 64, 0);
-   		//Arrays.fill(ch1.bs_add_harmonic, 0, 64, 0);
 
    		ch0.bs_add_harmonic_flag = ld.readBool();
    		if(ch0.bs_add_harmonic_flag)

@@ -45,4 +45,16 @@ class ExtData {
         ipd.update(num_env);
         opd.update(num_env);
     }
+
+    public void mapTo34(int num_env) {
+        ipd.mapTo34(num_env);
+        opd.mapTo34(num_env);
+    }
+
+    public int nr_par() {
+        int nr_par = ipd.mode.nr_par;
+        if(nr_par<11)
+            nr_par = 11;
+        return nr_par;
+    }
 }

@@ -10,8 +10,10 @@ public class PDData extends EnvData<PDMode> {
 
     private final PDMode[] modes;
 
+    public float prev[][][] = new float[20][2][2];
+
     PDData(PDMode[] modes) {
-        super(34);
+        super(17);
         this.modes = modes;
     }
 

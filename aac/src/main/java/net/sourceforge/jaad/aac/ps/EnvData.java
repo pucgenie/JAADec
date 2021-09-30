@@ -36,7 +36,7 @@ abstract public class EnvData<Mode extends EnvMode> {
     }
 
     Mode mode() {
-        return mode;
+        return mode == null ? mode(0) : mode;
     }
 
     abstract protected Mode mode(int id);
@@ -73,6 +73,10 @@ abstract public class EnvData<Mode extends EnvMode> {
         envs[num_env].restore();
     }
 
-
-
+    void mapTo34(int num_env) {
+        if(mode!=null && (mode.id%3)!=2) {
+            for (int env = 0; env < num_env; env++)
+                envs[env].map20To34();
+        }
+    }
 }

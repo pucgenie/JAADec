@@ -1,7 +1,6 @@
 package net.sourceforge.jaad.aac.ps;
 
 import net.sourceforge.jaad.aac.sbr.PS;
-import net.sourceforge.jaad.aac.sbr.SBR;
 import net.sourceforge.jaad.aac.syntax.BitStream;
 
 import java.util.Arrays;
@@ -12,7 +11,7 @@ import static net.sourceforge.jaad.aac.ps.PSTables.*;
 
 public class PSOrig implements PS {
 
-	final SBR sbr;
+	final int numTimeSlotsRate;
 
 	/* bitstream parameters */
 	boolean enable_iid, enable_icc, enable_ext;
@@ -81,10 +80,10 @@ public class PSOrig implements PS {
 	float[][][] ipd_prev = new float[20][2][2];
 	float[][][] opd_prev = new float[20][2][2];
 
-	public PSOrig(SBR sbr) {
-		this.sbr = sbr;
+	public PSOrig(int numTimeSlotsRate) {
+		this.numTimeSlotsRate = numTimeSlotsRate;
 
-		hyb = new Filterbank(sbr.numTimeSlotsRate);
+		hyb = new Filterbank(numTimeSlotsRate);
 
 		ps_data_available = false;
 
@@ -527,14 +526,14 @@ public class PSOrig implements PS {
 		if(frame_class==0) {
 			border_position[0] = 0;
 			for(int env = 1; env<num_env; env++) {
-				border_position[env] = (env*sbr.numTimeSlotsRate)/num_env;
+				border_position[env] = (env*numTimeSlotsRate)/num_env;
 			}
-			border_position[num_env] = sbr.numTimeSlotsRate;
+			border_position[num_env] = numTimeSlotsRate;
 		}
 		else {
 			border_position[0] = 0;
 
-			if(border_position[num_env]<sbr.numTimeSlotsRate) {
+			if(border_position[num_env]<numTimeSlotsRate) {
 				for(int bin = 0; bin<34; bin++) {
 					iid_index[num_env][bin] = iid_index[num_env-1][bin];
 					icc_index[num_env][bin] = icc_index[num_env-1][bin];
@@ -544,11 +543,11 @@ public class PSOrig implements PS {
 					opd_index[num_env][bin] = opd_index[num_env-1][bin];
 				}
 				num_env++;
-				border_position[num_env] = sbr.numTimeSlotsRate;
+				border_position[num_env] = numTimeSlotsRate;
 			}
 
 			for(int env = 1; env<num_env; env++) {
-				int thr = sbr.numTimeSlotsRate-(num_env-env);
+				int thr = numTimeSlotsRate-(num_env-env);
 
 				if(border_position[env]>thr) {
 					border_position[env] = thr;
@@ -595,7 +594,7 @@ public class PSOrig implements PS {
 		/* calculate the energy in each parameter band b(k) */
 		for(int gr = 0; gr<fbt.num_groups; gr++) {
 			/* select the parameter index b(k) to which this group belongs */
-			int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
+			int bk = fbt.bk(gr);
 
 			/* select the upper subband border for this group */
 			int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
@@ -751,7 +750,7 @@ public class PSOrig implements PS {
 					}
 
 					/* select b(k) for reading the transient ratio */
-					final int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
+					final int bk = fbt.bk(gr);
 
 					/* duck if a past transient is found */
 					Xr[n][sb][0]  = (G_TransientRatio[n][bk]*r0Re);
@@ -819,7 +818,7 @@ public class PSOrig implements PS {
 		}
 
 		for(int gr = 0; gr<fbt.num_groups; gr++) {
-			final int bk = (~NEGATE_IPD_MASK)&fbt.map_group2bk[gr];
+			final int bk = fbt.bk(gr);
 
 			/* use one channel per group in the subqmf domain */
 			final int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
@@ -1019,7 +1018,7 @@ public class PSOrig implements PS {
 					H21[1] = h21_prev[gr][1];
 					H22[1] = h22_prev[gr][1];
 
-					if((NEGATE_IPD_MASK&fbt.map_group2bk[gr])!=0) {
+					if(fbt.bkm(gr)) {
 						deltaH11[1] = -deltaH11[1];
 						deltaH12[1] = -deltaH12[1];
 						deltaH21[1] = -deltaH21[1];
