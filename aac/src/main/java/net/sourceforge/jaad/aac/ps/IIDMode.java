@@ -1,5 +1,7 @@
 package net.sourceforge.jaad.aac.ps;
 
+import net.sourceforge.jaad.aac.tools.Utils;
+
 import static net.sourceforge.jaad.aac.ps.Huffman.*;
 import static net.sourceforge.jaad.aac.ps.PSTables.*;
 
@@ -40,9 +42,7 @@ public class IIDMode extends ICMode {
     @Override
     int clip(int idx) {
         int clip = tables.num_steps;
-        idx = Math.max(idx, -clip);
-        idx = Math.min(idx, clip);
-        return idx;
+        return Utils.clip(idx, -clip, clip);
     }
 
     static private final IIDMode[] IID_MODES = {

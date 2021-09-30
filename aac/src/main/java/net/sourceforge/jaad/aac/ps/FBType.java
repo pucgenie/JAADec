@@ -64,6 +64,10 @@ public class FBType {
         return map_group2bk[gr] & ~NEGATE_IPD_MASK;
     }
 
+    int maxsb(int gr) {
+        return (gr<num_hybrid_groups) ? group_border[gr]+1 : group_border[gr+1];
+    }
+
     boolean bkm(int gr) {
         return (map_group2bk[gr] &~NEGATE_IPD_MASK)!=0;
     }

@@ -2,6 +2,7 @@ package net.sourceforge.jaad.aac.ps;
 
 import net.sourceforge.jaad.aac.sbr.PS;
 import net.sourceforge.jaad.aac.syntax.BitStream;
+import net.sourceforge.jaad.aac.tools.Utils;
 
 import java.util.Arrays;
 
@@ -18,7 +19,7 @@ public class PSImpl implements PS {
 	FBType fbt = FBType.T20;
 
 	/* bitstream parameters */
-	int frame_class;
+	boolean var_borders;
 	int num_env;
 	int[] border_position = new int[MAX_PS_ENVELOPES+1];
 
@@ -114,12 +115,12 @@ public class PSImpl implements PS {
 					.max(icc.fbType());
 		}
 
-		frame_class = ld.readBit();
+		var_borders = ld.readBit()!=0;
 		int tmp = ld.readBits(2);
 
-		num_env = num_env_tab[frame_class][tmp];
+		num_env = num_env_tab[var_borders?1:0][tmp];
 
-		if(frame_class!=0) {
+		if(var_borders) {
 			for(int n = 1; n<num_env+1; n++) {
 				border_position[n] = ld.readBits(5)+1;
 			}
@@ -158,7 +159,7 @@ public class PSImpl implements PS {
 
 		ps_data_available = false;
 
-		if(frame_class==0) {
+		if(!var_borders) {
 			border_position[0] = 0;
 			for(int env = 1; env<num_env; env++) {
 				border_position[env] = (env*fb.len)/num_env;
@@ -177,18 +178,13 @@ public class PSImpl implements PS {
 				border_position[num_env] = fb.len;
 			}
 
+			int bpl = border_position[0];
 			for(int env = 1; env<num_env; env++) {
-				int thr = fb.len-(num_env-env);
-
-				if(border_position[env]>thr) {
-					border_position[env] = thr;
-				}
-				else {
-					thr = border_position[env-1]+1;
-					if(border_position[env]<thr) {
-						border_position[env] = thr;
-					}
-				}
+				int bp = border_position[env];
+				int max = fb.len-(num_env-env);
+				bpl = Utils.clip(bp, bpl+1, max);
+				if(bpl!=bp)
+					border_position[env] = bpl;
 			}
 		}
 
@@ -221,7 +217,7 @@ public class PSImpl implements PS {
 			int bk = fbt.bk(gr);
 
 			/* select the upper subband border for this group */
-			int maxsb = (gr<fbt.num_hybrid_groups) ? fbt.group_border[gr]+1 : fbt.group_border[gr+1];
+			int maxsb = fbt.maxsb(gr);
 			float[][][] Xl = gr<fbt.num_hybrid_groups ? X_hybrid_left : X_left;
 
 			for(int n = border_position[0]; n<border_position[num_env]; n++) {
@@ -271,11 +267,7 @@ public class PSImpl implements PS {
 
 		/* apply stereo decorrelation filter to the signal */
 		for(int gr = 0; gr<fbt.num_groups; gr++) {
-			int maxsb;
-			if(gr<fbt.num_hybrid_groups)
-				maxsb = fbt.group_border[gr]+1;
-			else
-				maxsb = fbt.group_border[gr+1];
+			int maxsb = fbt.maxsb(gr);
 
 			float[][][] Xl = gr<fbt.num_hybrid_groups ? X_hybrid_left : X_left;
 			float[][][] Xr = gr<fbt.num_hybrid_groups ? X_hybrid_right : X_right;
@@ -713,5 +705,4 @@ public class PSImpl implements PS {
 
 		fb.hybrid_synthesis(X_right, X_hybrid_right, fbt);
 	}
-
 }
