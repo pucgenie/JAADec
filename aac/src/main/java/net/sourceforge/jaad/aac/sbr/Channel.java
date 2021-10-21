@@ -590,11 +590,9 @@ class Channel {
    		boolean dont_process = sbr.hdr==null;
    
    		/* subband analysis */
-   		if(dont_process)
-   			qmfa.sbr_qmf_analysis_32(sbr, channel_buf, Xsbr, sbr.tHFGen, 32);
-   		else
-   			qmfa.sbr_qmf_analysis_32(sbr, channel_buf, Xsbr, sbr.tHFGen, sbr.kx);
-   
+        qmfa.sbr_qmf_analysis_32(sbr.numTimeSlotsRate, channel_buf,
+                Xsbr, sbr.tHFGen, dont_process ? 32 : sbr.kx);
+
    		if(!dont_process) {
    			/* insert high frequencies here */
    			/* hf generation using patching */

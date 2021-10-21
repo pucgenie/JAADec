@@ -29,14 +29,15 @@ public class DecoderConfig {
 	//extension: SBR
 	private final boolean sbrEnabled;
 	private boolean sbrPresent=false;
-	private boolean downSampledSBR=false;
 	// in case of SBR this may be twice the SampleFrequency.
+	// it remains null without SBR
 	private SampleRate outputFrequency;
 
 	private boolean psEnabled = true;
 	private boolean psPresent = false;
 
 	public PS openPS(SBR sbr) {
+		psPresent = true;
 		return new PSImpl(sbr.numTimeSlotsRate);
 	}
 
@@ -58,7 +59,6 @@ public class DecoderConfig {
 
 	public DecoderConfig setAudioDecoderInfo(AudioDecoderInfo info) {
 		profile = info.getProfile();
-		outputFrequency =
 		sampleFrequency = info.getSampleFrequency();
 		channelConfiguration = info.getChannelConfiguration();
 		return this;
@@ -81,7 +81,7 @@ public class DecoderConfig {
 	}
 
 	public int getSampleLength() {
-		int upsampled = sbrPresent && !downSampledSBR ? 2 : 1;
+		int upsampled = outputFrequency!= null && sampleFrequency != outputFrequency ? 2 : 1;
 		return upsampled * getFrameLength();
 	}
 
@@ -102,7 +102,7 @@ public class DecoderConfig {
 	}
 
 	public SampleRate getOutputFrequency() {
-		return outputFrequency;
+		return outputFrequency!=null ? outputFrequency : sampleFrequency;
 	}
 
 	public int getChannelCount() {
@@ -117,35 +117,29 @@ public class DecoderConfig {
 	//=========== SBR =============
 
 	/**
-	 * Called by implicit SBR detection.
-	 * Explicit SBR detection already setup output frequency
+	 * Setup SBR and try to duplicate the output frequency if possible.
+	 *
+	 *  @return true if the frequency could be duplicated.
 	 */
-	public void setSBRPresent() {
-		if(sbrEnabled && !sbrPresent) {
-			sbrPresent = true;
+	public boolean setSBRPresent() {
+		sbrPresent = true;
 
+		if(outputFrequency==null) {
 			SampleRate duplicated = sampleFrequency.duplicated();
-			if(duplicated != SF_NONE)
-				outputFrequency = duplicated;
-			else // can not be duplicated, use downsampled SBR instead
-				downSampledSBR = true;
+			if (duplicated == SF_NONE)
+				return false;
+			outputFrequency = duplicated;
 		}
+
+		return isUpSampled();
 	}
 
-	public boolean isSBRPresent() {
-		return sbrPresent;
-	}
-
-	public boolean isSBRDownSampled() {
-		return downSampledSBR;
+	boolean isUpSampled() {
+		return outputFrequency!=null && outputFrequency!=sampleFrequency;
 	}
 
 	public boolean isSBREnabled() {
 		return sbrEnabled;
-	}
-
-	public void setPsPresent() {
-		psPresent = true;
 	}
 
 	public boolean isPSEnabled() {
@@ -190,7 +184,7 @@ public class DecoderConfig {
 		switch(profile) {
 			case AAC_PS:
 				psPresent = true;
-
+			    // implies SBR
 			case AAC_SBR:
 				SampleRate frequency = SampleRate.decode(in);
 
@@ -198,7 +192,6 @@ public class DecoderConfig {
 				profile = readProfile(in);
 
 				if(sbrEnabled) {
-					sbrPresent = true;
 					outputFrequency = frequency;
 				}
 

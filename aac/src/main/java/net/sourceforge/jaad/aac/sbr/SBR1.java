@@ -26,7 +26,7 @@ public class SBR1 extends SBR {
         super(config);
 
         ch0 = new Channel(this);
-        qmfs0 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
+        qmfs0 = openFilterbank();
     }
 
 
@@ -63,8 +63,7 @@ public class SBR1 extends SBR {
    		if(bs_extension_id==EXTENSION_ID_PS  && config.isPSEnabled()) {
 			if(ps==null) {
 				this.ps = config.openPS(this);
-				this.qmfs1 = new SynthesisFilterbank((config.isSBRDownSampled()) ? 32 : 64);
-				config.setPsPresent();
+				this.qmfs1 = openFilterbank();
 			}
 
 			ps.decode(ld);
@@ -89,12 +88,7 @@ public class SBR1 extends SBR {
 		ch0.process_channel(channel, X, this.reset);
 
 		/* subband synthesis */
-		if(config.isSBRDownSampled()) {
-			qmfs0.sbr_qmf_synthesis_32(this, X, channel);
-		}
-		else {
-			qmfs0.sbr_qmf_synthesis_64(this, X, channel);
-		}
+		qmfs0.synthesis(numTimeSlotsRate, X, channel);
 
 		if(this.hdr!=null) {
 			sbr_save_prev_data(ch0);
@@ -107,8 +101,8 @@ public class SBR1 extends SBR {
 
 	private int processPS(float[] left_channel, float[] right_channel) {
 		int ret = 0;
-		float[][][] X_left = new float[38][64][2];
-		float[][][] X_right = new float[38][64][2];
+		float[][][] X_left = new float[MAX_NTSR+6][64][2];
+		float[][][] X_right = new float[MAX_NTSR+6][64][2];
 
 		ch0.process_channel(left_channel, X_left, this.reset);
 
@@ -124,14 +118,9 @@ public class SBR1 extends SBR {
 		ps.process(X_left, X_right);
 
 		/* subband synthesis */
-		if(config.isSBRDownSampled()) {
-			qmfs0.sbr_qmf_synthesis_32(this, X_left, left_channel);
-			qmfs1.sbr_qmf_synthesis_32(this, X_right, right_channel);
-		}
-		else {
-			qmfs0.sbr_qmf_synthesis_64(this, X_left, left_channel);
-			qmfs1.sbr_qmf_synthesis_64(this, X_right, right_channel);
-		}
+
+		qmfs0.synthesis(numTimeSlotsRate, X_left, left_channel);
+		qmfs1.synthesis(numTimeSlotsRate, X_right, right_channel);
 
 		if(this.hdr!=null&&ret==0) {
 			sbr_save_prev_data(ch0);

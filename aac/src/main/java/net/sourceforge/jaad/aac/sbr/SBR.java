@@ -26,6 +26,16 @@ abstract public class SBR {
 
 	protected final DecoderConfig config;
 
+	private final boolean downSampled;
+
+	public boolean isSBRDownSampled() {
+		return downSampled;
+	}
+
+	SynthesisFilterbank openFilterbank() {
+		return downSampled ? new SynthesisFilterbank32() : new SynthesisFilterbank64();
+	}
+
 	final SampleFrequency sample_rate;
 
 	boolean valid = false;
@@ -87,7 +97,7 @@ abstract public class SBR {
 
 	public SBR(DecoderConfig config) {
 		this.config = config;
-		config.setSBRPresent();
+		this.downSampled = !config.setSBRPresent();
 
 		this.sample_rate = config.getOutputFrequency().getNominal();
 

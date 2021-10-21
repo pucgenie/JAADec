@@ -239,3 +239,12 @@ This also avoids most temporary float[2] arrays.
 Set sbrPresent on first allocation of SBR to get outputFrequency duplicated.
 Use downSampledSBR if it can not be duplicated.
 What's about DecoderConfig.sbrEnabled==false and SBR.bs_samplerate_mode??
+
+**2021-10-21**
+
+DecoderConfig.outputFrequency remains null until SBR was set up.
+getOutputFrequency() returns sampleFrequency if null.
+
+SBR downsampled flag moved to SBR itself.
+SynthesisFilterbank was split into 32 and 64 parts to avoid annoying if/else cases.
+Filterbank turned into a class. The ringbuffer may be used by AnalysisFilterbank, too.
