@@ -13,8 +13,10 @@ import net.sourceforge.jaad.mp4.api.Track;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
@@ -63,15 +65,15 @@ public class Play {
 			decodeMP4(new RandomAccessFile(in, "r"));
 	}
 
-	private static void decodeMP4(InputStream in) throws Exception {
+	protected static void decodeMP4(InputStream in) throws IOException, LineUnavailableException {
 			decodeMP4(MP4Input.open(in));
 	}
 
-	private static void decodeMP4(RandomAccessFile in) throws Exception {
+	protected static void decodeMP4(RandomAccessFile in) throws IOException, LineUnavailableException {
 			decodeMP4(MP4Input.open(in));
 	}
 
-	private static void decodeMP4(MP4Input in) throws Exception {
+	protected static void decodeMP4(MP4Input in) throws IOException, LineUnavailableException {
 
 		//create container
 		final MP4Container cont = new MP4Container(in);
@@ -79,7 +81,7 @@ public class Play {
 		//find AAC track
 		final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
 		if(tracks.isEmpty())
-			throw new Exception("movie does not contain any AAC track");
+			throw new UnsupportedOperationException("movie does not contain any AAC track");
 		final AudioTrack track = (AudioTrack) tracks.get(0);
 
 		//create AAC decoder
@@ -89,9 +91,9 @@ public class Play {
 		DecoderConfig conf = dec.getConfig();
 		AudioFormat aufmt = new AudioFormat(conf.getOutputFrequency().getFrequency(), 16, conf.getChannelCount(), true, true);
 
+		boolean lineStarted = false;
 		try(SourceDataLine line =  AudioSystem.getSourceDataLine(aufmt)) {
 			line.open();
-			line.start();
 
 
 			//decode
@@ -103,6 +105,11 @@ public class Play {
 					dec.decodeFrame(frame.getData(), buf);
 					byte[] b = buf.getData();
 					line.write(b, 0, b.length);
+					if (!lineStarted) {
+						// pucgenie: Just to make things more complicated - or so I thought.
+						line.start();
+						lineStarted = true;
+					}
 				}
 				catch(AACException e) {
 					e.printStackTrace();
@@ -117,28 +124,40 @@ public class Play {
 	}
 
     private static void decodeAAC(String in) throws Exception {
-		if(in.startsWith("http:"))
+		if (in.startsWith("http") && (in.charAt(4) == ':' ||
+				(in.charAt(4) == 's' && in.charAt(5) == ':'))
+		)
 			decodeAAC(new URL(in).openStream());
 		else
 			decodeAAC(new FileInputStream(in));
 	}
 
-	private static void decodeAAC(InputStream in) throws Exception {
+	protected static void decodeAAC(InputStream in) throws IOException, LineUnavailableException {
 
 		final ADTSDemultiplexer adts = new ADTSDemultiplexer(in);
 		final Decoder dec = Decoder.create(adts.getDecoderInfo());
 		AudioFormat aufmt = dec.getAudioFormat();
 		final SampleBuffer buf = new SampleBuffer(aufmt);
 
+		boolean lineStarted = false;
 		try(SourceDataLine line = AudioSystem.getSourceDataLine(aufmt)) {
 			line.open();
-			line.start();
 
-			while(true) {
-				byte[] b = adts.readNextFrame();
-				dec.decodeFrame(b, buf);
-				b = buf.getData();
-				line.write(b, 0, b.length);
+			try {
+				while (true) {
+					dec.decodeFrame(adts.readNextFrame(), buf);
+					final byte[] b = buf.getData();
+					line.write(b, 0, b.length);
+					if (!lineStarted) {
+						// pucgenie: Just to make things more complicated - or so I thought.
+						line.start();
+						lineStarted = true;
+					}
+				}
+			} finally {
+				if (line.isRunning()) {
+					line.drain();
+				}
 			}
 		}
 	}
