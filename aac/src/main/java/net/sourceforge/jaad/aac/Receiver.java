@@ -1,5 +1,6 @@
 package net.sourceforge.jaad.aac;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -10,5 +11,5 @@ import java.util.List;
  */
 public interface Receiver {
 
-    void accept(List<float[]> samples, int sampleLength, int sampleRate);
+    void accept(Collection<float[]> samples, int sampleLength, int sampleRate);
 }

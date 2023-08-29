@@ -5,6 +5,7 @@ import net.sourceforge.jaad.aac.Receiver;
 import javax.sound.sampled.AudioFormat;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -133,7 +134,7 @@ public class SampleBuffer implements Receiver {
 	}
 
 	@Override
-	public void accept(List<float[]> samples, int sampleLength, int sampleRate) {
+	public void accept(Collection<float[]> samples, int sampleLength, int sampleRate) {
 
 		this.sampleRate = sampleRate;
 		this.channels = samples.size();
@@ -154,9 +155,17 @@ public class SampleBuffer implements Receiver {
 				int k = sample.length * is / sampleLength;
 				float s = sample[k];
 				int pulse = Math.round(s);
-				pulse = Math.min(pulse, Short.MAX_VALUE);
-				pulse = Math.max(pulse, Short.MIN_VALUE);
-				bb.putShort((short)pulse);
+				// #clamp is coming with Java 21: https://download.java.net/java/early_access/jdk21/docs/api/java.base/java/lang/Math.html#clamp(long,long,long)
+				//pulse = Math.min(pulse, Short.MAX_VALUE);
+				//pulse = Math.max(pulse, Short.MIN_VALUE);
+				bb.putShort((short) (
+						(pulse > Short.MAX_VALUE)
+						? Short.MAX_VALUE
+				 		: (pulse < Short.MIN_VALUE)
+							? Short.MIN_VALUE
+							: pulse
+						)
+				);
 			}
 		}
 	}
