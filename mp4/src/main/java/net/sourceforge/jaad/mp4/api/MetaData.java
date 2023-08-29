@@ -303,9 +303,10 @@ public class MetaData {
 			else if(l==BoxTypes.ALBUM_NAME_BOX)
 				put(Field.ALBUM, data.getText());
 			else if(l==BoxTypes.TRACK_NUMBER_BOX) {
-				byte[] b = data.getData();
-				put(Field.TRACK_NUMBER, new Integer(b[3]));
-				put(Field.TOTAL_TRACKS, new Integer(b[5]));
+				final byte[] b = data.getData();
+				// pucgenie: Don't fail at numbers greater than 127
+				put(Field.TRACK_NUMBER, Integer.valueOf(b[3] & 0xFF));
+				put(Field.TOTAL_TRACKS, Integer.valueOf(b[5] & 0xFF));
 			}
 			else if(l==BoxTypes.DISK_NUMBER_BOX)
 				put(Field.DISK_NUMBER, data.getInteger());

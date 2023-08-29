@@ -31,6 +31,9 @@ public class SampleSizeBox extends FullBox {
 			sampleSize = (int) in.readBytes(4);
 
 		sampleCount = in.readBytes(4);
+		if (sampleCount < 0) {
+			throw new UnsupportedOperationException("More samples than supported by this implementation. Provided: " + (sampleCount & 0xFFFFFFFFl) + ", supported: " + Integer.MAX_VALUE);
+		}
 		sampleSizes = new long[(int) sampleCount];
 
 		if(compact) {

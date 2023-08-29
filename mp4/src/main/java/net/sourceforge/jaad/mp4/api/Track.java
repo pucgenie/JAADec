@@ -109,8 +109,8 @@ public abstract class Track {
 
 		//sample durations/timestamps
 		final DecodingTimeToSampleBox stts = (DecodingTimeToSampleBox) stbl.getChild(BoxTypes.DECODING_TIME_TO_SAMPLE_BOX);
-		final long[] sampleCounts = stts.getSampleCounts();
-		final long[] sampleDeltas = stts.getSampleDeltas();
+		final int[] sampleCounts = stts.getSampleCounts();
+		final int[] sampleDeltas = stts.getSampleDeltas();
 		final long[] timeOffsets = new long[sampleSizes.length];
 		long tmp = 0;
 		int off = 0;
@@ -172,21 +172,21 @@ public abstract class Track {
 		}
 	}
 
-	protected <T> void parseSampleEntry(Box sampleEntry, Class<T> clazz) {
-		T type;
-		try {
-			type = clazz.newInstance();
-			if(sampleEntry.getClass().isInstance(type)) {
-				System.out.println("true");
-			}
-		}
-		catch(InstantiationException ex) {
-			ex.printStackTrace();
-		}
-		catch(IllegalAccessException ex) {
-			ex.printStackTrace();
-		}
-	}
+//	protected <T> void parseSampleEntry(Box sampleEntry, Class<T> clazz) {
+//		T type;
+//		try {
+//			type = clazz.newInstance();
+//			if(sampleEntry.getClass().isInstance(type)) {
+//				System.out.println("true");
+//			}
+//		}
+//		catch(InstantiationException ex) {
+//			ex.printStackTrace();
+//		}
+//		catch(IllegalAccessException ex) {
+//			ex.printStackTrace();
+//		}
+//	}
 
 	public abstract Type getType();
 
@@ -318,33 +318,33 @@ public abstract class Track {
 	 * @throws IOException if reading fails
 	 */
 	public Frame readNextFrame() throws IOException {
-		Frame frame = null;
-		if(hasMoreFrames()) {
-			frame = frames.get(currentFrame);
-
-			final long diff = frame.getOffset()-in.getOffset();
-			if(diff>0)
-				in.skipBytes(diff);
-			else if(diff<0) {
-				if(in.hasRandomAccess())
-					in.seek(frame.getOffset());
-				else {
-					DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: frame {0} already skipped, offset:{1}, stream:{2}", new Object[]{currentFrame, frame.getOffset(), in.getOffset()});
-					throw new IOException("frame already skipped and no random access");
-				}
-			}
-
-			final byte[] b = new byte[(int) frame.getSize()];
-			try {
-				in.readBytes(b);
-			}
-			catch(EOFException e) {
-				DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: tried to read {0} bytes at {1}", new Long[]{frame.getSize(), in.getOffset()});
-				throw e;
-			}
-			frame.setData(b);
-			currentFrame++;
+		if (!hasMoreFrames()) {
+			throw new EOFException();
 		}
+		Frame frame = frames.get(currentFrame);
+
+		final long diff = frame.getOffset()-in.getOffset();
+		if(diff>0)
+			in.skipBytes(diff);
+		else if(diff<0) {
+			if(in.hasRandomAccess())
+				in.seek(frame.getOffset());
+			else {
+				DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: frame {0} already skipped, offset:{1}, stream:{2}", new Object[]{currentFrame, frame.getOffset(), in.getOffset()});
+				throw new IOException("frame already skipped and no random access");
+			}
+		}
+
+		final byte[] b = new byte[(int) frame.getSize()];
+		try {
+			in.readBytes(b);
+		}
+		catch(EOFException e) {
+			DecoderInfo.LOGGER.log(Level.WARNING, "readNextFrame failed: tried to read {0} bytes at {1}", new Long[]{frame.getSize(), in.getOffset()});
+			throw e;
+		}
+		frame.setData(b);
+		currentFrame++;
 		return frame;
 	}
 

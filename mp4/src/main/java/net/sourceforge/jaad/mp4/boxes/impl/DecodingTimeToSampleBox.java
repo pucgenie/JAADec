@@ -26,7 +26,7 @@ import java.io.IOException;
  */
 public class DecodingTimeToSampleBox extends FullBox {
 
-	private long[] sampleCounts, sampleDeltas;
+	private int[] sampleCounts, sampleDeltas;
 
 	public DecodingTimeToSampleBox() {
 		super("Time To Sample Box");
@@ -37,20 +37,23 @@ public class DecodingTimeToSampleBox extends FullBox {
 		super.decode(in);
 		
 		final int entryCount = (int) in.readBytes(4);
-		sampleCounts = new long[entryCount];
-		sampleDeltas = new long[entryCount];
+		if (entryCount < 0) {
+			throw new UnsupportedOperationException("More Entries than supported by this implementation. Provided: " + (entryCount & 0xFFFFFFFFl) + ", supported: " + Integer.MAX_VALUE);
+		}
+		sampleCounts = new int[entryCount];
+		sampleDeltas = new int[entryCount];
 
 		for(int i = 0; i<entryCount; i++) {
-			sampleCounts[i] = in.readBytes(4);
-			sampleDeltas[i] = in.readBytes(4);
+			sampleCounts[i] = (int) in.readBytes(4);
+			sampleDeltas[i] = (int) in.readBytes(4);
 		}
 	}
 
-	public long[] getSampleCounts() {
+	public int[] getSampleCounts() {
 		return sampleCounts;
 	}
 
-	public long[] getSampleDeltas() {
+	public int[] getSampleDeltas() {
 		return sampleDeltas;
 	}
 }

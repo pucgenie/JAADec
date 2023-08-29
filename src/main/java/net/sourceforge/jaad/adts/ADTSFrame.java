@@ -18,7 +18,7 @@ class ADTSFrame implements AudioDecoderInfo {
 	private int frameLength, adtsBufferFullness, rawDataBlockCount;
 	//error check
 	private int[] rawDataBlockPosition;
-	private int crcCheck;
+	private short crcCheck;
 	//decoder specific info
 	private byte[] info;
 
@@ -26,7 +26,7 @@ class ADTSFrame implements AudioDecoderInfo {
 		readHeader(in);
 
 		if(!protectionAbsent)
-			crcCheck = in.readUnsignedShort();
+			crcCheck = (short) in.readUnsignedShort();
 
 		if(rawDataBlockCount==0) {
 			//raw_data_block();
@@ -38,13 +38,13 @@ class ADTSFrame implements AudioDecoderInfo {
 				for(int i = 0; i<rawDataBlockCount; i++) {
 					rawDataBlockPosition[i] = in.readUnsignedShort();
 				}
-				crcCheck = in.readUnsignedShort();
+				crcCheck = (short) in.readUnsignedShort();
 			}
 			//raw data blocks
 			for(int i = 0; i<rawDataBlockCount; i++) {
 				//raw_data_block();
 				if(!protectionAbsent)
-					crcCheck = in.readUnsignedShort();
+					crcCheck = (short) in.readUnsignedShort();
 			}
 		}
 	}
