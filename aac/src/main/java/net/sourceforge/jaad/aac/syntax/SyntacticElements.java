@@ -14,19 +14,20 @@ public class SyntacticElements {
 	static final Logger LOGGER = Logger.getLogger("jaad.SyntacticElements"); //for debugging
 
 	//global properties
-	private DecoderConfig config;
+	private final DecoderConfig config;
 
 	private final FilterBank filterBank;
 
 	//elements
 
-	private List<CCE> cces = new ArrayList<>();
+	// pucgenie: private declarations can use specific types. It is implementation-specific.
+	private final ArrayList<CCE> cces = new ArrayList<>(0);
 
 	private final Map<Element.InstanceTag, Element> elements = new HashMap<>();
 
-	private final List<ChannelElement> audioElements = new ArrayList<>(); //SCE, LFE and CPE
+	private final ArrayList<ChannelElement> audioElements = new ArrayList<>(0); //SCE, LFE and CPE
 
-	private List<float[]> channels = new ArrayList<>();
+	private final ArrayList<float[]> channels = new ArrayList<>(0);
 
 	private Element newElement(Element.InstanceTag tag) {
 		return tag.newElement(config);
