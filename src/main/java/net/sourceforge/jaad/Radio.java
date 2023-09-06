@@ -39,10 +39,7 @@ public class Radio {
 	}
 
 	private static void decode(String arg) throws Exception {
-		final SampleBuffer buf = new SampleBuffer();
-
 		SourceDataLine line = null;
-		byte[] b;
 		try {
 			final URI uri = new URI(arg);
 			final Socket sock = new Socket(uri.getHost(), uri.getPort()>0 ? uri.getPort() : 80);
@@ -70,8 +67,12 @@ public class Radio {
 			AudioFormat aufmt = new AudioFormat(adts.getSampleFrequency(), 16, adts.getChannelCount(), true, true);
 			final Decoder dec = Decoder.create(adts.getDecoderInfo());
 
+			// pucgenie: Somehow it always decodes to 16 bit (=2 bytes)
+			final SampleBuffer buf = new SampleBuffer(dec.getConfig().getSampleLength() * adts.getChannelCount() * 2);
+			byte[] primitiveSampleBuffer = null;
+			byte[] b = null;
 			while(true) {
-				b = adts.readNextFrame();
+				b = adts.readNextFrame(b);
 				dec.decodeFrame(b, buf);
 
 				if(line!=null&&formatChanged(line.getFormat(), buf)) {
@@ -86,8 +87,8 @@ public class Radio {
 					line.open();
 					line.start();
 				}
-				b = buf.getData();
-				line.write(b, 0, b.length);
+				primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
+				line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
 			}
 		}
 		finally {

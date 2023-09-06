@@ -23,15 +23,21 @@ public class ADTSDemultiplexer {
 			throw new IOException("no ADTS header found");
 	}
 
-	public byte[] readNextFrame() throws IOException {
+	public byte[] readNextFrame(byte[] buf) throws IOException {
 		if(first)
+			// pushback functionality
 			first = false;
 		else
 			findNextFrame();
 
-		byte[] b = new byte[frame.getFrameLength()];
-		din.readFully(b);
-		return b;
+        if (buf == null || buf.length != frame.getFrameLength()) {
+			if (buf != null) {
+				System.err.println("frame size changed to " + frame.getFrameLength());
+			}
+			buf = new byte[frame.getFrameLength()];
+		}
+        din.readFully(buf);
+		return buf;
 	}
 
 	private boolean findNextFrame() throws IOException {

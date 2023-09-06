@@ -63,11 +63,13 @@ public class Main {
 			final Decoder dec = Decoder.create(track.getDecoderSpecificInfo().getData());
 
 			Frame frame;
-			final SampleBuffer buf = new SampleBuffer();
+			final SampleBuffer buf = new SampleBuffer(dec.getConfig().getSampleLength() * Math.max(2, track.getChannelCount()) * track.getSampleSize()/Byte.SIZE);
+			byte[] primitiveSampleBuffer = null;
 			while(track.hasMoreFrames()) {
 				frame = track.readNextFrame();
 				dec.decodeFrame(frame.getData(), buf);
-				wav.write(buf.getData());
+				primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
+				wav.write(primitiveSampleBuffer);
 			}
 		}
 		finally {
@@ -77,25 +79,27 @@ public class Main {
 	}
 
 	private static void decodeAAC(String in, String out) throws IOException {
-		WaveFileWriter wav = null;
-		try {
-			final ADTSDemultiplexer adts = new ADTSDemultiplexer(new FileInputStream(in));
-			final Decoder dec = Decoder.create(adts.getDecoderInfo());
+		final ADTSDemultiplexer adts = new ADTSDemultiplexer(new FileInputStream(in));
+		final Decoder dec = Decoder.create(adts.getDecoderInfo());
 
-			final SampleBuffer buf = new SampleBuffer();
-			byte[] b;
-			while(true) {
-				b = adts.readNextFrame();
+		// heuristic
+		final SampleBuffer buf = new SampleBuffer(dec.getConfig().getSampleLength() * 4);
+		byte[] primitiveSampleBuffer = null;
+
+		byte[] b = adts.readNextFrame(null);
+		// initializes buf.bitsPerSample
+		dec.decodeFrame(b, buf);
+
+		primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
+		try (var wav = new WaveFileWriter(new File(out), adts.getSampleFrequency(), adts.getChannelCount(), buf.getBitsPerSample())) {
+			wav.write(primitiveSampleBuffer);
+			while (true) {
+				b = adts.readNextFrame(b);
 				dec.decodeFrame(b, buf);
 
-				if(wav==null)
-					wav = new WaveFileWriter(new File(out), buf.getSampleRate(), buf.getChannels(), buf.getBitsPerSample());
-				wav.write(buf.getData());
+				primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
+				wav.write(primitiveSampleBuffer);
 			}
-		}
-		finally {
-			if(wav!=null)
-				wav.close();
 		}
 	}
 }

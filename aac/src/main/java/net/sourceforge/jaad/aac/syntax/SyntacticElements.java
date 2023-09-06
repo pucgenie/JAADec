@@ -20,14 +20,17 @@ public class SyntacticElements {
 
 	//elements
 
-	// pucgenie: private declarations can use specific types. It is implementation-specific.
+	// pucgenie: private declarations can use specific types (ArrayList instead of List). It is implementation-specific.
 	private final ArrayList<CCE> cces = new ArrayList<>(0);
 
 	private final Map<Element.InstanceTag, Element> elements = new HashMap<>();
 
-	private final ArrayList<ChannelElement> audioElements = new ArrayList<>(0); //SCE, LFE and CPE
+	/**
+	 * pucgenie: Capacity 1 by heuristic (stereo, most often).
+	 */
+	private final ArrayList<ChannelElement> audioElements = new ArrayList<>(1); //SCE, LFE and CPE
 
-	private final ArrayList<float[]> channels = new ArrayList<>(0);
+	private final ArrayList<float[]> channels;
 
 	private Element newElement(Element.InstanceTag tag) {
 		return tag.newElement(config);
@@ -40,6 +43,7 @@ public class SyntacticElements {
 	public SyntacticElements(DecoderConfig config) {
 		this.config = config;
 		filterBank = new FilterBank(config.isSmallFrameUsed());
+		channels = new ArrayList<>(config.getChannelCount());
 
 		startNewFrame();
 	}
@@ -228,7 +232,7 @@ public class SyntacticElements {
 
 	}
 
-	public List<float[]> process() {
+	public ArrayList<float[]> process() {
 
 		channels.clear();
 

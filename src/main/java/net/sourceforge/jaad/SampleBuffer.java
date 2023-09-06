@@ -17,31 +17,47 @@ public class SampleBuffer implements Receiver {
 
 	private int sampleRate, channels, bitsPerSample;
 	private double length, bitrate;
-	private byte[] data;
-	private boolean bigEndian;
+	//private byte[] data;
+	//private boolean bigEndian;
+	private ByteBuffer bb;
 
-	public SampleBuffer() {
-		data = new byte[0];
+	/**
+	 * pucgenie: Might have broken all code using this because of ******* ByteOrder.
+	 * @param sampleLength
+	 */
+	public SampleBuffer(int sampleLength) {
+		bb = ByteBuffer.allocateDirect(sampleLength);
+		bb.order(ByteOrder.BIG_ENDIAN);
 		sampleRate = 0;
 		channels = 0;
 		bitsPerSample = 0;
-		bigEndian = true;
 	}
 
-	public SampleBuffer(AudioFormat af) {
-		data = new byte[0];
+	public SampleBuffer(AudioFormat af, int sampleLength) {
 		sampleRate = (int) af.getSampleRate();
 		channels = af.getChannels();
 		bitsPerSample = af.getSampleSizeInBits();
-		bigEndian = af.isBigEndian();
+		bb = ByteBuffer.allocateDirect(sampleLength);
+		bb.order(af.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 	}
 
 	/**
 	 * Returns the buffer's PCM data.
 	 * @return the audio data
 	 */
-	public byte[] getData() {
-		return data;
+	public ByteBuffer getBB() {
+		return bb;
+	}
+
+	public byte[] getData(byte[] primitiveSampleBuffer) {
+		if (primitiveSampleBuffer == null || primitiveSampleBuffer.length < bb.position()) {
+			if (primitiveSampleBuffer != null) {
+				System.err.println("reallocating primitiveSampleBuffer to " + bb.position());
+			}
+			primitiveSampleBuffer = new byte[bb.position()];
+		}
+		bb.flip().get(primitiveSampleBuffer);
+		return primitiveSampleBuffer;
 	}
 
 	/**
@@ -93,7 +109,7 @@ public class SampleBuffer implements Receiver {
 	 * @return true if the data is in big endian, false if it is in little endian
 	 */
 	public boolean isBigEndian() {
-		return bigEndian;
+		return bb.order().equals(ByteOrder.BIG_ENDIAN);
 	}
 
 	/**
@@ -103,19 +119,27 @@ public class SampleBuffer implements Receiver {
 	 * endian
 	 */
 	public void setBigEndian(boolean bigEndian) {
-		if(bigEndian!=this.bigEndian) {
+		if(bigEndian!=isBigEndian()) {
 			byte tmp;
-			for(int i = 0; i<data.length; i += 2) {
-				tmp = data[i];
-				data[i] = data[i+1];
-				data[i+1] = tmp;
+			final int bbLength = bb.position();
+			for(int i = 0; i < bbLength; i += 2) {
+				tmp = bb.get(i);
+				bb.put(i, bb.get(i+1));
+				bb.put(i+1, tmp);
 			}
-			this.bigEndian = bigEndian;
+			bb.order(bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 		}
 	}
 
 	public void setData(byte[] data, int sampleRate, int channels, int bitsPerSample, int bitsRead) {
-		this.data = data;
+		if (this.bb.capacity() >= data.length) {
+			this.bb.clear();
+			this.bb.put(data);
+		} else {
+			final boolean bigEndian = isBigEndian();
+			this.bb = ByteBuffer.wrap(data);
+			bb.order(bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+		}
 		this.sampleRate = sampleRate;
 		this.channels = channels;
 		this.bitsPerSample = bitsPerSample;
@@ -134,30 +158,37 @@ public class SampleBuffer implements Receiver {
 	}
 
 	@Override
-	public void accept(Collection<float[]> samples, int sampleLength, int sampleRate) {
+	public void accept(final Collection<float[]> samples, final int sampleLength, final int sampleRate) {
 
 		this.sampleRate = sampleRate;
 		this.channels = samples.size();
 		this.bitsPerSample = Short.SIZE;
 
-		int bytes = samples.size() * Short.BYTES * sampleLength;
-		if(data==null || data.length!=bytes)
-			data = new byte[bytes];
+		// pucgenie: Why hardcoded to 16 bits?
+		final int bytes = samples.size() * bitsPerSample/Byte.SIZE * sampleLength;
+		if(bb.capacity() < bytes) {
+			System.err.println("reallocating bb data ByteBuffer, previous capacity: " + bb.capacity());
+			final boolean bigEndian = isBigEndian();
+			this.bb = ByteBuffer.allocateDirect(bytes);
+			bb.order(bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+		} else {
+			bb.rewind();
+		}
 
 		this.length = (double) sampleLength/sampleRate;
 		this.bitrate = (double) sampleLength*bitsPerSample*channels/bytes;
-
-		ByteBuffer bb = ByteBuffer.wrap(data);
-		bb.order(bigEndian?ByteOrder.BIG_ENDIAN:ByteOrder.LITTLE_ENDIAN);
 
 		for(int is=0; is<sampleLength; ++is) {
 			for (float[] sample : samples) {
 				int k = sample.length * is / sampleLength;
 				float s = sample[k];
+				// pucgenie: Why convert here? Simply use float AudioFormat...
 				int pulse = Math.round(s);
 				// #clamp is coming with Java 21: https://download.java.net/java/early_access/jdk21/docs/api/java.base/java/lang/Math.html#clamp(long,long,long)
-				//pulse = Math.min(pulse, Short.MAX_VALUE);
-				//pulse = Math.max(pulse, Short.MIN_VALUE);
+				//bb.putShort((short) Math.clamp(pulse, Short.MIN_VALUE, Short.MAX_VALUE));
+				if (pulse > Short.MAX_VALUE || pulse < Short.MIN_VALUE) {
+					System.err.println("out of Short (16 bit) bounds: " + s);
+				}
 				bb.putShort((short) (
 						(pulse > Short.MAX_VALUE)
 						? Short.MAX_VALUE

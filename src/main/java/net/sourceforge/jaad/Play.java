@@ -97,14 +97,16 @@ public class Play {
 
 
 			//decode
-			final SampleBuffer buf = new SampleBuffer(aufmt);
+			final SampleBuffer buf = new SampleBuffer(aufmt, conf.getSampleLength());
+			final byte[] primitiveSampleBuffer = new byte[buf.getBB().capacity()];
 			while(track.hasMoreFrames()) {
 				Frame frame = track.readNextFrame();
 
 				try {
 					dec.decodeFrame(frame.getData(), buf);
-					byte[] b = buf.getData();
-					line.write(b, 0, b.length);
+					buf.getData(primitiveSampleBuffer);
+					line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
+
 					if (!lineStarted) {
 						// pucgenie: Just to make things more complicated - or so I thought.
 						line.start();
@@ -137,17 +139,19 @@ public class Play {
 		final ADTSDemultiplexer adts = new ADTSDemultiplexer(in);
 		final Decoder dec = Decoder.create(adts.getDecoderInfo());
 		AudioFormat aufmt = dec.getAudioFormat();
-		final SampleBuffer buf = new SampleBuffer(aufmt);
+		final SampleBuffer buf = new SampleBuffer(aufmt, dec.getConfig().getSampleLength() * Math.max(2, aufmt.getChannels()) * aufmt.getSampleSizeInBits()/Byte.SIZE);
+		final byte[] primitiveSampleBuffer = new byte[buf.getBB().capacity()];
 
 		boolean lineStarted = false;
 		try(SourceDataLine line = AudioSystem.getSourceDataLine(aufmt)) {
 			line.open();
 
 			try {
+				byte[] primitiveFrameBuf = null;
 				while (true) {
-					dec.decodeFrame(adts.readNextFrame(), buf);
-					final byte[] b = buf.getData();
-					line.write(b, 0, b.length);
+					dec.decodeFrame(primitiveFrameBuf = adts.readNextFrame(primitiveFrameBuf), buf);
+					buf.getData(primitiveSampleBuffer);
+					line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
 					if (!lineStarted) {
 						// pucgenie: Just to make things more complicated - or so I thought.
 						line.start();

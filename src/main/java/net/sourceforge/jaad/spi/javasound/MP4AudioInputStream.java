@@ -12,6 +12,7 @@ import net.sourceforge.jaad.mp4.api.Track;
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 class MP4AudioInputStream extends AsynchronousAudioInputStream {
@@ -34,7 +35,7 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 		track = (AudioTrack) tracks.get(0);
 
 		decoder = Decoder.create(track.getDecoderSpecificInfo().getData());
-		sampleBuffer = new SampleBuffer();
+		sampleBuffer = new SampleBuffer(decoder.getConfig().getSampleLength() * track.getChannelCount() * track.getSampleSize()/Byte.SIZE);
 	}
 
 	@Override
@@ -43,7 +44,9 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 			//read first frame
 			decodeFrame();
 			audioFormat = new AudioFormat(sampleBuffer.getSampleRate(), sampleBuffer.getBitsPerSample(), sampleBuffer.getChannels(), true, true);
-			saved = sampleBuffer.getData();
+			ByteBuffer bufferedData = sampleBuffer.getBB();
+			saved = new byte[bufferedData.position()];
+			bufferedData.flip().get(saved);
 		}
 		return audioFormat;
 	}
@@ -51,13 +54,15 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 	public void execute() {
 		if(saved==null) {
 			decodeFrame();
-			if(buffer.isOpen())
-				buffer.write(sampleBuffer.getData());
+			if(!buffer.isOpen()) {
+				return;
+			}
+			ByteBuffer bufferedData = sampleBuffer.getBB();
+			saved = new byte[bufferedData.position()];
+			bufferedData.flip().get(saved);
 		}
-		else {
-			buffer.write(saved);
-			saved = null;
-		}
+		buffer.write(saved);
+		saved = null;
 	}
 
 	private void decodeFrame() {

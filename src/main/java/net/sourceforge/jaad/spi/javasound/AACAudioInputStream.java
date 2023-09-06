@@ -4,6 +4,7 @@ import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.SampleBuffer;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import javax.sound.sampled.AudioFormat;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 
@@ -19,7 +20,8 @@ class AACAudioInputStream extends AsynchronousAudioInputStream {
 		super(in, format, length);
 		adts = new ADTSDemultiplexer(in);
 		decoder = Decoder.create(adts.getDecoderInfo());
-		sampleBuffer = new SampleBuffer();
+		// pucgenie: Somehow it always decodes to 16 bit (=2 bytes)
+		sampleBuffer = new SampleBuffer(decoder.getConfig().getSampleLength() * adts.getChannelCount() * 2);
 	}
 
 	@Override
@@ -27,9 +29,11 @@ class AACAudioInputStream extends AsynchronousAudioInputStream {
 		if(audioFormat==null) {
 			//read first frame
 			try {
-				decoder.decodeFrame(adts.readNextFrame(), sampleBuffer);
+				decoder.decodeFrame(adts.readNextFrame(null), sampleBuffer);
 				audioFormat = new AudioFormat(sampleBuffer.getSampleRate(), sampleBuffer.getBitsPerSample(), sampleBuffer.getChannels(), true, true);
-				saved = sampleBuffer.getData();
+				ByteBuffer bufferedData = sampleBuffer.getBB();
+				saved = new byte[bufferedData.position()];
+				bufferedData.flip().get(saved);
 			}
 			catch(IOException e) {
 				return null;
@@ -41,13 +45,13 @@ class AACAudioInputStream extends AsynchronousAudioInputStream {
 	public void execute() {
 		try {
 			if(saved==null) {
-				decoder.decodeFrame(adts.readNextFrame(), sampleBuffer);
-				buffer.write(sampleBuffer.getData());
+				decoder.decodeFrame(adts.readNextFrame(null), sampleBuffer);
+				ByteBuffer bufferedData = sampleBuffer.getBB();
+				saved = new byte[bufferedData.remaining()];
+				bufferedData.flip().get(saved);
 			}
-			else {
-				buffer.write(saved);
-				saved = null;
-			}
+			buffer.write(saved);
+			saved = null;
 		}
 		catch(IOException e) {
 			buffer.close();
