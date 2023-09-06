@@ -117,7 +117,7 @@ public class Decoder {
 		//1: bitstream parsing and noiseless coding
 		syntacticElements.decode(in);
 		//2: spectral processing
-		List<float[]> channels = syntacticElements.process();
+		var channels = syntacticElements.process();
 		//3: send to output buffer
 		buffer.accept(channels, config.getSampleLength(), config.getOutputFrequency().getFrequency());
 	}
@@ -133,5 +133,18 @@ public class Decoder {
 			freq *= 2;
 
 		return new AudioFormat(freq,16, config.getChannelCount(), true, false);
+	}
+
+	public AudioFormat getAudioFormatFloat() {
+
+		int freq = config.getSampleFrequency().getFrequency();
+
+		// assume SBR/PS
+		if(!config.getProfile().isErrorResilientProfile()
+				&& config.getChannelConfiguration()==ChannelConfiguration.MONO
+				&& freq < 24000)
+			freq *= 2;
+
+		return new AudioFormat(AudioFormat.Encoding.PCM_FLOAT, freq, 32, config.getChannelCount(), ((32 + 7) / 8) * config.getChannelCount(), freq, false);
 	}
 }
