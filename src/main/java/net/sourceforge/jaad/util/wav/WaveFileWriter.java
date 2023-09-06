@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public class WaveFileWriter {
+public class WaveFileWriter implements AutoCloseable {
 
 	private static final int HEADER_LENGTH = 44;
 	private static final int RIFF = 1380533830; //'RIFF'
