@@ -7,6 +7,8 @@ import net.sourceforge.jaad.aac.syntax.ICSInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.lang.Float.*;
+
 /**
  * Intra-channel prediction used in profile Main
  * @author in-somnia
@@ -109,6 +111,7 @@ public class ICPrediction {
 		final float k1 = var0>1 ? cor0*even(A/var0) : 0;
 		final float k2 = var1>1 ? cor1*even(A/var1) : 0;
 
+		// pucgenie: Why does it need rounding here?
 		final float pv = round(k1*r0+k2*r1);
 		if(output)
 			data[off] += pv*SF_SCALE;
@@ -126,16 +129,17 @@ public class ICPrediction {
 	}
 
 	private float round(float pf) {
-		return Float.intBitsToFloat((Float.floatToIntBits(pf)+0x00008000)&0xFFFF0000);
+		return intBitsToFloat((floatToIntBits(pf)+0x00008000)&0xFFFF0000);
 	}
 
 	private float even(float pf) {
-		int i = Float.floatToIntBits(pf);
-		i = (i+0x00007FFF+(i&0x00010000>>16))&0xFFFF0000;
-		return Float.intBitsToFloat(i);
+		int i = floatToIntBits(pf);
+		// pucgenie: Let IDEA add clarifying parentheses. Looks like a bug now: the constant bitmask which is shifted by 16 bits.
+        i = (i + 0x00007FFF + (i & (0x00010000 >> 16))) & 0xFFFF0000;
+		return intBitsToFloat(i);
 	}
 
 	private float trunc(float pf) {
-		return Float.intBitsToFloat(Float.floatToIntBits(pf)&0xFFFF0000);
+		return intBitsToFloat(floatToIntBits(pf)&0xFFFF0000);
 	}
 }
