@@ -49,12 +49,11 @@ public enum Profile {
 	 * @return a profile with the given index
 	 */
 	public static Profile forInt(int i) {
-		Profile p;
-		if(i<=0||i>ALL.length)
-			p = UNKNOWN;
-		else
-			p = ALL[i-1];
-		return p;
+		try {
+			return ALL[i-1];
+		} catch (ArrayIndexOutOfBoundsException aiex) {
+			return UNKNOWN;
+		}
 	}
 	private final int num;
 	private final String descr;
