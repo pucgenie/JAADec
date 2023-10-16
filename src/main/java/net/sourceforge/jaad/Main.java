@@ -1,6 +1,7 @@
 package net.sourceforge.jaad;
 
 import net.sourceforge.jaad.aac.Decoder;
+import net.sourceforge.jaad.aac.syntax.ByteArrayBitStream;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 import net.sourceforge.jaad.mp4.MP4Container;
 import net.sourceforge.jaad.mp4.MP4Input;
@@ -10,10 +11,8 @@ import net.sourceforge.jaad.mp4.api.Movie;
 import net.sourceforge.jaad.mp4.api.Track;
 import net.sourceforge.jaad.util.wav.WaveFileWriter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -65,9 +64,11 @@ public class Main {
 			Frame frame;
 			final SampleBuffer buf = new SampleBuffer(dec.getConfig().getSampleLength() * Math.max(2, track.getChannelCount()) * track.getSampleSize()/Byte.SIZE);
 			byte[] primitiveSampleBuffer = null;
+			final var bitStream = new ByteArrayBitStream();
 			while(track.hasMoreFrames()) {
 				frame = track.readNextFrame();
-				dec.decodeFrame(frame.getData(), buf);
+				bitStream.setData(frame.getData());
+				dec.decodeFrame(bitStream, buf);
 				primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
 				wav.write(primitiveSampleBuffer);
 			}
@@ -84,20 +85,26 @@ public class Main {
 
 		// heuristic
 		final SampleBuffer buf = new SampleBuffer(dec.getConfig().getSampleLength() * 4);
-		byte[] primitiveSampleBuffer = null;
 
-		byte[] b = adts.readNextFrame(null);
+		final var cbb = ByteBuffer.allocateDirect(ADTSDemultiplexer.MAXIMUM_FRAME_SIZE);
+		final var bitStream = new ByteArrayBitStream();
 		// initializes buf.bitsPerSample
-		dec.decodeFrame(b, buf);
+		adts.readNextFrame(cbb);
+		cbb.flip();
+		bitStream.setData(cbb);
+		cbb.clear();
+		dec.decode0(bitStream, buf);
 
-		primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
+		final byte[] primitiveSampleBuffer = buf.getData(null);
 		try (var wav = new WaveFileWriter(new File(out), adts.getSampleFrequency(), adts.getChannelCount(), buf.getBitsPerSample())) {
 			wav.write(primitiveSampleBuffer);
 			while (true) {
-				b = adts.readNextFrame(b);
-				dec.decodeFrame(b, buf);
-
-				primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
+				adts.readNextFrame(cbb);
+				cbb.flip();
+				bitStream.setData(cbb);
+				cbb.rewind();
+				dec.decode0(bitStream, buf);
+				buf.getData(primitiveSampleBuffer);
 				wav.write(primitiveSampleBuffer);
 			}
 		}

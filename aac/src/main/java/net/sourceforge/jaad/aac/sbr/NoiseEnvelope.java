@@ -192,23 +192,18 @@ class NoiseEnvelope {
 	public static float calc_Q_div(SBR2 sbr, Channel ch, int m, int l) {
 		if(sbr.bs_coupling) {
 			/* left channel */
-			if((sbr.ch0.Q[m][l]<0||sbr.ch0.Q[m][l]>30)
-				||(sbr.ch1.Q[m][l]<0||sbr.ch1.Q[m][l]>24 /* 2*panOffset(1) */)) {
+			final int ch0q = sbr.ch0.Q[m][l];
+			final int ch1q = sbr.ch1.Q[m][l];
+			if((ch0q <0|| ch0q >30)
+				||(ch1q <0|| ch1q >24 /* 2*panOffset(1) */)) {
 				return 0;
 			}
 			else {
 				/* the pan parameter is always even */
-				if(ch==sbr.ch0) {
-					return Q_div_tab_left[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
-				}
-				else {
-					return Q_div_tab_right[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
-				}
+				return ((ch==sbr.ch0) ? Q_div_tab_left : Q_div_tab_right)[ch0q][ch1q >>1];
 			}
 		}
-		else {
-			return calc_Q_div(ch, m, l);
-		}
+		return calc_Q_div(ch, m, l);
 	}
 
 	public static float calc_Q_div(Channel ch, int m, int l) {
@@ -216,26 +211,26 @@ class NoiseEnvelope {
 		if(ch.Q[m][l]<0||ch.Q[m][l]>30) {
 			return 0;
 		}
-		else {
-			return Q_div_tab[ch.Q[m][l]];
-		}
+		return Q_div_tab[ch.Q[m][l]];
 	}
 
 	/* calculates Q/(1+Q) */
 	/* [0..1] */
 	public static float calc_Q_div2(SBR2 sbr, Channel ch, int m, int l) {
 		if(sbr.bs_coupling) {
-			if((sbr.ch0.Q[m][l]<0||sbr.ch0.Q[m][l]>30)
-				||(sbr.ch1.Q[m][l]<0||sbr.ch1.Q[m][l]>24 /* 2*panOffset(1) */)) {
+			int ch0q = sbr.ch0.Q[m][l];
+			int ch1q = sbr.ch1.Q[m][l];
+			if((ch0q <0|| ch0q >30)
+				||(ch1q <0|| ch1q >24 /* 2*panOffset(1) */)) {
 				return 0;
 			}
 			else {
 				/* the pan parameter is always even */
 				if(ch==sbr.ch0) {
-					return Q_div2_tab_left[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
+					return Q_div2_tab_left[ch0q][ch1q >>1];
 				}
 				else {
-					return Q_div2_tab_right[sbr.ch0.Q[m][l]][sbr.ch1.Q[m][l]>>1];
+					return Q_div2_tab_right[ch0q][ch1q >>1];
 				}
 			}
 		}
@@ -249,9 +244,7 @@ class NoiseEnvelope {
 		if(ch.Q[m][l]<0||ch.Q[m][l]>30) {
 			return 0;
 		}
-		else {
-			return Q_div2_tab[ch.Q[m][l]];
-		}
+		return Q_div2_tab[ch.Q[m][l]];
 	}
 
 	public static void dequantChannel(SBR sbr, Channel ch) {
@@ -305,13 +298,14 @@ class NoiseEnvelope {
 
 	public static void unmap(SBR2 sbr) {
 
-		int amp0 = (sbr.ch0.amp_res) ? 0 : 1;
-		int amp1 = (sbr.ch1.amp_res) ? 0 : 1;
+		final int amp0 = (sbr.ch0.amp_res) ? 0 : 1;
+		final int amp1 = (sbr.ch1.amp_res) ? 0 : 1;
 
 		for(int l = 0; l<sbr.ch0.L_E; l++) {
 			for(int k = 0; k<sbr.n[sbr.ch0.f[l]]; k++) {
 				/* +6: * 64 ; +1: * 2 ; */
-				int exp0 = (sbr.ch0.E[k][l]>>amp0)+1;
+				int ch0E = sbr.ch0.E[k][l];
+				int exp0 = (ch0E >>amp0)+1;
 
 				/* UN_MAP removed: (x / 4096) same as (x >> 12) */
 				/* E[1] is always even so no need for compensating the divide by 2 with
@@ -327,7 +321,8 @@ class NoiseEnvelope {
 				}
 				else {
 					float tmp = E_deq_tab[exp0];
-					if(amp0!=0&&(sbr.ch0.E[k][l]&1)!=0) {
+					if(amp0!=0&&(ch0E &1)!=0) {
+						// * sqrt(2)
 						tmp *= 1.414213562;
 					}
 

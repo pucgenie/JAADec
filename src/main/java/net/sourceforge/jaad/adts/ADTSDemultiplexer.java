@@ -2,14 +2,13 @@ package net.sourceforge.jaad.adts;
 
 import net.sourceforge.jaad.aac.AudioDecoderInfo;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PushbackInputStream;
+import java.io.*;
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
 
 public class ADTSDemultiplexer {
 
-	private static final int MAXIMUM_FRAME_SIZE = 6144;
+	public static final int MAXIMUM_FRAME_SIZE = 6144;
 	private PushbackInputStream in;
 	private DataInputStream din;
 	private boolean first;
@@ -23,21 +22,18 @@ public class ADTSDemultiplexer {
 			throw new IOException("no ADTS header found");
 	}
 
-	public byte[] readNextFrame(byte[] buf) throws IOException {
-		if(first)
+	public void readNextFrame(ByteBuffer out) throws IOException {
+		if (first) {
 			// pushback functionality
 			first = false;
-		else
-			findNextFrame();
-
-        if (buf == null || buf.length != frame.getFrameLength()) {
-			if (buf != null) {
-				System.err.println("frame size changed to " + frame.getFrameLength());
+		} else {
+			if (!findNextFrame()) {
+				throw new EOFException();
 			}
-			buf = new byte[frame.getFrameLength()];
 		}
-        din.readFully(buf);
-		return buf;
+		for (int i = frame.getFrameLength(); i-- > 0; ) {
+			out.put(din.readByte());
+		}
 	}
 
 	private boolean findNextFrame() throws IOException {

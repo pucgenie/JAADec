@@ -81,18 +81,16 @@ public class Decoder {
 	/**
 	 * Decodes one frame of AAC data in frame mode and returns the raw PCM
 	 * data.
-	 * @param frame the AAC frame
+	 * @param in the AAC frame
 	 * @param buffer a buffer to hold the decoded PCM data
 	 * @throws AACException if decoding fails
 	 */
 
-	public void decodeFrame(byte[] frame, Receiver buffer) {
-
-		BitStream in = BitStream.open(frame);
+	public void decodeFrame(BitStream in, Receiver buffer) {
 
 		try {
-			LOGGER.log(Level.FINE, ()->String.format("frame %d @%d", frames, 8*frame.length));
-			decode(in, buffer);
+			LOGGER.log(Level.FINE, ()->String.format("frame %d @%d", frames, in.getBitsLeft()));
+			decode0(in, buffer);
 			LOGGER.log(Level.FINEST, ()->String.format("left %d", in.getBitsLeft()));
 		}
 		catch(EOSException e) {
@@ -102,7 +100,7 @@ public class Decoder {
 		}
 	}
 
-	private void decode(BitStream in, Receiver buffer) {
+	public void decode0(BitStream in, Receiver buffer) {
 		if(ADIFHeader.isPresent(in)) {
 			adifHeader = ADIFHeader.readHeader(in);
 			PCE pce = adifHeader.getFirstPCE();

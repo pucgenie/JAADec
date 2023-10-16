@@ -22,10 +22,10 @@ abstract class AsynchronousAudioInputStream extends AudioInputStream implements 
 		if(singleByte==null)
 			singleByte = new byte[1];
 		if(buffer.read(singleByte, 0, 1)==-1)
-			i = -1;
+			// pucgenie: I don't like this way of signalling...
+			return -1;
 		else
-			i = singleByte[0]&0xFF;
-		return i;
+			return singleByte[0]&0xFF;
 	}
 
 	@Override

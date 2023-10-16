@@ -3,6 +3,8 @@ package net.sourceforge.jaad;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.DecoderConfig;
+import net.sourceforge.jaad.aac.syntax.BitStream;
+import net.sourceforge.jaad.aac.syntax.ByteArrayBitStream;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 import net.sourceforge.jaad.mp4.MP4Container;
 import net.sourceforge.jaad.mp4.MP4Input;
@@ -15,11 +17,9 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -89,21 +89,22 @@ public class Play {
 
 		//create audio format
 		DecoderConfig conf = dec.getConfig();
-		AudioFormat aufmt = new AudioFormat(conf.getOutputFrequency().getFrequency(), 16, conf.getChannelCount(), true, true);
+		AudioFormat aufmt = dec.getAudioFormat();//new AudioFormat(conf.getOutputFrequency().getFrequency(), 16, conf.getChannelCount(), true, true);
 
 		boolean lineStarted = false;
 		try(SourceDataLine line =  AudioSystem.getSourceDataLine(aufmt)) {
 			line.open();
 
-
 			//decode
-			final SampleBuffer buf = new SampleBuffer(aufmt, conf.getSampleLength());
+			final SampleBuffer buf = new SampleBuffer(aufmt, conf.getSampleLength() * Math.max(2, aufmt.getChannels()) * aufmt.getSampleSizeInBits()/Byte.SIZE);
 			final byte[] primitiveSampleBuffer = new byte[buf.getBB().capacity()];
+			final var bitStream = new ByteArrayBitStream();
 			while(track.hasMoreFrames()) {
 				Frame frame = track.readNextFrame();
 
 				try {
-					dec.decodeFrame(frame.getData(), buf);
+					bitStream.setData(frame.getData());
+					dec.decodeFrame(bitStream, buf);
 					buf.getData(primitiveSampleBuffer);
 					line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
 
@@ -143,20 +144,26 @@ public class Play {
 		final byte[] primitiveSampleBuffer = new byte[buf.getBB().capacity()];
 
 		boolean lineStarted = false;
-		try(SourceDataLine line = AudioSystem.getSourceDataLine(aufmt)) {
-			line.open();
-
+		try (SourceDataLine line = AudioSystem.getSourceDataLine(aufmt)) {
 			try {
-				byte[] primitiveFrameBuf = null;
+				final var bitStream = new ByteArrayBitStream();
+				line.open();
+				final var cbb = ByteBuffer.allocateDirect(ADTSDemultiplexer.MAXIMUM_FRAME_SIZE);
 				while (true) {
-					dec.decodeFrame(primitiveFrameBuf = adts.readNextFrame(primitiveFrameBuf), buf);
+					// pucgenie: So many useless copies...
+					adts.readNextFrame(cbb);
+					cbb.flip();
+					bitStream.setData(cbb);
+					cbb.clear();
+					dec.decode0(bitStream, buf);
 					buf.getData(primitiveSampleBuffer);
-					line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
+					assert line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length) == primitiveSampleBuffer.length : "Need to start line before writing...";
 					if (!lineStarted) {
+						lineStarted = true;
 						// pucgenie: Just to make things more complicated - or so I thought.
 						line.start();
-						lineStarted = true;
 					}
+					//aos.flush();
 				}
 			} finally {
 				if (line.isRunning()) {

@@ -1,13 +1,18 @@
 package net.sourceforge.jaad;
 
 import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import net.sourceforge.jaad.aac.Decoder;
+import net.sourceforge.jaad.aac.syntax.ByteArrayBitStream;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 
 /**
@@ -39,8 +44,6 @@ public class Radio {
 	}
 
 	private static void decode(String arg) throws Exception {
-		SourceDataLine line = null;
-		try {
 			final URI uri = new URI(arg);
 			final Socket sock = new Socket(uri.getHost(), uri.getPort()>0 ? uri.getPort() : 80);
 
@@ -64,39 +67,49 @@ public class Radio {
 			while(x!=null&&!x.trim().equals(""));
 
 			final ADTSDemultiplexer adts = new ADTSDemultiplexer(in);
-			AudioFormat aufmt = new AudioFormat(adts.getSampleFrequency(), 16, adts.getChannelCount(), true, true);
 			final Decoder dec = Decoder.create(adts.getDecoderInfo());
 
 			// pucgenie: Somehow it always decodes to 16 bit (=2 bytes)
 			final SampleBuffer buf = new SampleBuffer(dec.getConfig().getSampleLength() * adts.getChannelCount() * 2);
 			byte[] primitiveSampleBuffer = null;
-			byte[] b = null;
-			while(true) {
-				b = adts.readNextFrame(b);
-				dec.decodeFrame(b, buf);
+			final var bitStream = new ByteArrayBitStream();
+			AudioFormat aufmt = new AudioFormat(adts.getSampleFrequency(), 16, adts.getChannelCount(), true, true);
+			SourceDataLine line = null;
+			final var cbb = ByteBuffer.allocateDirect(ADTSDemultiplexer.MAXIMUM_FRAME_SIZE);
 
-				if(line!=null&&formatChanged(line.getFormat(), buf)) {
-					//format has changed (e.g. SBR has started)
+			try {
+				while (true) {
+					adts.readNextFrame(cbb);
+					cbb.flip();
+					bitStream.setData(cbb);
+					cbb.clear();
+					dec.decode0(bitStream, buf);
+					buf.getData(primitiveSampleBuffer);
+					if(line!=null&&formatChanged(line.getFormat(), buf)) {
+						//format has changed (e.g. SBR has started)
+						line.stop();
+						line.close();
+						line = null;
+						aufmt = new AudioFormat(buf.getSampleRate(), buf.getBitsPerSample(), buf.getChannels(), true, true);
+					}
+					if(line==null) {
+						try {
+							line = AudioSystem.getSourceDataLine(aufmt);
+							line.open();
+						} catch (LineUnavailableException e) {
+							throw new RuntimeException(e);
+						}
+						line.start();
+					}
+					line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
+				}
+			} finally {
+				if (line!=null) {
+					line.drain();
 					line.stop();
 					line.close();
-					line = null;
-					aufmt = new AudioFormat(buf.getSampleRate(), buf.getBitsPerSample(), buf.getChannels(), true, true);
 				}
-				if(line==null) {
-					line = AudioSystem.getSourceDataLine(aufmt);
-					line.open();
-					line.start();
-				}
-				primitiveSampleBuffer = buf.getData(primitiveSampleBuffer);
-				line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
 			}
-		}
-		finally {
-			if(line!=null) {
-				line.stop();
-				line.close();
-			}
-		}
 	}
 
 	private static boolean formatChanged(AudioFormat af, SampleBuffer buf) {

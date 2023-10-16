@@ -2,6 +2,8 @@ package net.sourceforge.jaad.spi.javasound;
 
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.SampleBuffer;
+import net.sourceforge.jaad.aac.syntax.BitStream;
+import net.sourceforge.jaad.aac.syntax.ByteArrayBitStream;
 import net.sourceforge.jaad.mp4.MP4Container;
 import net.sourceforge.jaad.mp4.MP4Input;
 import net.sourceforge.jaad.mp4.api.AudioTrack;
@@ -12,6 +14,7 @@ import net.sourceforge.jaad.mp4.api.Track;
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -65,6 +68,8 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 		saved = null;
 	}
 
+	private final ByteArrayBitStream bitStream = new ByteArrayBitStream();
+
 	private void decodeFrame() {
 		if(!track.hasMoreFrames()) {
 			buffer.close();
@@ -76,7 +81,8 @@ class MP4AudioInputStream extends AsynchronousAudioInputStream {
 				buffer.close();
 				return;
 			}
-			decoder.decodeFrame(frame.getData(), sampleBuffer);
+			bitStream.setData(frame.getData());
+			decoder.decode0(bitStream, sampleBuffer);
 		}
 		catch(IOException e) {
 			buffer.close();

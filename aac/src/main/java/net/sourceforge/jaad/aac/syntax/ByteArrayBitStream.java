@@ -2,6 +2,7 @@ package net.sourceforge.jaad.aac.syntax;
 
 import net.sourceforge.jaad.aac.EOSException;
 
+import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,7 +33,7 @@ public class ByteArrayBitStream implements BitStream {
 			return String.format("[%d;%d]", getPosition(), length);
 	}
 
-	ByteArrayBitStream() {
+	public ByteArrayBitStream() {
 	}
 
 	/**
@@ -89,6 +90,31 @@ public class ByteArrayBitStream implements BitStream {
 			buffer = new byte[size];
 
 		System.arraycopy(data, shift, buffer, 0, buffer.length);
+	}
+
+	public final void setData(ByteBuffer data) {
+		reset();
+
+		int size = data.remaining();
+		this.length = 8*size;
+
+		// reduce the buffer size to an integer number of words
+		int shift = size%WORD_BYTES;
+
+		// push leading bytes to cache
+		bitsCached = 8*shift;
+
+		for(int i=0; i<shift; ++i) {
+			// 0xFF& is required because Java byte is signed but we interpret it unsigned.
+			cache = cache << 8 | (0xff & data.get());
+		}
+
+		size -= shift;
+
+		//only reallocate if needed
+		if(buffer==null||buffer.length!=size)
+			buffer = new byte[size];
+		data.get(buffer);
 	}
 
 	@Override

@@ -24,7 +24,7 @@ public class PlayGoldDust extends Play {
     }
 
     @Test
-    public void testPlay() {
+    public void testPlayAAC() {
         try (var instream = new FileInputStream(new File(System.getenv("CD"), "mzaf_8033856765369564727.plus.aac.ep.aac"))) {
             decodeAAC(instream);
         } catch (FileNotFoundException e) {

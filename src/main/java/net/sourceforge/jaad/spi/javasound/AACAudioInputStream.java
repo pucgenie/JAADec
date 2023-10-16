@@ -4,8 +4,11 @@ import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.SampleBuffer;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import javax.sound.sampled.AudioFormat;
+
+import net.sourceforge.jaad.aac.syntax.ByteArrayBitStream;
 import net.sourceforge.jaad.adts.ADTSDemultiplexer;
 
 class AACAudioInputStream extends AsynchronousAudioInputStream {
@@ -24,16 +27,27 @@ class AACAudioInputStream extends AsynchronousAudioInputStream {
 		sampleBuffer = new SampleBuffer(decoder.getConfig().getSampleLength() * adts.getChannelCount() * 2);
 	}
 
+	protected final ByteArrayBitStream bitStream = new ByteArrayBitStream();
+	protected final ByteBuffer cbb = ByteBuffer.allocateDirect(ADTSDemultiplexer.MAXIMUM_FRAME_SIZE);
+
+	protected void readNextFrameInternal() throws IOException {
+		adts.readNextFrame(cbb);
+		cbb.flip();
+		bitStream.setData(cbb);
+		cbb.clear();
+		decoder.decode0(bitStream, sampleBuffer);
+		audioFormat = new AudioFormat(sampleBuffer.getSampleRate(), sampleBuffer.getBitsPerSample(), sampleBuffer.getChannels(), true, true);
+		ByteBuffer bufferedData = sampleBuffer.getBB();
+		saved = new byte[bufferedData.position()];
+		bufferedData.flip().get(saved);
+	}
+
 	@Override
 	public AudioFormat getFormat() {
 		if(audioFormat==null) {
 			//read first frame
 			try {
-				decoder.decodeFrame(adts.readNextFrame(null), sampleBuffer);
-				audioFormat = new AudioFormat(sampleBuffer.getSampleRate(), sampleBuffer.getBitsPerSample(), sampleBuffer.getChannels(), true, true);
-				ByteBuffer bufferedData = sampleBuffer.getBB();
-				saved = new byte[bufferedData.position()];
-				bufferedData.flip().get(saved);
+				readNextFrameInternal();
 			}
 			catch(IOException e) {
 				return null;
@@ -45,10 +59,7 @@ class AACAudioInputStream extends AsynchronousAudioInputStream {
 	public void execute() {
 		try {
 			if(saved==null) {
-				decoder.decodeFrame(adts.readNextFrame(null), sampleBuffer);
-				ByteBuffer bufferedData = sampleBuffer.getBB();
-				saved = new byte[bufferedData.remaining()];
-				bufferedData.flip().get(saved);
+				readNextFrameInternal();
 			}
 			buffer.write(saved);
 			saved = null;
