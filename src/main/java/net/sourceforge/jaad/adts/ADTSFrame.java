@@ -6,16 +6,21 @@ import net.sourceforge.jaad.aac.Profile;
 import net.sourceforge.jaad.aac.SampleFrequency;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.util.BitSet;
 
 class ADTSFrame implements AudioDecoderInfo {
 
 	//fixed
 	private boolean id, protectionAbsent, privateBit, copy, home;
-	private int layer, profile, sampleFrequency, channelConfiguration;
+
+	private byte layer, profile, sampleFrequency, channelConfiguration;
 	//variable
 	private boolean copyrightIDBit, copyrightIDStart;
-	private int frameLength, adtsBufferFullness, rawDataBlockCount;
+
+	private short frameLength, adtsBufferFullness;
+	private byte rawDataBlockCount;
 	//error check
 	private int[] rawDataBlockPosition;
 	private short crcCheck;
@@ -49,37 +54,62 @@ class ADTSFrame implements AudioDecoderInfo {
 		}
 	}
 
+	private static boolean specialLog1;
+	private static short maxFrameLength;
+
+	public static void resetStats() {
+		specialLog1 = true;
+		maxFrameLength = 960;
+	}
+	static {
+		resetStats();
+	}
+
 	private void readHeader(DataInputStream in) throws IOException {
 		//fixed header:
+		// pucgenie: higher bits not used for information?
 		//1 bit ID, 2 bits layer, 1 bit protection absent
-		int i = in.read();
-		id = ((i>>3)&0x1)==1;
-		layer = (i>>1)&0x3;
-		protectionAbsent = (i&0x1)==1;
-
+		int i = in.readByte();
+		id =               (i & 0b0000_1000) != 0;
+		layer =    (byte) ((i & 0b0000_0110) >> 1);
+		protectionAbsent = (i & 0b0000_0001) == 1;
 		//2 bits profile, 4 bits sample frequency, 1 bit private bit
-		i = in.read();
-		profile = ((i>>6)&0x3)+1;
-		sampleFrequency = (i>>2)&0xF;
-		privateBit = ((i>>1)&0x1)==1;
-
-		//3 bits channel configuration, 1 bit copy, 1 bit home
-		i = (i<<8)|in.read();
-		channelConfiguration = ((i>>6)&0x7);
-		copy = ((i>>5)&0x1)==1;
-		home = ((i>>4)&0x1)==1;
+		i = in.readByte();
+		// pucgenie: I personally want to get rid of that "+1"
+		profile =             (byte) (((i & 0b1100_0000) >>> 8-2) + 1);
+		sampleFrequency =      (byte) ((i & 0b0011_1100) >> 6-4);
+		privateBit =                   (i & 0b0000_0010) != 0;
+		channelConfiguration = (byte) ((i & 0b0000_0001 ) << 2);
+		//3 (1+2) bits channel configuration, 1 bit copy, 1 bit home
+		i = in.readByte();
+		channelConfiguration |= (i & 0b1100_0000) >>> 8-2;
+		copy =                  (i & 0b0010_0000) != 0;
+		home =                  (i & 0b0001_0000) != 0;
 		//int emphasis = in.readBits(2);
-
 		//variable header:
 		//1 bit copyrightIDBit, 1 bit copyrightIDStart, 13 bits frame length,
+		copyrightIDBit =        (i & 0b0000_1000) != 0;
+		copyrightIDStart =      (i & 0b0000_0100) != 0;
+		frameLength =  (short) ((i & 0b0000_0011) << 13-2);
+		if (frameLength > maxFrameLength) {
+			maxFrameLength = frameLength;
+			System.err.println("Max. frame length: " + maxFrameLength);
+		}
+		i = in.readUnsignedShort();
 		//11 bits adtsBufferFullness, 2 bits rawDataBlockCount
-		copyrightIDBit = ((i>>3)&0x1)==1;
-		copyrightIDStart = ((i>>2)&0x1)==1;
-		i = (i<<16)|in.readUnsignedShort();
-		frameLength = (i>>5)&0x1FFF;
-		i = (i<<8)|in.read();
-		adtsBufferFullness = (i>>2)&0x7FF;
-		rawDataBlockCount = i&0x3;
+		frameLength |=                (i & 0b1111_1111_1110_0000) >>> 16-11;
+
+		adtsBufferFullness = (short) ((i & 0b0000_0000_0001_1111) << 11-5);
+		i = in.readByte();
+		adtsBufferFullness |=      (i & 0b1111_1100) >> 8-6;
+		if (adtsBufferFullness == 0x7FF && specialLog1) {
+			specialLog1 = false;
+			System.err.println("variable bitrate");
+		}
+		rawDataBlockCount = (byte) (i & 0b0000_0011);
+		if (rawDataBlockCount > 0) {
+			System.err.println("Raw AAC block count in ADTS frame: " + (rawDataBlockCount+1));
+		}
 	}
 
 	int getFrameLength() {
