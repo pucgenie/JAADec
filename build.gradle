@@ -10,7 +10,7 @@ allprojects {
 
     plugins.withType(JavaPlugin) {
         
-        sourceCompatibility = 17
+        sourceCompatibility = 21
 
         idea {
             module {
@@ -37,7 +37,7 @@ allprojects {
 dependencies {
     implementation (project(':aac'))
     implementation (project(':mp4'))
-    testImplementation 'org.testng:testng:7.1.0'
+    testImplementation 'org.testng:testng:7.7.0'
 }
 
 test {

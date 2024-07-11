@@ -49,6 +49,13 @@ public class SampleBuffer implements Receiver {
 		return bb;
 	}
 
+	/**
+	 *
+	 * @deprecated Use {@link #getBB()} instead.
+	 * @param primitiveSampleBuffer
+	 * @return
+	 */
+	@Deprecated
 	public byte[] getData(byte[] primitiveSampleBuffer) {
 		if (primitiveSampleBuffer == null || primitiveSampleBuffer.length < bb.position()) {
 			if (primitiveSampleBuffer != null) {

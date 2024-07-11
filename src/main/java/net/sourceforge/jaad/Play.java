@@ -20,6 +20,7 @@ import javax.sound.sampled.SourceDataLine;
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -92,12 +93,14 @@ public class Play {
 		AudioFormat aufmt = dec.getAudioFormat();//new AudioFormat(conf.getOutputFrequency().getFrequency(), 16, conf.getChannelCount(), true, true);
 
 		boolean lineStarted = false;
-		try(SourceDataLine line =  AudioSystem.getSourceDataLine(aufmt)) {
+		try(final var line =  AudioSystem.getSourceDataLine(aufmt)) {
 			line.open();
 
 			//decode
 			final SampleBuffer buf = new SampleBuffer(aufmt, conf.getSampleLength() * Math.max(2, aufmt.getChannels()) * aufmt.getSampleSizeInBits()/Byte.SIZE);
-			final byte[] primitiveSampleBuffer = new byte[buf.getBB().capacity()];
+			final ByteBuffer _bb = buf.getBB();
+
+			final byte[] primitiveSampleBuffer = new byte[_bb.capacity()];
 			final var bitStream = new ByteArrayBitStream();
 			while(track.hasMoreFrames()) {
 				Frame frame = track.readNextFrame();
@@ -105,8 +108,10 @@ public class Play {
 				try {
 					bitStream.setData(frame.getData());
 					dec.decodeFrame(bitStream, buf);
-					buf.getData(primitiveSampleBuffer);
-					line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length);
+					int length = _bb.position();
+					_bb.flip().get(primitiveSampleBuffer, 0, length);
+					//buf.getData(primitiveSampleBuffer);
+					line.write(primitiveSampleBuffer, 0, length);
 
 					if (!lineStarted) {
 						// pucgenie: Just to make things more complicated - or so I thought.
@@ -141,7 +146,8 @@ public class Play {
 		final Decoder dec = Decoder.create(adts.getDecoderInfo());
 		AudioFormat aufmt = dec.getAudioFormat();
 		final SampleBuffer buf = new SampleBuffer(aufmt, dec.getConfig().getSampleLength() * Math.max(2, aufmt.getChannels()) * aufmt.getSampleSizeInBits()/Byte.SIZE);
-		final byte[] primitiveSampleBuffer = new byte[buf.getBB().capacity()];
+		final ByteBuffer _bb = buf.getBB();
+		final byte[] primitiveSampleBuffer = new byte[_bb.capacity()];
 
 		boolean lineStarted = false;
 		try (SourceDataLine line = AudioSystem.getSourceDataLine(aufmt)) {
@@ -156,8 +162,10 @@ public class Play {
 					bitStream.setData(cbb);
 					cbb.clear();
 					dec.decode0(bitStream, buf);
-					buf.getData(primitiveSampleBuffer);
-					assert line.write(primitiveSampleBuffer, 0, primitiveSampleBuffer.length) == primitiveSampleBuffer.length : "Need to start line before writing...";
+					int length = _bb.position();
+					_bb.flip().get(primitiveSampleBuffer, 0, length);
+					//buf.getData(primitiveSampleBuffer);
+					assert line.write(primitiveSampleBuffer, 0, length) == length : "Need to start line before writing as it seems...";
 					if (!lineStarted) {
 						lineStarted = true;
 						// pucgenie: Just to make things more complicated - or so I thought.
